@@ -2,19 +2,21 @@ import React from 'react';
 import { POI } from '@/types/navigation';
 import { POI_CATEGORIES } from '@/types/poi-categories';
 import { Button } from '@/components/ui/button';
-import { X, Navigation, Clock, Phone, Globe, Mail, Building, MapPin } from 'lucide-react';
+import { X, Navigation, Clock, Phone, Globe, Mail, Building, MapPin, Compass } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 
 interface TransparentPOIOverlayProps {
   poi: POI;
   onNavigate: (poi: POI) => void;
   onClose: () => void;
+  onCompass: (poi: POI) => void;
 }
 
 export const TransparentPOIOverlay: React.FC<TransparentPOIOverlayProps> = ({
   poi,
   onNavigate,
-  onClose
+  onClose,
+  onCompass
 }) => {
   const { t, translateText } = useLanguage();
 
@@ -287,6 +289,14 @@ export const TransparentPOIOverlay: React.FC<TransparentPOIOverlayProps> = ({
               >
                 <Navigation className="w-4 h-4 mr-2" />
                 {t('navigation.navigateHere')}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12"
+                onClick={() => onCompass(poi)}
+              >
+                <Compass className="w-4 h-4 mr-2" />
+                {t('navigation.compass')}
               </Button>
             </div>
           </div>

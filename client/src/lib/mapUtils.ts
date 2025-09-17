@@ -1,22 +1,28 @@
 import { Coordinates } from '@/types/navigation';
-import { calculateDistance as calcDistanceMeters, formatDistance as formatDistanceShared, toRadians } from '../../../shared/utils';
+import { calculateDistance as calcDistanceMeters, toRadians } from '../../../shared/utils';
+import { point } from '@turf/helpers';
+import bearing from '@turf/bearing';
 
 export const calculateDistance = (point1: Coordinates, point2: Coordinates): number => {
   // Convert from meters to kilometers for backward compatibility
   return calcDistanceMeters(point1.lat, point1.lng, point2.lat, point2.lng) / 1000;
 };
 
+/**
+ * Formats a distance in meters into a readable string.
+ * e.g., 950 -> "950 m", 1250 -> "1.3 km"
+ * @param distanceInMeters The distance in meters.
+ * @returns A formatted string.
+ */
 export const formatDistance = (distanceInMeters: number): string => {
   if (distanceInMeters < 1000) {
-    return `${Math.round(distanceInMeters)} Meter`;
+    return `${Math.round(distanceInMeters)} m`;
   }
-
   const kilometers = distanceInMeters / 1000;
   if (kilometers < 10) {
-    return `${kilometers.toFixed(1)} Kilometer`;
+    return `${kilometers.toFixed(1)} km`;
   }
-
-  return `${Math.round(kilometers)} Kilometer`;
+  return `${Math.round(kilometers)} km`;
 };
 
 export { toRadians };
@@ -41,20 +47,16 @@ export const getBounds = (coordinates: Coordinates[]): [[number, number], [numbe
   return [[minLat, minLng], [maxLat, maxLng]];
 };
 
-// Calculate bearing between two coordinates  
+/**
+ * Calculates the bearing (direction) from one coordinate to another using Turf.js.
+ * @param from The starting coordinate.
+ * @param to The destination coordinate.
+ * @returns The bearing in degrees (from -180 to 180).
+ */
 export const calculateBearing = (from: Coordinates, to: Coordinates): number => {
-  const dLng = toRadians(to.lng - from.lng);
-  const lat1 = toRadians(from.lat);
-  const lat2 = toRadians(to.lat);
-
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
-
-  let bearing = Math.atan2(y, x);
-  bearing = (bearing * 180) / Math.PI;
-  bearing = (bearing + 360) % 360; // Normalize to 0-360
-
-  return bearing;
+  const fromPoint = point([from.lng, from.lat]);
+  const toPoint = point([to.lng, to.lat]);
+  return bearing(fromPoint, toPoint);
 };
 
 export const decodePolyline = (encoded: string): number[][] => {

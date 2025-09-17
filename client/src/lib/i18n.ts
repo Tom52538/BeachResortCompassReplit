@@ -442,7 +442,8 @@ export const translations = {
       next: 'Next',
       speed: 'Speed',
       avg: 'Avg',
-      navigateHere: 'Navigate Here'
+      navigateHere: 'Navigate Here',
+      compass: 'Compass'
     },
     categories: {
       'campsites': 'Campsites',
@@ -562,7 +563,8 @@ export const translations = {
       turnRightOn: 'Rechts abbiegen auf',
       continueOn: 'Weiter auf',
       end: 'Beenden',
-      navigateHere: 'Hier navigieren'
+      navigateHere: 'Hier navigieren',
+      compass: 'Kompass'
     },
     categories: {
       'campsites': 'Campingplätze',
@@ -688,7 +690,8 @@ export const translations = {
       filter: 'Filtrer',
       map: 'Carte',
       navigate: 'Navigation',
-      settings: 'Paramètres'
+      settings: 'Paramètres',
+      compass: 'Boussole'
     },
     categories: {
       'campsites': 'Campings',
@@ -770,7 +773,8 @@ export const translations = {
       filter: 'Filter',
       map: 'Kaart',
       navigate: 'Navigatie',
-      settings: 'Instellingen'
+      settings: 'Instellingen',
+      compass: 'Kompas'
     },
     categories: {
       'campsites': 'Campings',
@@ -847,7 +851,8 @@ export const translations = {
       filter: 'Filtro',
       map: 'Mappa',
       navigation: 'Navigazione',
-      settings: 'Impostazioni'
+      settings: 'Impostazioni',
+      compass: 'Bussola'
     },
     categories: {
       'campsites': 'Campeggi',
@@ -912,7 +917,8 @@ export const translations = {
       filter: 'Filtro',
       map: 'Mapa',
       navigation: 'Navegación',
-      settings: 'Ajustes'
+      settings: 'Ajustes',
+      compass: 'Brújula'
     },
     categories: {
       'campsites': 'Campings',
