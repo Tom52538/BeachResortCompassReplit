@@ -7,6 +7,7 @@ import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 import { calculateBearing, calculateDistance, formatDistance } from '@/lib/mapUtils';
 import { cn } from '@/lib/utils';
 
+// Renders the Compass View UI
 interface CompassViewProps {
   destination: POI;
   onClose: () => void;
