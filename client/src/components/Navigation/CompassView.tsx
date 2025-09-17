@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, NavigationArrow } from 'lucide-react';
+import { ArrowLeft, Navigation } from 'lucide-react';
 import { POI } from '@/types/poi-categories';
 import { useLocation } from '@/hooks/useLocation';
 import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
@@ -81,7 +81,7 @@ export const CompassView = ({ destination, onClose }: CompassViewProps) => {
 
       <div className="relative w-64 h-64 flex items-center justify-center">
         {/* User's heading arrow - always points up */}
-        <NavigationArrow className="w-10 h-10 text-primary absolute -top-12" />
+        <Navigation className="w-10 h-10 text-primary absolute -top-12" />
 
         {/* Compass Ring */}
         <div className="absolute w-full h-full rounded-full border-4 border-foreground transition-transform duration-500 ease-in-out" style={compassRingStyle}>
@@ -95,7 +95,7 @@ export const CompassView = ({ destination, onClose }: CompassViewProps) => {
         {/* Destination Pointer */}
         {bearing !== null && (
           <div className="absolute w-full h-full transition-transform duration-500 ease-in-out" style={destinationPointerStyle}>
-            <NavigationArrow className="w-12 h-12 text-accent absolute top-0 left-1/2 -ml-6 transform -rotate-90" />
+            <Navigation className="w-12 h-12 text-accent absolute top-0 left-1/2 -ml-6" />
           </div>
         )}
       </div>
