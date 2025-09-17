@@ -33,7 +33,7 @@ export default defineConfig({
   },
   root: path.resolve(process.cwd(), "client"),
   build: {
-    outDir: 'dist',
+    outDir: '../dist',
     emptyOutDir: true,
   },
   server: {
