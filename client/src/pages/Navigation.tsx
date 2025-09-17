@@ -32,7 +32,6 @@ import { POILocalizationDebugger } from '@/components/Navigation/POILocalization
 import { POILocalizationTestPanel } from '@/components/Navigation/POILocalizationTestPanel';
 import { VoiceControlPanel } from '@/components/Navigation/VoiceControlPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { CompassView } from '@/components/Navigation/CompassView';
 // Removed SmartBottomDrawer - POIs show directly on map
 import { TopBar } from '@/components/Navigation/TopBar'; // Assuming TopBar is imported for the new structure
 import MobileMemoryMonitor from '@/components/UI/MobileMemoryMonitor'; // Assuming MobileMemoryMonitor is available
@@ -101,7 +100,6 @@ export default function Navigation() {
   // New state for POI Dialog visibility
   const [showPOIDialog, setShowPOIDialog] = useState(false);
   const [showPOIOverlay, setShowPOIOverlay] = useState(false);
-  const [isCompassViewActive, setCompassViewActive] = useState(false);
 
   // Voice control state
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -894,15 +892,6 @@ export default function Navigation() {
     setShowPOIDialog(false);
   }, []);
 
-  const handleOpenCompass = useCallback(() => {
-    if (selectedPOI) {
-      setCompassViewActive(true);
-      // Close other overlays when switching to compass view
-      setShowPOIOverlay(false);
-      setShowPOIDialog(false);
-    }
-  }, [selectedPOI]);
-
   const handleCategoryFilter = useCallback((category: string) => {
     console.log('🔍 CATEGORY FILTER DEBUG: ==========================================');
     console.log('🔍 CATEGORY FILTER DEBUG: handleCategoryFilter called with:', category);
@@ -1453,21 +1442,12 @@ export default function Navigation() {
           />
 
 
-          {/* Compass View - Overlays everything when active */}
-          {isCompassViewActive && selectedPOI && (
-            <CompassView
-              destination={selectedPOI}
-              onClose={() => setCompassViewActive(false)}
-            />
-          )}
-
           {/* POI Info Overlay - Positioned below button rows */}
           {showPOIOverlay && selectedPOI && (
             <TransparentPOIOverlay
               poi={selectedPOI}
               onNavigate={handleNavigateToPOI}
               onClose={handleClosePOI}
-              onCompass={handleOpenCompass}
             />
           )}
 
@@ -1478,7 +1458,6 @@ export default function Navigation() {
               isOpen={showPOIDialog}
               onClose={handleClosePOI}
               onNavigate={handleNavigateToPOI}
-              onCompass={handleOpenCompass}
             />
           )}
 
