@@ -42,6 +42,9 @@ interface MapContainerProps {
   destinationMarker?: { lat: number; lng: number } | null;
   showNetworkOverlay?: boolean;
   children?: React.ReactNode;
+  rotation?: number;
+  onRotate?: (rotation: number) => void;
+  onRotateStart?: () => void;
 }
 
 const CurrentLocationMarker = ({ position }: { position: Coordinates }) => {
@@ -192,7 +195,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   mapStyle,
   destinationMarker,
   showNetworkOverlay = false,
-  children
+  children,
+  rotation = 0,
+  onRotate,
+  onRotateStart,
 }) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const [gestureIndicator, setGestureIndicator] = useState<{
@@ -353,6 +359,14 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   // Ensure center is always defined
   const safeCenter = center || currentPosition || { lat: 51.589, lng: 3.716 };
 
+  useEffect(() => {
+    if (mapRef.current) {
+      const mapContainer = mapRef.current.getContainer();
+      mapContainer.style.transform = `rotate(${rotation}deg)`;
+      mapContainer.style.transition = 'transform 0.1s linear';
+    }
+  }, [rotation]);
+
 
   return (
     <div className="map-container relative">
@@ -411,6 +425,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           onLongPress={onMapLongPress}
           onDoubleTap={onMapDoubleTap || handleDoubleTap}
           onSingleTap={onMapClick}
+          rotation={rotation}
+          onRotate={onRotate}
+          onRotateStart={onRotateStart}
         />
 
         <CurrentLocationMarker position={currentPosition} />
