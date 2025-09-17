@@ -83,7 +83,7 @@ export const CompassView = ({ destination, onClose }: CompassViewProps) => {
       <div className="relative w-64 h-64 flex items-center justify-center">
         {/* User's heading arrow - always points up */}
         <Navigation className="w-10 h-10 text-primary absolute -top-12" />
-
+        
         {/* Compass Ring */}
         <div className="absolute w-full h-full rounded-full border-4 border-foreground transition-transform duration-500 ease-in-out" style={compassRingStyle}>
           <div className="absolute top-1/2 left-1/2 -mt-2 -ml-2 w-4 h-4 rounded-full bg-primary" />
