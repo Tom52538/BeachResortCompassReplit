@@ -177,7 +177,7 @@ export const EnhancedMapControls: React.FC<EnhancedMapControlsProps> = ({
             <Navigation className="w-5 h-5 text-orange-600" style={{ transform: 'rotate(45deg)' }} />
           ),
           compassMode === 'north' ? 'Nord-Modus (Karte zeigt nach Norden)' : 'Fahrtrichtung (Karte folgt Bewegung)',
-          true
+          compassMode === 'bearing'
         )}
 
         {/* Network Overlay Toggle */}

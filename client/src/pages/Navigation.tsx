@@ -53,7 +53,7 @@ export default function Navigation() {
   // Use SiteManager as single source of truth for site management
   const { config, setSite } = useSiteManager();
   const currentSite = config.site;
-  const { currentPosition, useRealGPS, toggleGPS } = useLocation({ currentSite });
+  const { currentPosition, useRealGPS, toggleGPS, getCurrentPosition } = useLocation({ currentSite });
   const { data: allPOIs = [], isLoading: poisLoading } = usePOI(currentSite);
 
   // Debug: Log the site synchronization - now using SiteManager
@@ -569,11 +569,22 @@ export default function Navigation() {
     setMapZoom(prev => Math.max(prev - 1, 1));
   }, []);
 
-  const handleCenterOnLocation = useCallback(() => {
-    if (currentPosition) {
-      setMapCenter(currentPosition);
+  const handleCenterOnLocation = useCallback(async () => {
+    try {
+      // Actively fetch the current position
+      const freshPosition = await getCurrentPosition();
+      setMapCenter(freshPosition);
+      setMapZoom(17); // Zoom in for context
+    } catch (error) {
+      console.error("Failed to get current position:", error);
+      // Optionally, show a toast to the user
+      toast({
+        title: "Standortfehler",
+        description: "Ihren aktuellen Standort konnte nicht abgerufen werden.",
+        variant: "destructive",
+      });
     }
-  }, [currentPosition]);
+  }, [getCurrentPosition, toast]);
 
   const handlePOIClick = useCallback(async (poi: POI) => {
     console.log('🔍 handlePOIClick called with:', poi);
@@ -1441,11 +1452,7 @@ export default function Navigation() {
             onTravelModeChange={handleTravelModeChange}
             onZoomIn={() => setMapZoom(prev => Math.min(prev + 1, 18))}
             onZoomOut={() => setMapZoom(prev => Math.max(prev - 1, 0))}
-            onCenterOnLocation={() => {
-              if (currentPosition) {
-                setMapCenter(currentPosition);
-              }
-            }}
+            onCenterOnLocation={handleCenterOnLocation}
             compassMode={mapOrientation === 'driving' ? 'bearing' : 'north'}
             onToggleCompass={() => setMapOrientation(prev => prev === 'north' ? 'driving' : 'north')}
             showNetworkOverlay={showNetworkOverlay}
