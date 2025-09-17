@@ -67,6 +67,10 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Environment validation and info
 const envValidation = validateProductionEnvironment();
@@ -161,7 +165,7 @@ app.use((req, res, next) => {
       console.log('📦 Setting up production static serving...');
       
       // Custom static file serving with correct build path
-      const distPath = path.resolve(process.cwd(), "dist");
+      const distPath = path.resolve(__dirname, "../");
       
       if (!fs.existsSync(distPath)) {
         console.error(`❌ Warning: Build directory not found at ${distPath}. Run 'npm run build' first.`);
