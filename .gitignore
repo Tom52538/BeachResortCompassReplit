@@ -1,4 +1,4 @@
-# Build artifacts (should not be committed)
+# Build artifacts
 dist/
 build/
 
@@ -21,19 +21,10 @@ Thumbs.db
 # Logs
 *.log
 
-# Screenshots
-attached_assets/Screenshot_*.png
-
 # Runtime data
 pids
 *.pid
 *.seed
 
-# Replit-specific
-.replit
-replit.nix*.cache/
+# Cache
 .cache/
-server/data/crawler/
-attached_assets/
-node_modules/
-.git/objects/pack/

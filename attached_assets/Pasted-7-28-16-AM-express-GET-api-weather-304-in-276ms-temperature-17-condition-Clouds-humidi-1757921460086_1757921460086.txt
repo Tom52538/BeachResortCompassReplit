@@ -1,0 +1,81 @@
+7:28:16 AM [express] GET /api/weather 304 in 276ms :: {"temperature":17,"condition":"Clouds","humidi…
+Loading POI data for site: kamperland
+🏕️ Loading roompot POIs from: /home/runner/workspace/server/data/combined_pois_roompot.geojson
+🔍 POI Transformer: Processing 1905 raw features for site kamperland
+✅ POI Processing Summary:
+   - Processed: 1905 features
+   - Valid POIs: 1899
+   - Invalid coordinates: 0
+   - Skipped (no name): 6
+   - Total skipped: 6
+✅ Loaded 1899 POIs for site kamperland from combined_pois_roompot.geojson
+7:28:30 AM [express] GET /api/pois 304 in 23ms :: [{"id":"way/swimming_pool_corrected","name":"Swimm…
+Weather request for coordinates: 51.59, 3.722
+Weather alerts request for: 51.59, 3.722
+7:28:30 AM [express] GET /api/weather/alerts 304 in 0ms :: {"alerts":[]}
+🌦️ REAL Forecast data generated: {
+  today: { temp: 17, condition: 'Rain', icon: 'rainy' },
+  tomorrow: { temp: 16, condition: 'Rain', icon: 'rainy' },
+  dayAfter: { temp: 15, condition: 'Rain', icon: 'rainy' }
+}
+7:28:30 AM [express] GET /api/weather/forecast 200 in 135ms :: {"today":{"temp":17,"condition":"Rain…
+🌍 REAL GEOCODING: 51.59,3.722 → Kamperland
+🌤️ REAL Weather response for Kamperland: {
+  temperature: 16,
+  condition: 'Clouds',
+  humidity: 84,
+  windSpeed: 44,
+  location: 'Kamperland',
+  icon: 'cloudy',
+  description: 'Mäßig bewölkt'
+}
+7:28:30 AM [express] GET /api/weather 200 in 203ms :: {"temperature":16,"condition":"Clouds","humidi…
+🏠 INDIVIDUAL POI REQUEST: "roompot_436" for site: kamperland
+🏠 ACCOMMODATION ENRICHMENT: "Lodge 01" with language "en"
+🏠 Details: {
+  id: 'roompot_436',
+  name: 'Lodge 01',
+  category: 'poi',
+  roompot_category: 'Lodge 4',
+  lodge_number: null,
+  enrichment_key: null
+}
+🔍 ENRICHMENT ELIGIBILITY: POI "Lodge 01" should have enrichment: true
+🏠 POI detected: "Lodge 01", roompot_category: "Lodge 4"
+🏠 No enrichment match for roompot_category: "Lodge 4"
+🏠 FALLBACK Lodge detected: "Lodge 01", roompot_category: "Lodge 4"
+❌ No enrichment found for POI "Lodge 01"
+🏠 Returning enriched POI: "Lodge 01" (enriched: true)
+7:28:36 AM [express] GET /api/pois/roompot_436 200 in 7ms :: {"id":"roompot_436","name":"Lodge 01","…
+Enrichment API called with query: "Lodge 01", POI ID: "roompot_436"
+No enrichment data found for: Lodge 01
+7:28:36 AM [express] GET /api/enrichment/search 404 in 1ms :: {"error":"No enrichment data found"}
+Enrichment API called with query: "Lodge 01", POI ID: "roompot_436"
+No enrichment data found for: Lodge 01
+7:28:36 AM [express] GET /api/enrichment/search 404 in 0ms :: {"error":"No enrichment data found"}
+🏠 INDIVIDUAL POI REQUEST: "roompot_375" for site: kamperland
+🏠 ACCOMMODATION ENRICHMENT: "beach house 1" with language "en"
+🏠 Details: {
+  id: 'roompot_375',
+  name: 'beach house 1',
+  category: 'poi',
+  roompot_category: 'Beach House 6b',
+  lodge_number: null,
+  enrichment_key: null
+}
+🔍 ENRICHMENT ELIGIBILITY: POI "beach house 1" should have enrichment: true
+🏠 POI detected: "beach house 1", roompot_category: "Beach House 6b"
+🏠 No enrichment match for roompot_category: "Beach House 6b"
+🏠 Beach house detected: "beach house 1", roompot_category: "Beach House 6b"
+🏠 No enrichment match for category: "Beach House 6b"
+❌ No enrichment found for POI "beach house 1"
+🏠 Returning enriched POI: "beach house 1" (enriched: true)
+7:28:46 AM [express] GET /api/pois/roompot_375 200 in 8ms :: {"id":"roompot_375","name":"beach house…
+Enrichment API called with query: "beach house 1", POI ID: "roompot_375"
+No enrichment data found for: beach house 1
+7:28:46 AM [express] GET /api/enrichment/search 404 in 1ms :: {"error":"No enrichment data found"}
+Enrichment API called with query: "beach house 1", POI ID: "roompot_375"
+No enrichment data found for: beach house 1
+7:28:46 AM [express] GET /api/enrichment/search 404 in 1ms :: {"error":"No enrichment data found"}
+📈 Memory check: { rss: '280MB', heapUsed: '110MB', uptime: '1622s' }
+📈 Memory check: { rss: '280MB', heapUsed: '110MB', uptime: '1682s' }

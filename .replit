@@ -1,0 +1,167 @@
+modules = ["nodejs-20", "bash", "web"]
+run = "npm run dev"
+
+[nix]
+channel = "stable-25_05"
+packages = ["psmisc"]
+
+[deployment]
+run = ["sh", "-c", "npm start"]
+build = ["sh", "-c", "npm run build"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 33009
+externalPort = 3002
+
+[[ports]]
+localPort = 33657
+externalPort = 5173
+
+[[ports]]
+localPort = 34467
+externalPort = 8000
+
+[[ports]]
+localPort = 36345
+externalPort = 6000
+
+[[ports]]
+localPort = 37305
+externalPort = 4200
+
+[[ports]]
+localPort = 37499
+externalPort = 3001
+
+[[ports]]
+localPort = 38835
+externalPort = 3003
+
+[[ports]]
+localPort = 41175
+externalPort = 3000
+
+[[ports]]
+localPort = 45457
+externalPort = 5000
+
+[workflows]
+runButton = "Start Analysis Fixed"
+
+[[workflows.workflow]]
+name = "Development Server"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Development Server"
+author = "agent"
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "Start Dev Server"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pkill -f \"tsx.*server\" || true"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Quick Start"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Production Build"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run build"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm start"
+
+[[workflows.workflow]]
+name = "Restart with New Network"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development tsx server/index.ts"
+
+[[workflows.workflow]]
+name = "Debug Server"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development tsx server/index.ts"
+
+[[workflows.workflow]]
+name = "Test Server"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development tsx server/index.ts"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Development Server"
+
+[[workflows.workflow]]
+name = "Start Analysis"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Start Analysis Fixed"
+author = 44636399
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[agent]
+expertMode = true
