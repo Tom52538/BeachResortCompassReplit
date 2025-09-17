@@ -17,7 +17,7 @@ interface EnhancedMapControlsProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onCenterOnLocation: () => void;
-  compassMode: 'north' | 'bearing';
+  compassMode: 'north' | 'bearing' | 'manual';
   onToggleCompass: () => void;
   showNetworkOverlay: boolean;
   onToggleNetworkOverlay: () => void;
@@ -171,13 +171,13 @@ export const EnhancedMapControls: React.FC<EnhancedMapControlsProps> = ({
         {/* Compass Toggle */}
         {renderControlButton(
           onToggleCompass,
-          compassMode === 'north' ? (
-            <Compass className="w-5 h-5 text-blue-600" />
-          ) : (
+          compassMode === 'bearing' ? (
             <Navigation className="w-5 h-5 text-orange-600" style={{ transform: 'rotate(45deg)' }} />
+          ) : (
+            <Compass className="w-5 h-5 text-blue-600" />
           ),
-          compassMode === 'north' ? 'Nord-Modus (Karte zeigt nach Norden)' : 'Fahrtrichtung (Karte folgt Bewegung)',
-          compassMode === 'bearing'
+          compassMode === 'north' ? 'Switch to Driving Mode' : 'Reset to North Up',
+          compassMode === 'bearing' || compassMode === 'manual'
         )}
 
         {/* Network Overlay Toggle */}

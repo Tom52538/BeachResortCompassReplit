@@ -108,8 +108,9 @@ export default function Navigation() {
   const [showSettings, setShowSettings] = useState(false);
 
   // Map orientation and style state
-  const [mapOrientation, setMapOrientation] = useState<'north' | 'driving'>('north');
+  const [mapOrientation, setMapOrientation] = useState<'north' | 'driving' | 'manual'>('north');
   const [mapStyle, setMapStyle] = useState<'outdoors' | 'satellite' | 'streets' | 'navigation'>('outdoors');
+  const [mapRotation, setMapRotation] = useState(0);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   // Travel mode state for routing
@@ -1126,6 +1127,14 @@ export default function Navigation() {
     }
   }, [currentPanel]);
 
+  const handleRotate = (newRotation: number) => {
+    setMapRotation(newRotation);
+  };
+
+  const handleRotateStart = () => {
+    setMapOrientation('manual');
+  };
+
   // POI Category Filter Handler for Quick Access (duplicate removed)
 
   // Voice toggle handler - ElevenLabs TTS
@@ -1403,6 +1412,9 @@ export default function Navigation() {
                 mapStyle={mapStyle}
                 destinationMarker={destinationMarker}
                 showNetworkOverlay={showNetworkOverlay}
+                rotation={mapRotation}
+                onRotate={handleRotate}
+                onRotateStart={handleRotateStart}
               >
               </MapContainer>
             </div>
@@ -1453,8 +1465,16 @@ export default function Navigation() {
             onZoomIn={() => setMapZoom(prev => Math.min(prev + 1, 18))}
             onZoomOut={() => setMapZoom(prev => Math.max(prev - 1, 0))}
             onCenterOnLocation={handleCenterOnLocation}
-            compassMode={mapOrientation === 'driving' ? 'bearing' : 'north'}
-            onToggleCompass={() => setMapOrientation(prev => prev === 'north' ? 'driving' : 'north')}
+            compassMode={mapOrientation === 'driving' ? 'bearing' : mapOrientation === 'manual' ? 'manual' : 'north'}
+            onToggleCompass={() => {
+              if (mapOrientation === 'north') {
+                setMapOrientation('driving');
+              } else {
+                // If in 'driving' or 'manual' mode, reset to north
+                setMapRotation(0);
+                setMapOrientation('north');
+              }
+            }}
             showNetworkOverlay={showNetworkOverlay}
             onToggleNetworkOverlay={() => setShowNetworkOverlay(!showNetworkOverlay)}
           />
