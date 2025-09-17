@@ -1,0 +1,39 @@
+# Build artifacts (should not be committed)
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Screenshots
+attached_assets/Screenshot_*.png
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Replit-specific
+.replit
+replit.nix*.cache/
+.cache/
+server/data/crawler/
+attached_assets/
+node_modules/
+.git/objects/pack/
