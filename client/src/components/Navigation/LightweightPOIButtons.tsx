@@ -45,16 +45,16 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
   // SiteManager - Single Source of Truth! No more localStorage polling!
   const { config: siteConfig } = useSiteManager();
   const currentSite = siteConfig.site;
-  
+
   console.log('🎯 POI BUTTONS: Using SiteManager:', { currentSite, isValid: siteConfig.isValid });
 
   // No POI fetching needed - buttons are hardcoded, dynamic categories disabled
-  
+
   // SiteManager handles all site changes automatically - no polling needed!
-  
+
   // Always use hardcoded buttons - dynamic categories are disabled
   const POI_BUTTONS = currentSite === 'zuhause' ? ZUHAUSE_POI_BUTTONS : KAMPERLAND_POI_BUTTONS;
-  
+
   console.log(`🔍 POI BUTTON DEBUG: Erkannte Site: "${currentSite}", verwende ${POI_BUTTONS.length} Buttons für ${currentSite}`);
 
   const handleCategoryClick = useCallback((category: string) => {

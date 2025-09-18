@@ -363,11 +363,28 @@ export default function Navigation() {
                    poi.sport || poiName.includes('sportplatz') || poiName.includes('spielplatz');
           }
 
-          // 🛒 Einkaufen (50 POIs - 4%)
+          // 🛒 Einkaufen (50+ POIs - 4%)
           if (selectedCategory === 'shop') {
-            return poi.shop === 'supermarket' || poi.shop === 'bakery' ||
-                   poi.shop === 'hairdresser' || poi.shop ||
-                   poiName.includes('markt') || poiName.includes('bäckerei') || poiName.includes('friseur');
+            const isShop = poi.shop ||  // Alle shop= Tags
+                          poi.amenity === 'marketplace' ||
+                          poiName.includes('markt') || 
+                          poiName.includes('bäckerei') || 
+                          poiName.includes('bakery') ||
+                          poiName.includes('friseur') ||
+                          poiName.includes('laden') ||
+                          poiName.includes('geschäft') ||
+                          poiName.includes('supermarket') ||
+                          poiName.includes('penny') ||
+                          poiName.includes('aldi') ||
+                          poiName.includes('netto') ||
+                          poiName.includes('lidl') ||
+                          poiName.includes('rewe') ||
+                          poiName.includes('edeka');
+
+            if (isShop) {
+              console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (shop: ${poi.shop}, amenity: ${poi.amenity})`);
+            }
+            return isShop;
           }
 
           // 🏥 Gesundheit & Bildung (28 POIs - 2%)
@@ -488,6 +505,15 @@ export default function Navigation() {
             }
           }
 
+          // Special handling for shop category
+          if (selectedCategory === 'shop') {
+            const hasShopTag = !!poi.shop;
+            if (hasShopTag) {
+              console.log(`✅ SHOP TAG MATCH: ${normalizePoiString(poi.name)} (shop: ${poi.shop})`);
+              return true;
+            }
+          }
+
           // For Zuhause, check raw OSM properties
           if (poi.amenity && selectedCategory === 'amenity') return true;
           if (poi.leisure && selectedCategory === 'leisure') return true;
@@ -524,6 +550,17 @@ export default function Navigation() {
     // Debug: Show which POIs matched
     if (displayPOIs.length > 0) {
       console.log(`🔍 FILTERING DEBUG: Matched POIs:`, displayPOIs.slice(0, 5).map(poi => ({ name: normalizePoiString(poi.name), category: normalizePoiString(poi.category) })));
+      
+      // Special debug for shop filter
+      if (filteredCategories.includes('shop')) {
+        const shopPOIs = allPOIs.filter(poi => poi.shop);
+        console.log(`🛒 SHOP DEBUG: Found ${shopPOIs.length} POIs with shop tag`);
+        console.log(`🛒 SHOP DEBUG: Sample shop POIs:`, shopPOIs.slice(0, 10).map(poi => ({ 
+          name: normalizePoiString(poi.name), 
+          shop: poi.shop, 
+          category: poi.category 
+        })));
+      }
     } else {
       console.log(`🔍 FILTERING DEBUG: No POIs matched filters. Analyzing...`);
       console.log(`🔍 FILTERING DEBUG: Filter categories:`, filteredCategories);
