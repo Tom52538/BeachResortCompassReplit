@@ -250,16 +250,49 @@ export const GroundNavigation = ({
             }
           }
 
-          // CRITICAL FIX: ALWAYS get fresh first instruction from current route
+          // CRITICAL FIX: Calculate REAL distance from current position to first waypoint
           let firstInstruction = null;
+          let actualDistance = null;
 
           // Log route data for debugging
           console.log('🔍 ROUTE DEBUG:', {
             hasInstructions: !!(route.instructions && route.instructions.length > 0),
             instructionCount: route.instructions?.length || 0,
             firstInstructionRaw: route.instructions?.[0],
-            fallbackReason: route.fallbackReason || 'none'
+            fallbackReason: route.fallbackReason || 'none',
+            hasGeometry: !!(route.geometry && route.geometry.length > 0),
+            currentPosition: currentPosition?.position
           });
+
+          // Calculate ACTUAL distance to first route point
+          if (route.geometry && route.geometry.length > 1 && currentPosition) {
+            const firstRoutePoint = {
+              lat: route.geometry[1][1], // Skip starting point, get first real waypoint
+              lng: route.geometry[1][0]
+            };
+
+            const currentPos = currentPosition.position;
+            
+            // Calculate real distance using haversine formula
+            const R = 6371e3; // Earth radius in meters
+            const φ1 = currentPos.lat * Math.PI/180;
+            const φ2 = firstRoutePoint.lat * Math.PI/180;
+            const Δφ = (firstRoutePoint.lat - currentPos.lat) * Math.PI/180;
+            const Δλ = (firstRoutePoint.lng - currentPos.lng) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            actualDistance = Math.round(R * c); // Distance in meters
+
+            console.log('📏 REAL DISTANCE CALCULATION:', {
+              currentPos,
+              firstRoutePoint,
+              calculatedDistance: actualDistance + 'm',
+              geometryPoints: route.geometry.length
+            });
+          }
 
           // Extract first instruction from current route - NO CACHING
           if (route.instructions && route.instructions.length > 0) {
@@ -271,7 +304,20 @@ export const GroundNavigation = ({
               firstInstruction = firstInstructionData.instruction;
             }
 
-            console.log('✅ EXTRACTED FIRST INSTRUCTION:', firstInstruction);
+            // REPLACE any distance in the instruction with ACTUAL calculated distance
+            if (firstInstruction && actualDistance !== null) {
+              // Remove any existing distance info and replace with real calculation
+              firstInstruction = firstInstruction.replace(/\d+\s*(m|meter|meters|km|kilometer|kilometers)/gi, '');
+              firstInstruction = `${actualDistance}m ${firstInstruction.trim()}`;
+              
+              console.log('✅ DISTANCE CORRECTED INSTRUCTION:', {
+                originalInstruction: route.instructions[0],
+                correctedInstruction: firstInstruction,
+                realDistance: actualDistance + 'm'
+              });
+            } else {
+              console.log('✅ EXTRACTED FIRST INSTRUCTION (no distance correction):', firstInstruction);
+            }
           }
 
           // NO FALLBACK to routeTracker - use ONLY current route data
