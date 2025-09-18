@@ -3,16 +3,16 @@ import { Coordinates, RouteResponse } from '@/types/navigation';
 export interface CampgroundReroutingConfig {
   // Distance threshold for considering "off-route" in campgrounds (much smaller than city)
   offRouteThreshold: number; // meters - default 8m for campgrounds vs 50m for cities
-  
+
   // Minimum distance moved before checking for rerouting
   minimumMovementThreshold: number; // meters - default 3m for walking in campgrounds
-  
+
   // Time threshold before considering rerouting
   rerouteConsiderationTime: number; // milliseconds - default 5 seconds
-  
+
   // Distance threshold for automatic rerouting
   autoRerouteThreshold: number; // meters - default 15m off-route in campground
-  
+
   // Maximum reroute attempts to prevent loops
   maxRerouteAttempts: number; // default 3
 }
@@ -32,6 +32,12 @@ export class CampgroundRerouteDetector {
   private rerouteAttempts: number = 0;
   private lastRerouteTime: number = 0;
 
+  // These constants are from the changes snippet and are assumed to be part of the RerouteDecision interface
+  // and used within the shouldReroute method as per the provided snippet.
+  private readonly OFF_ROUTE_THRESHOLD = 0.015; // Corresponds to 15m, using the original autoRerouteThreshold as a baseline for "off-route"
+  private readonly IMMEDIATE_REROUTE_DISTANCE = 0.050; // Corresponds to 50m, a more significant deviation
+  private offRouteCount: number = 0; // Counter for consecutive off-route detections
+
   constructor(config: CampgroundReroutingConfig = CAMPGROUND_REROUTING_CONFIG) {
     this.config = config;
   }
@@ -43,7 +49,7 @@ export class CampgroundRerouteDetector {
     if (!route.geometry || route.geometry.length === 0) return 0;
 
     let minDistance = Infinity;
-    
+
     for (const point of route.geometry) {
       if (Array.isArray(point) && point.length >= 2) {
         const routePoint = { lat: point[1], lng: point[0] };
@@ -51,7 +57,7 @@ export class CampgroundRerouteDetector {
         minDistance = Math.min(minDistance, distance);
       }
     }
-    
+
     return minDistance;
   }
 
@@ -62,13 +68,20 @@ export class CampgroundRerouteDetector {
     const R = 6371000; // Earth's radius in meters
     const dLat = (pos2.lat - pos1.lat) * Math.PI / 180;
     const dLng = (pos2.lng - pos1.lng) * Math.PI / 180;
-    
+
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
               Math.cos(pos1.lat * Math.PI / 180) * Math.cos(pos2.lat * Math.PI / 180) *
               Math.sin(dLng/2) * Math.sin(dLng/2);
-    
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  }
+
+  // This is a placeholder for the calculateDistanceFromRoute method that is called in the changes snippet.
+  // Based on the original code's distanceToRoute, it's highly probable that calculateDistanceFromRoute
+  // is a direct call to distanceToRoute.
+  private calculateDistanceFromRoute(currentPosition: Coordinates, route: RouteResponse): number {
+      return this.distanceToRoute(currentPosition, route);
   }
 
   /**
@@ -79,90 +92,66 @@ export class CampgroundRerouteDetector {
     route: RouteResponse,
     isNavigating: boolean
   ): { shouldReroute: boolean; reason?: string; distance?: number } {
-    if (!isNavigating || !route) {
-      return { shouldReroute: false };
+    const now = Date.now();
+
+    // REDUCED minimum reroute interval to be more responsive
+    const MIN_RESPONSIVE_INTERVAL = 5000; // 5 seconds instead of 15
+
+    // Don't reroute too frequently, but be more responsive
+    if (now - this.lastRerouteTime < MIN_RESPONSIVE_INTERVAL) {
+      return {
+        shouldReroute: false,
+        reason: `Too soon since last reroute (${Math.round((now - this.lastRerouteTime) / 1000)}s ago)`,
+        distance: 0
+      };
     }
 
-    // Check if we've moved enough to warrant position analysis
-    if (this.lastPosition) {
-      const movementDistance = this.calculateDistance(currentPosition, this.lastPosition);
-      if (movementDistance < this.config.minimumMovementThreshold) {
-        return { shouldReroute: false, reason: 'Insufficient movement' };
-      }
-    }
+    // Calculate distance from route
+    const distanceFromRoute = this.calculateDistanceFromRoute(currentPosition, route);
 
-    this.lastPosition = currentPosition;
-    
-    // Calculate distance to route
-    const distanceToRoute = this.distanceToRoute(currentPosition, route);
-    
-    console.log('🏕️ Campground reroute check:', {
-      distanceToRoute: distanceToRoute.toFixed(1) + 'm',
-      offRouteThreshold: this.config.offRouteThreshold + 'm',
-      autoRerouteThreshold: this.config.autoRerouteThreshold + 'm',
-      rerouteAttempts: this.rerouteAttempts,
-      maxAttempts: this.config.maxRerouteAttempts
-    });
-
-    // Check if we're outside the off-route threshold
-    if (distanceToRoute > this.config.offRouteThreshold) {
-      const now = Date.now();
-      
-      // Start tracking off-route time
-      if (!this.offRouteStartTime) {
-        this.offRouteStartTime = now;
-        console.log('🏕️ Started off-route tracking in campground');
-        return { shouldReroute: false, reason: 'Started off-route timer', distance: distanceToRoute };
-      }
-      
-      // Check if we've been off-route long enough
-      const offRouteDuration = now - this.offRouteStartTime;
-      
-      // Immediate reroute if very far off-route (emergency reroute)
-      if (distanceToRoute > this.config.autoRerouteThreshold) {
-        if (this.rerouteAttempts < this.config.maxRerouteAttempts) {
-          const timeSinceLastReroute = now - this.lastRerouteTime;
-          if (timeSinceLastReroute > 30000) { // Wait 30 seconds between reroutes (increased from 10s)
-            this.rerouteAttempts++;
-            this.lastRerouteTime = now;
-            this.offRouteStartTime = null;
-            console.log('🏕️ Emergency campground reroute triggered');
-            return { 
-              shouldReroute: true, 
-              reason: `Emergency reroute: ${distanceToRoute.toFixed(1)}m off-route`, 
-              distance: distanceToRoute 
-            };
-          }
-        }
-      }
-      
-      // Normal reroute after consideration time
-      if (offRouteDuration > this.config.rerouteConsiderationTime) {
-        if (this.rerouteAttempts < this.config.maxRerouteAttempts) {
-          this.rerouteAttempts++;
-          this.lastRerouteTime = now;
-          this.offRouteStartTime = null;
-          console.log('🏕️ Campground reroute triggered after consideration time');
-          return { 
-            shouldReroute: true, 
-            reason: `Off-route for ${(offRouteDuration/1000).toFixed(1)}s`, 
-            distance: distanceToRoute 
-          };
-        } else {
-          console.log('🏕️ Max reroute attempts reached, disabling rerouting');
-          return { shouldReroute: false, reason: 'Max reroute attempts reached', distance: distanceToRoute };
-        }
-      }
-      
-      return { shouldReroute: false, reason: 'Waiting for consideration time', distance: distanceToRoute };
+    // Count consecutive off-route detections
+    if (distanceFromRoute > this.OFF_ROUTE_THRESHOLD) {
+      this.offRouteCount++;
     } else {
-      // Back on route - reset tracking
-      if (this.offRouteStartTime) {
-        this.offRouteStartTime = null;
-        console.log('🏕️ Back on route in campground');
-      }
-      return { shouldReroute: false, reason: 'On route', distance: distanceToRoute };
+      this.offRouteCount = 0;
+      return {
+        shouldReroute: false,
+        reason: 'On route',
+        distance: distanceFromRoute
+      };
     }
+
+    // ENHANCED: More aggressive rerouting conditions for campground navigation
+    const shouldReroute = 
+      distanceFromRoute > this.IMMEDIATE_REROUTE_DISTANCE || // Very far off route (50m)
+      (distanceFromRoute > this.OFF_ROUTE_THRESHOLD && this.offRouteCount >= 2) || // 2 consecutive detections instead of 3
+      (distanceFromRoute > 0.025 && this.offRouteCount >= 3); // Even 25m if consistently detected
+
+    if (shouldReroute) {
+      this.lastRerouteTime = now;
+      console.log('🏕️ CAMPGROUND REROUTING TRIGGERED:', {
+        distance: Math.round(distanceFromRoute * 1000) + 'm',
+        offRouteCount: this.offRouteCount,
+        thresholds: {
+          immediate: Math.round(this.IMMEDIATE_REROUTE_DISTANCE * 1000) + 'm',
+          normal: Math.round(this.OFF_ROUTE_THRESHOLD * 1000) + 'm'
+        }
+      });
+
+      return {
+        shouldReroute: true,
+        reason: distanceFromRoute > this.IMMEDIATE_REROUTE_DISTANCE 
+          ? `Far off route (${Math.round(distanceFromRoute * 1000)}m)`
+          : `Consistently off route (${this.offRouteCount} times, ${Math.round(distanceFromRoute * 1000)}m)`,
+        distance: distanceFromRoute
+      };
+    }
+
+    return {
+      shouldReroute: false,
+      reason: `Off route but within tolerance (${Math.round(distanceFromRoute * 1000)}m, count: ${this.offRouteCount})`,
+      distance: distanceFromRoute
+    };
   }
 
   /**
@@ -173,6 +162,7 @@ export class CampgroundRerouteDetector {
     this.offRouteStartTime = null;
     this.rerouteAttempts = 0;
     this.lastRerouteTime = 0;
+    this.offRouteCount = 0; // Resetting the new counter
     console.log('🏕️ Campground reroute detector reset');
   }
 

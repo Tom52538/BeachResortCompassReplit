@@ -97,11 +97,16 @@ export const GroundNavigation = ({
     adaptiveTracking: true
   });
 
-  // Automatic rerouting handler
+  // FIXED: Enhanced automatic rerouting handler with proper state reset
   const handleAutoReroute = useCallback(async (offRouteDistance: number) => {
-    if (isRerouting || !currentPosition || !onRouteUpdate) return;
+    if (isRerouting || !currentPosition || !onRouteUpdate) {
+      console.log('🔄 REROUTING BLOCKED:', { isRerouting, hasPosition: !!currentPosition, hasUpdateCallback: !!onRouteUpdate });
+      return;
+    }
 
+    console.log('🔄 STARTING REROUTING from position:', currentPosition.position);
     setIsRerouting(true);
+    
     try {
       // Extract destination from current route
       const geometry = route.geometry;
@@ -114,30 +119,53 @@ export const GroundNavigation = ({
         lng: geometry[geometry.length - 1][0]
       };
 
+      console.log('🎯 REROUTING DESTINATION:', destination);
+
       const newRoute = await rerouteService.quickReroute(
         currentPosition.position,
         destination
       );
 
-      // Update the route
-      onRouteUpdate(newRoute);
+      console.log('✅ NEW ROUTE CALCULATED:', {
+        distance: newRoute.totalDistance,
+        instructions: newRoute.instructions?.length || 0
+      });
 
-      // Reset tracking state
+      // CRITICAL: Reset ALL navigation state before updating route
       setCurrentStepIndex(0);
       setOffRouteCount(0);
       setLastAnnouncedDistance(0);
+      setIsOffRoute(false);
+      setHasAnnouncedStart(false); // Force new start announcement
+      hasAnnouncedStartRef.current = false;
+      
+      // Reset announcement tracking completely
+      lastAnnouncementRef.current = { step: -1, distance: 999, time: 0 };
+
+      // Update the route - this will trigger new navigation
+      onRouteUpdate(newRoute);
 
       // Force route tracker to update with new route
       routeTracker.updateRoute(newRoute);
 
-      console.log('Route recalculated successfully - RouteTracker updated');
+      // Announce rerouting success
+      if (ttsClientRef.current) {
+        try {
+          await ttsClientRef.current.speak('Route neu berechnet. Neue Anweisungen folgen.', 'start');
+        } catch (error) {
+          console.warn('Reroute announcement failed:', error);
+        }
+      }
+
+      console.log('✅ REROUTING COMPLETE - All state reset for new navigation');
 
     } catch (error) {
-      console.error('Rerouting failed:', error);
+      console.error('❌ REROUTING FAILED:', error);
+      setNavigationError('Rerouting failed - continuing with original route');
     } finally {
       setIsRerouting(false);
     }
-  }, [isRerouting, currentPosition, route.geometry, rerouteService, onRouteUpdate]);
+  }, [isRerouting, currentPosition, route.geometry, rerouteService, onRouteUpdate, routeTracker]);
 
   // Route tracker instance
   const routeTracker = useMemo(() => {
@@ -166,7 +194,7 @@ export const GroundNavigation = ({
     }
   }, [route?.geometry, routeTracker]);
 
-  // Navigation start announcement with comprehensive error handling
+  // FIXED: Navigation start announcement with REAL first instruction
   useEffect(() => {
     const handleNavigationStart = async () => {
       // Early return with safety checks
@@ -209,44 +237,38 @@ export const GroundNavigation = ({
           hasAnnouncedStartRef.current = true;
           setHasAnnouncedStart(true);
 
-          const currentInstruction = routeTracker.getCurrentInstruction();
-          if (currentInstruction && currentInstruction.instruction && ttsClientRef.current) {
-            // Unique route-specific announcement with timestamp to prevent caching issues
-            const routeId = Date.now().toString().slice(-6); // Last 6 digits for uniqueness
-            const dynamicStartAnnouncement = `Navigation ${routeId} gestartet. ${currentInstruction.instruction}`;
+          // FIX: Get REAL first instruction from route.instructions instead of routeTracker
+          const firstInstruction = route.instructions && route.instructions.length > 0 
+            ? (typeof route.instructions[0] === 'string' ? route.instructions[0] : route.instructions[0].instruction)
+            : null;
+
+          if (firstInstruction && ttsClientRef.current) {
+            // Use REAL first instruction instead of generic one
+            const realStartAnnouncement = `Navigation gestartet. ${firstInstruction}`;
 
             try {
-              await ttsClientRef.current.speak(dynamicStartAnnouncement, 'start');
+              await ttsClientRef.current.speak(realStartAnnouncement, 'start');
+              console.log('🎤 FIXED: Using REAL first instruction:', realStartAnnouncement);
             } catch (error) {
               console.error('❌ Navigation Start TTS Error:', error);
               setNavigationError('Voice announcement failed - navigation continues');
             }
 
-            // Set up the announcement tracking
+            // Set up the announcement tracking with CORRECT initial state
             setTimeout(() => {
               lastAnnouncementRef.current = { step: 0, distance: 999, time: Date.now() };
             }, 1500);
 
-            console.log('🎤 ElevenLabs Dynamic Start (Eindeutige Route):', {
-              firstInstruction: currentInstruction.instruction,
-              fullAnnouncement: dynamicStartAnnouncement,
-              routeId: routeId,
-              uniqueKey: `start:${dynamicStartAnnouncement}`
-            });
           } else if (ttsClientRef.current) {
-            // Fallback if no instruction available with unique identifier
-            const routeId = Date.now().toString().slice(-6);
-            const fallbackAnnouncement = `Navigation ${routeId} gestartet. Folgen Sie den Anweisungen.`;
+            // Fallback if no instruction available
+            const fallbackAnnouncement = `Navigation gestartet. Folgen Sie den Anweisungen.`;
             try {
               await ttsClientRef.current.speak(fallbackAnnouncement, 'start');
             } catch (error) {
               console.error('❌ Navigation Start TTS Error:', error);
               setNavigationError('Voice announcement failed - navigation continues');
             }
-            console.log('🎤 ElevenLabs Fallback Start (Eindeutige Route):', {
-              announcement: fallbackAnnouncement,
-              routeId: routeId
-            });
+            console.log('🎤 ElevenLabs Fallback Start');
           }
         }
       } catch (error) {
@@ -288,14 +310,15 @@ export const GroundNavigation = ({
         const timeSinceLastAnnouncement = currentTime - lastAnnouncement.time;
         const distanceChange = Math.abs(progress.distanceToNext - lastAnnouncement.distance);
 
+        // FIXED: Prevent voice loops with better conditions
         // Only announce if:
-        // 1. Step changed OR
-        // 2. More than 30 seconds passed OR
-        // 3. Distance changed significantly (>50m)
+        // 1. Step changed (most important) OR
+        // 2. More than 30 seconds passed AND significant distance change OR
+        // 3. Very significant distance change (>100m) - user made real progress
         const shouldAnnounce =
           progress.currentStep !== lastAnnouncement.step ||
-          timeSinceLastAnnouncement > 30000 ||
-          distanceChange > 0.05;
+          (timeSinceLastAnnouncement > 30000 && distanceChange > 0.02) ||
+          distanceChange > 0.1; // 100m significant change to prevent loops
 
         if (shouldAnnounce) {
           const distanceInMeters = progress.distanceToNext * 1000;
@@ -359,18 +382,44 @@ export const GroundNavigation = ({
         setOffRouteCount(0); // Reset counter when back on route
       }
 
-      // Check for automatic rerouting using CampgroundRerouteDetector
+      // FIXED: Enhanced automatic rerouting with immediate trigger
       if (progress.isOffRoute) {
+        console.log('🚨 OFF-ROUTE DETECTED:', {
+          offRouteDistance: Math.round((progress.distanceToNext || 0) * 1000) + 'm',
+          offRouteCount: offRouteCount,
+          isRerouting: isRerouting
+        });
+
         const rerouteDecision = campgroundRerouteDetector.shouldReroute(
           currentPosition.position,
           route,
           isNavigating
         );
 
-        if (rerouteDecision.shouldReroute) {
-          console.log('🏕️ Automatic rerouting triggered:', rerouteDecision.reason);
+        // TRIGGER REROUTING IMMEDIATELY - don't wait for multiple off-route detections
+        if (rerouteDecision.shouldReroute && !isRerouting) {
+          console.log('🏕️ IMMEDIATE REROUTING TRIGGERED:', rerouteDecision.reason);
+          
+          // Clear voice announcements to prevent loops
+          if (ttsClientRef.current) {
+            try {
+              ttsClientRef.current.clearCache();
+              console.log('🧹 Cleared TTS cache before rerouting to prevent loops');
+            } catch (error) {
+              console.warn('TTS cache clear warning:', error);
+            }
+          }
+          
+          // Reset announcement tracking to prevent voice loops
+          lastAnnouncementRef.current = { step: -1, distance: 999, time: 0 };
+          
           handleAutoReroute(rerouteDecision.distance || 0);
         }
+      } else if (!progress.isOffRoute && isOffRoute) {
+        // Back on route - reset counters and announcement state
+        console.log('✅ BACK ON ROUTE - resetting state');
+        setOffRouteCount(0);
+        lastAnnouncementRef.current = { step: progress.currentStep, distance: progress.distanceToNext, time: Date.now() };
       }
 
       // Increment GPS update counter for performance monitoring
