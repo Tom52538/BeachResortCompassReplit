@@ -235,6 +235,5 @@ export class SpeedTracker {
       default:
         return '3.6 km/h (gemütlich)';
     }
-  };
   }
 }
