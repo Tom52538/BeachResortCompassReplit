@@ -1006,6 +1006,34 @@ export const translateInstruction = (instruction: string, lang: SupportedLanguag
 
   // German translation mappings - ordered by specificity (longer phrases first)
   const translations: Record<string, string> = {
+    // CRITICAL: Google Directions mixed-language fixes
+    'Head west on Im Hönzel': 'Auf Im Hönzel Richtung Westen fahren',
+    'Head east on Im Hönzel': 'Auf Im Hönzel Richtung Osten fahren',
+    'Head north on Im Hönzel': 'Auf Im Hönzel Richtung Norden fahren',
+    'Head south on Im Hönzel': 'Auf Im Hönzel Richtung Süden fahren',
+    '🚶 Head west on Im Hönzel': 'Auf Im Hönzel Richtung Westen gehen',
+    '🚶 Head east on Im Hönzel': 'Auf Im Hönzel Richtung Osten gehen',
+    '🚶 Head north on Im Hönzel': 'Auf Im Hönzel Richtung Norden gehen',
+    '🚶 Head south on Im Hönzel': 'Auf Im Hönzel Richtung Süden gehen',
+
+    // Generic Google Directions patterns (MOST SPECIFIC FIRST)
+    '🚶 Head west on (.+)': 'Auf $1 Richtung Westen gehen',
+    '🚶 Head east on (.+)': 'Auf $1 Richtung Osten gehen',
+    '🚶 Head north on (.+)': 'Auf $1 Richtung Norden gehen',
+    '🚶 Head south on (.+)': 'Auf $1 Richtung Süden gehen',
+    '🚶 Head northwest on (.+)': 'Auf $1 Richtung Nordwesten gehen',
+    '🚶 Head northeast on (.+)': 'Auf $1 Richtung Nordosten gehen',
+    '🚶 Head southwest on (.+)': 'Auf $1 Richtung Südwesten gehen',
+    '🚶 Head southeast on (.+)': 'Auf $1 Richtung Südosten gehen',
+    'Head west on (.+)': 'Auf $1 Richtung Westen fahren',
+    'Head east on (.+)': 'Auf $1 Richtung Osten fahren',
+    'Head north on (.+)': 'Auf $1 Richtung Norden fahren',
+    'Head south on (.+)': 'Auf $1 Richtung Süden fahren',
+    'Head northwest on (.+)': 'Auf $1 Richtung Nordwesten fahren',
+    'Head northeast on (.+)': 'Auf $1 Richtung Nordosten fahren',
+    'Head southwest on (.+)': 'Auf $1 Richtung Südwesten fahren',
+    'Head southeast on (.+)': 'Auf $1 Richtung Südosten fahren',
+
     // Walking instructions (most specific first)
     'Walk 396m to destination!': '396m zu Fuß zum Ziel!',
     'Walk to destination': 'Zu Fuß zum Ziel',
@@ -1090,15 +1118,23 @@ export const translateInstruction = (instruction: string, lang: SupportedLanguag
     'exit': 'Ausfahrt'
   };
 
-  let translatedInstruction = instruction;
+  // Remove emojis first for cleaner translation
+  let translatedInstruction = instruction.replace(/🚶/g, '').trim();
 
   // Apply translations in order of specificity (longest phrases first)
   const sortedTranslations = Object.entries(translations)
     .sort(([a], [b]) => b.length - a.length);
 
   for (const [english, german] of sortedTranslations) {
-    const regex = new RegExp(english.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    translatedInstruction = translatedInstruction.replace(regex, german);
+    // Check if pattern contains regex groups (for dynamic street names)
+    if (english.includes('(.+)')) {
+      const regex = new RegExp(english, 'gi');
+      translatedInstruction = translatedInstruction.replace(regex, german);
+    } else {
+      // Exact match replacement
+      const regex = new RegExp(english.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      translatedInstruction = translatedInstruction.replace(regex, german);
+    }
   }
 
   // Post-processing: Fix problematic word combinations that create confusion
