@@ -231,70 +231,73 @@ debugRouter.get('/poi-categories/:site?', async (req, res) => {
     console.log(`📊 POI CATEGORY ANALYSIS for site: ${site}`);
 
     // Load POI data for the specified site
-    const fs = require('fs');
-    const path = require('path');
-    const { transformGeoJSONToPOIs } = require('../lib/poiTransformer');
+    const { transformGeoJSONToPOIs } = await import('../lib/poiTransformer.js');
 
-    const dataPath = path.join(__dirname, '..', 'data', `${site}_pois.geojson`);
+    const dataPath = join(process.cwd(), 'server', 'data', `${site}_pois.geojson`);
 
-    if (!fs.existsSync(dataPath)) {
-      return res.status(404).json({ error: `No POI data found for site: ${site}` });
+    if (!readFileSync) {
+      return res.status(500).json({ error: 'File system not available' });
     }
 
-    const rawData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-    const pois = transformGeoJSONToPOIs(rawData, site);
+    try {
+      const rawData = JSON.parse(readFileSync(dataPath, 'utf8'));
+      const pois = transformGeoJSONToPOIs(rawData, site);
 
-    // Analyze categories
-    const categoryStats = {};
-    const poiDetails = [];
+      // Analyze categories
+      const categoryStats = {};
+      const poiDetails = [];
 
-    pois.forEach(poi => {
-      const category = poi.category || 'unknown';
+      pois.forEach(poi => {
+        const category = poi.category || 'unknown';
 
-      // Count categories
-      if (!categoryStats[category]) {
-        categoryStats[category] = { count: 0, examples: [] };
-      }
-      categoryStats[category].count++;
+        // Count categories
+        if (!categoryStats[category]) {
+          categoryStats[category] = { count: 0, examples: [] };
+        }
+        categoryStats[category].count++;
 
-      // Add first 3 examples per category
-      if (categoryStats[category].examples.length < 3) {
-        categoryStats[category].examples.push(poi.name);
-      }
+        // Add first 3 examples per category
+        if (categoryStats[category].examples.length < 3) {
+          categoryStats[category].examples.push(poi.name);
+        }
 
-      // Add to detailed list
-      poiDetails.push({
-        id: poi.id,
-        name: poi.name,
-        category: category,
-        amenity: poi.amenity || null,
-        shop: poi.shop || null,
-        leisure: poi.leisure || null,
-        tourism: poi.tourism || null,
-        building_type: poi.building_type || null,
-        roompot_category: poi.roompot_category || null
+        // Add to detailed list
+        poiDetails.push({
+          id: poi.id,
+          name: poi.name,
+          category: category,
+          amenity: poi.amenity || null,
+          shop: poi.shop || null,
+          leisure: poi.leisure || null,
+          tourism: poi.tourism || null,
+          building_type: poi.building_type || null,
+          roompot_category: poi.roompot_category || null
+        });
       });
-    });
 
-    // Sort categories by count
-    const sortedCategories = Object.entries(categoryStats)
-      .sort(([,a], [,b]) => b.count - a.count)
-      .reduce((acc, [key, value]) => {
-        acc[key] = value;
-        return acc;
-      }, {});
+      // Sort categories by count
+      const sortedCategories = Object.entries(categoryStats)
+        .sort(([,a], [,b]) => b.count - a.count)
+        .reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {});
 
-    const result = {
-      site,
-      totalPOIs: pois.length,
-      categoryOverview: sortedCategories,
-      allPOIs: poiDetails.sort((a, b) => a.name.localeCompare(b.name)),
-      timestamp: new Date().toISOString()
-    };
+      const result = {
+        site,
+        totalPOIs: pois.length,
+        categoryOverview: sortedCategories,
+        allPOIs: poiDetails.sort((a, b) => a.name.localeCompare(b.name)),
+        timestamp: new Date().toISOString()
+      };
 
-    console.log(`📊 POI Analysis complete: ${pois.length} POIs in ${Object.keys(categoryStats).length} categories`);
+      console.log(`📊 POI Analysis complete: ${pois.length} POIs in ${Object.keys(categoryStats).length} categories`);
 
-    res.json(result);
+      res.json(result);
+    } catch (fileError) {
+      return res.status(404).json({ error: `No POI data found for site: ${site}`, details: fileError.message });
+    }
+
   } catch (error) {
     console.error('POI category analysis error:', error);
     res.status(500).json({ error: 'POI analysis failed', details: error.message });
