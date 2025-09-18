@@ -124,10 +124,15 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
             hover:scale-105 active:scale-95`}
           style={{
             background: isButtonActive
-              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.7), rgba(59, 130, 246, 0.7))'
+              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(16, 185, 129, 0.95))'
               : 'rgba(255, 255, 255, 0.2)',
-            border: isButtonActive ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-            boxShadow: isButtonActive ? '0 3px 12px rgba(34, 197, 94, 0.3)' : 'none',
+            border: isButtonActive 
+              ? '2px solid rgba(34, 197, 94, 0.8)' 
+              : '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: isButtonActive 
+              ? '0 0 20px rgba(34, 197, 94, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
+              : 'none',
+            transform: isButtonActive ? 'translateZ(0)' : 'none',
           }}
           aria-label={displayLabel}
           onMouseEnter={() => {
@@ -142,7 +147,19 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
             console.log(`🔍 POI BUTTON DEBUG: Mouse left ${poi.category}`);
           }}
         >
-          <span className="text-sm">{displayIcon}</span>
+          <span 
+            className="text-sm transition-all duration-200"
+            style={{
+              filter: isButtonActive 
+                ? 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)) brightness(1.1)' 
+                : 'none',
+              textShadow: isButtonActive 
+                ? '0 1px 2px rgba(0, 0, 0, 0.2)' 
+                : 'none'
+            }}
+          >
+            {displayIcon}
+          </span>
         </button>
         {visibleTooltip === poi.category && createPortal(
           <div style={{
