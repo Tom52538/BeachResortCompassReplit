@@ -187,7 +187,7 @@ class ModernRoutingEngine {
       }
       
       // Generate turn-by-turn instructions from coordinates and path
-      const instructions = this.generateTurnByTurnInstructions(coordinates, path);
+      const instructions = this.generateTurnByTurnInstructions(coordinates, path, vehicleType);
       
       return {
         success: true,
@@ -215,14 +215,18 @@ class ModernRoutingEngine {
   }
   
   // Generate turn-by-turn instructions from coordinates and path
-  private generateTurnByTurnInstructions(coordinates: number[][], path: string[]): string[] {
+  private generateTurnByTurnInstructions(coordinates: number[][], path: string[], vehicleType: string = 'walking'): string[] {
     if (coordinates.length < 2) {
       return ['Sie haben Ihr Ziel erreicht'];
     }
     
-    console.log(`🗺️ INSTRUCTION GENERATION: Processing ${coordinates.length} coordinates`);
+    console.log(`🗺️ INSTRUCTION GENERATION: Processing ${coordinates.length} coordinates for ${vehicleType}`);
     const instructions: string[] = [];
     const significantPoints = this.findSignificantTurns(coordinates);
+    
+    // Get appropriate German verb based on vehicle type
+    const verb = this.getGermanVerbForVehicle(vehicleType);
+    console.log(`🇩🇪 INSTRUCTION VERB: Using "${verb}" for vehicle type "${vehicleType}"`);
     
     console.log(`🗺️ INSTRUCTION GENERATION: Found ${significantPoints.length} significant points`);
     
@@ -240,9 +244,9 @@ class ModernRoutingEngine {
       if (i === 0) {
         // First instruction with road name
         if (roadName) {
-          instruction = `Auf ${roadName} ${this.formatDistance(distance)} geradeaus fahren`;
+          instruction = `Auf ${roadName} ${this.formatDistance(distance)} geradeaus ${verb}`;
         } else {
-          instruction = `Geradeaus ${this.formatDistance(distance)} weitergehen`;
+          instruction = `Geradeaus ${this.formatDistance(distance)} ${verb}`;
         }
       } else if (i === significantPoints.length - 2) {
         // Last instruction - arrival
@@ -252,9 +256,9 @@ class ModernRoutingEngine {
         const prevIndex = significantPoints[i - 1];
         const maneuver = this.calculateTurnDirection(coordinates, prevIndex, currentIndex, nextIndex);
         if (roadName) {
-          instruction = `${maneuver} auf ${roadName} und ${this.formatDistance(distance)} fahren`;
+          instruction = `${maneuver} auf ${roadName} und ${this.formatDistance(distance)} ${verb}`;
         } else {
-          instruction = `${maneuver} und ${this.formatDistance(distance)} weitergehen`;
+          instruction = `${maneuver} und ${this.formatDistance(distance)} ${verb}`;
         }
       }
       
@@ -262,7 +266,23 @@ class ModernRoutingEngine {
       console.log(`📍 INSTRUCTION ${i + 1}: ${instruction}`);
     }
     
-    return instructions.length > 0 ? instructions : ['Geradeaus zum Ziel gehen', 'Sie haben Ihr Ziel erreicht'];
+    return instructions.length > 0 ? instructions : [`Geradeaus zum Ziel ${verb}`, 'Sie haben Ihr Ziel erreicht'];
+  }
+
+  // Get appropriate German verb for vehicle type
+  private getGermanVerbForVehicle(vehicleType: string): string {
+    switch (vehicleType) {
+      case 'driving':
+      case 'car':
+        return 'fahren';
+      case 'cycling':
+      case 'bike':
+        return 'radeln';
+      case 'walking':
+      case 'pedestrian':
+      default:
+        return 'gehen';
+    }
   }
   
   // Extract road name for a segment of the path

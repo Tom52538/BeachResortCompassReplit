@@ -447,7 +447,8 @@ export class SmartRoutingOrchestrator {
   private localizeToGerman(instruction: string, mode: string): string {
     // Skip if already in German
     if (this.isGermanInstruction(instruction)) {
-      return instruction;
+      // CRITICAL FIX: Even German instructions need verb correction
+      return this.correctGermanVerbs(instruction, mode);
     }
 
     const verb = this.getGermanTravelVerb(mode);
@@ -471,6 +472,41 @@ export class SmartRoutingOrchestrator {
     }
 
     return germanInstruction;
+  }
+
+  /**
+   * Correct German verbs in existing German instructions
+   */
+  private correctGermanVerbs(instruction: string, mode: string): string {
+    const verb = this.getGermanTravelVerb(mode);
+    
+    // Replace incorrect verbs with mode-appropriate ones
+    let corrected = instruction;
+    
+    if (mode === 'walking' || mode === 'pedestrian') {
+      // Replace "fahren" with "gehen" for walking
+      corrected = corrected
+        .replace(/fahren/gi, 'gehen')
+        .replace(/fahren Sie/gi, 'Gehen Sie')
+        .replace(/Fahren Sie/gi, 'Gehen Sie');
+    } else if (mode === 'cycling' || mode === 'bike') {
+      // Replace incorrect verbs with "radeln"
+      corrected = corrected
+        .replace(/fahren/gi, 'radeln')
+        .replace(/gehen/gi, 'radeln')
+        .replace(/Gehen Sie/gi, 'Radeln Sie')
+        .replace(/Fahren Sie/gi, 'Radeln Sie');
+    } else if (mode === 'driving' || mode === 'car') {
+      // Replace incorrect verbs with "fahren"
+      corrected = corrected
+        .replace(/gehen/gi, 'fahren')
+        .replace(/radeln/gi, 'fahren')
+        .replace(/Gehen Sie/gi, 'Fahren Sie')
+        .replace(/Radeln Sie/gi, 'Fahren Sie');
+    }
+    
+    console.log(`🇩🇪 VERB CORRECTION: "${instruction}" → "${corrected}" (mode: ${mode})`);
+    return corrected;
   }
 
   /**
