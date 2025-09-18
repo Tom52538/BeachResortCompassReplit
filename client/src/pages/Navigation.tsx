@@ -996,7 +996,7 @@ export default function Navigation() {
       title: t('alerts.siteChanged'),
       description: `${t('alerts.siteSwitched')} ${normalizePoiString(TEST_SITES.find(s => s.id === site)?.name) || site}`,
     });
-  }, [toast, t, setSite]);
+  }, [toast, currentSite, t, setSite]);
 
   const handleClearPOIs = useCallback(() => {
     setSearchQuery('');
