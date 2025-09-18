@@ -63,27 +63,12 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     console.log(`🔍 POI BUTTON DEBUG: Previous active categories:`, activeCategories);
     console.log(`🔍 POI BUTTON DEBUG: Button category type:`, typeof category, category);
 
-    // For Zuhause location, map to exact OSM categories based on analyzed data
-    let mappedCategory = category;
-    if (currentSite === 'zuhause') {
-      const categoryMapping = {
-        'parking': 'parking', // Direct: amenity=parking (575 POIs)
-        'gastronomie': 'gastronomie', // Direct mapping to gastronomie filter (25 POIs)
-        'accommodation': 'tourism', // tourism=camp_pitch,apartment,guest_house,chalet (58 POIs)
-        'services': 'information', // tourism=information,amenity=post_box,atm,post_office,townhall,police (80 POIs)
-        'kultur': 'place_of_worship', // amenity=place_of_worship (36 POIs)
-        'sport': 'leisure', // leisure=pitch,playground,stadium,swimming_pool + sport=* (120 POIs)
-        'shopping': 'shop', // shop=supermarket,bakery,hairdresser,etc (50 POIs)
-        'gesundheit': 'healthcare' // amenity=doctors,pharmacy,dentist + amenity=school,kindergarten (28 POIs)
-      };
-      mappedCategory = categoryMapping[category] || category;
-      console.log(`🔍 POI BUTTON DEBUG: Mapped "${category}" to "${mappedCategory}" for ${currentSite}`);
-    }
-
-    console.log(`🔍 POI BUTTON DEBUG: Calling onCategorySelect with: "${mappedCategory}"`);
+    // CRITICAL FIX: Always call onCategorySelect with the BUTTON category name
+    // The parent component will handle the mapping to OSM categories internally
+    console.log(`🔍 POI BUTTON DEBUG: Calling onCategorySelect with BUTTON category: "${category}"`);
     console.log(`🔍 POI BUTTON DEBUG: Expected button to become active: "${category}"`);
     
-    onCategorySelect(mappedCategory);
+    onCategorySelect(category);
     setVisibleTooltip(category);
 
     if (tooltipTimeoutRef.current) {
@@ -117,9 +102,15 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     // Enhanced debugging for active state
     console.log(`🔍 BUTTON RENDER DEBUG: Button ${index} - Category: "${poi.category}", Active categories:`, activeCategories);
     
+    // CRITICAL FIX: Check if this button's category is in the activeCategories array
+    // activeCategories now contains the button category names directly
     const isButtonActive = activeCategories.includes(poi.category);
     
-    console.log(`🔍 BUTTON ACTIVE DEBUG: Button "${poi.category}" - isActive: ${isButtonActive}`);
+    console.log(`🔍 BUTTON ACTIVE DEBUG: Button "${poi.category}" - isActive: ${isButtonActive}`, {
+      buttonCategory: poi.category,
+      activeCategories: activeCategories,
+      includes: activeCategories.includes(poi.category)
+    });
     
     const displayIcon = poi.icon;
     const displayLabel = poi.label; // Use German labels directly from button definition

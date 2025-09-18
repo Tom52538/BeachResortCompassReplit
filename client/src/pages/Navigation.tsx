@@ -246,32 +246,75 @@ export default function Navigation() {
       const poiName = normalizePoiString(poi.name).toLowerCase();
       const description = normalizePoiString(poi.description).toLowerCase();
 
-      const matchesCategory = filteredCategories.some(selectedCat => {
-        const selectedCategory = selectedCat.toLowerCase();
+      const matchesCategory = filteredCategories.some(buttonCategory => {
+        console.log(`🔍 FILTER MATCH DEBUG: Checking POI "${normalizePoiString(poi.name)}" (category: "${normalizePoiString(poi.category)}") against BUTTON filter "${buttonCategory}"`);
 
-        console.log(`🔍 FILTER MATCH DEBUG: Checking POI "${normalizePoiString(poi.name)}" (category: "${normalizePoiString(poi.category)}") against filter "${selectedCategory}"`);
-
-        // Direct match
-        if (poiCategory === selectedCategory) return true;
-
-        // Enhanced category mapping for better matching - based on analyzed concept
-        let categoryMappings: Record<string, string[]> = {};
-
+        // CRITICAL FIX: Map button categories to OSM filtering logic
         if (currentSite === 'zuhause') {
-          // Zuhause mappings - EXACT implementation of analyzed concept
-          categoryMappings = {
-            'parking': ['parking'], // amenity=parking (575 POIs)
-            'restaurant': ['restaurant', 'cafe', 'pub', 'fast_food', 'biergarten'], // Gastronomie (25 POIs)
-            'tourism': ['camp_pitch', 'apartment', 'guest_house', 'chalet'], // Übernachten (58 POIs)
-            'information': ['information', 'post_box', 'atm', 'post_office', 'townhall', 'police'], // Info & Services (80 POIs)
-            'place_of_worship': ['place_of_worship'], // Kultur & Religion (36 POIs)
-            'leisure': ['pitch', 'playground', 'stadium', 'swimming_pool'], // Sport & Freizeit (120 POIs)
-            'shop': ['supermarket', 'bakery', 'hairdresser'], // Einkaufen (50 POIs)
-            'healthcare': ['doctors', 'pharmacy', 'dentist', 'school', 'kindergarten'] // Gesundheit & Bildung (28 POIs)
-          };
+          // Map button categories to actual POI filtering
+          switch(buttonCategory) {
+            case 'parking':
+              return poi.amenity === 'parking' || poi.amenity === 'parking_space' ||
+                     poiName.includes('parking') || poiName.includes('parkplatz');
+            
+            case 'gastronomie':
+              const isGastronomie = poi.amenity === 'restaurant' ||
+                                   poi.amenity === 'cafe' ||
+                                   poi.amenity === 'pub' ||
+                                   poi.amenity === 'fast_food' ||
+                                   poi.amenity === 'biergarten' ||
+                                   poiName.includes('restaurant') ||
+                                   poiName.includes('cafe') ||
+                                   poiName.includes('gasthof') ||
+                                   poiName.includes('gasterie') ||
+                                   poiName.includes('kebap') ||
+                                   poiName.includes('pizzeria') ||
+                                   poiName.includes('sushi') ||
+                                   poiName.includes('grill');
+              if (isGastronomie) {
+                console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
+              }
+              return isGastronomie;
+            
+            case 'accommodation':
+              return poi.tourism === 'camp_pitch' || poi.tourism === 'apartment' ||
+                     poi.tourism === 'guest_house' || poi.tourism === 'chalet' ||
+                     poiName.includes('camping') || poiName.includes('ferienwohnung');
+            
+            case 'services':
+              return poi.tourism === 'information' || poi.amenity === 'post_box' ||
+                     poi.amenity === 'atm' || poi.amenity === 'post_office' ||
+                     poi.amenity === 'townhall' || poi.amenity === 'police' ||
+                     poiName.includes('info') || poiName.includes('rathaus');
+            
+            case 'kultur':
+              return poi.amenity === 'place_of_worship' || poi.building === 'church' ||
+                     poiName.includes('kirche') || poiName.includes('kapelle');
+            
+            case 'sport':
+              return poi.leisure === 'pitch' || poi.leisure === 'playground' ||
+                     poi.leisure === 'stadium' || poi.leisure === 'swimming_pool' ||
+                     poi.sport || poiName.includes('sportplatz') || poiName.includes('spielplatz');
+            
+            case 'shopping':
+              const isShop = poiCategory === 'shop' || !!poi.shop;
+              if (isShop) {
+                console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (category: ${poi.category}, shop: ${poi.shop})`);
+              }
+              return isShop;
+            
+            case 'gesundheit':
+              return poi.amenity === 'doctors' || poi.amenity === 'pharmacy' ||
+                     poi.amenity === 'dentist' || poi.amenity === 'school' ||
+                     poi.amenity === 'kindergarten' || poi.healthcare ||
+                     poiName.includes('arzt') || poiName.includes('apotheke') || poiName.includes('schule');
+            
+            default:
+              return false;
+          }
         } else {
-          // Kamperland-specific mappings (original)
-          categoryMappings = {
+          // Kamperland logic - map button categories to POI properties
+          const categoryMappings: Record<string, string[]> = {
             'leisure': ['leisure', 'entertainment', 'recreation', 'playground', 'sports', 'swimming', 'pool', 'wellness', 'spa', 'tennis', 'golf', 'volleyball', 'fitness'],
             'facilities': ['facilities', 'services', 'reception', 'swimming_pool', 'wellness', 'restaurant', 'shop', 'playground'],
             'services': ['services', 'reception', 'information', 'shop', 'supermarket', 'bike', 'laundry', 'medical'],
@@ -286,101 +329,52 @@ export default function Navigation() {
             'lodges_water': ['lodge', 'water', 'lodge 4', 'lodge4', 'watervilla', 'lodge4'],
             'bungalows_water': ['bungalow', 'water', 'watervilla', '4a', '4b', '6a', '6b']
           };
-        }
 
-        // Get mapped categories for this filter
-        const mappedCategories = categoryMappings[selectedCategory] || [];
+        // Get mapped categories for this button filter
+          const mappedCategories = categoryMappings[buttonCategory] || [];
 
-        // Check category matches first - be more flexible with matching
-        const categoryMatch = mappedCategories.some(mapped =>
-          poiCategory.includes(mapped) || mapped.includes(poiCategory)
-        );
+          // Check category matches first - be more flexible with matching
+          const categoryMatch = mappedCategories.some(mapped =>
+            poiCategory.includes(mapped) || mapped.includes(poiCategory)
+          );
 
-        // Check name matches for better detection
-        const nameMatch = mappedCategories.some(mapped =>
-          poiName.includes(mapped) || mapped.includes(poiName)
-        );
+          // Check name matches for better detection
+          const nameMatch = mappedCategories.some(mapped =>
+            poiName.includes(mapped) || mapped.includes(poiName)
+          );
 
-        // Check description for additional context
-        const descriptionMatch = mappedCategories.some(mapped =>
-          description.includes(mapped)
-        );
+          // Check description for additional context
+          const descriptionMatch = mappedCategories.some(mapped =>
+            description.includes(mapped)
+          );
 
-        // Zuhause-specific category handling based on exact data analysis
-        if (currentSite === 'zuhause') {
-          // 🚗 Verkehr & Parken (580 POIs - 45%)
-          if (selectedCategory === 'parking') {
-            return poi.amenity === 'parking' || poi.amenity === 'parking_space' ||
-                   poiName.includes('parking') || poiName.includes('parkplatz');
+        // Handle special accommodation types for Kamperland
+          if (buttonCategory === 'beach_houses') {
+            const roompotCat = normalizePoiString(poi.roompot_category).toLowerCase();
+            const safeName = normalizePoiString(poi.name).toLowerCase();
+            const safeBuildingType = normalizePoiString(poi.building_type).toLowerCase();
+
+            const hasBeachHouseBuildingType = safeBuildingType === 'beach house';
+            const hasBeachHouseInName = safeName.includes('beach house') || safeName.includes('strandhaus');
+            const hasBeachHouseInCategory = roompotCat.includes('beach house');
+
+            const isActualBeachHouse = hasBeachHouseBuildingType || hasBeachHouseInName || hasBeachHouseInCategory;
+            console.log(`🏖️ Beach house check for "${normalizePoiString(poi.name)}": ${isActualBeachHouse}`);
+            return isActualBeachHouse;
           }
 
-          // 🍽️ Gastronomie (25 POIs - 2%) - FIXED MAPPING
-          if (selectedCategory === 'gastronomie') {
-            const isGastronomie = poi.amenity === 'restaurant' ||
-                                 poi.amenity === 'cafe' ||
-                                 poi.amenity === 'pub' ||
-                                 poi.amenity === 'fast_food' ||
-                                 poi.amenity === 'biergarten' ||
-                                 poiName.includes('restaurant') ||
-                                 poiName.includes('cafe') ||
-                                 poiName.includes('gasthof') ||
-                                 poiName.includes('gasterie') ||
-                                 poiName.includes('kebap') ||
-                                 poiName.includes('pizzeria') ||
-                                 poiName.includes('sushi') ||
-                                 poiName.includes('grill');
+          // Handle other accommodation types for Kamperland
+          if (buttonCategory === 'bungalows') {
+            const safeBuildingType = normalizePoiString(poi.building_type).toLowerCase();
+            const safeName = normalizePoiString(poi.name).toLowerCase();
+            const roompotCat = normalizePoiString(poi.roompot_category).toLowerCase();
 
-            if (isGastronomie) {
-              console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
-            }
-            return isGastronomie;
+            return safeBuildingType === 'bungalow' ||
+                   safeName.includes('bungalow') ||
+                   roompotCat.includes('bungalow');
           }
 
-          // 🏨 Übernachten & Camping (58 POIs - 4%)
-          if (selectedCategory === 'tourism') {
-            return poi.tourism === 'camp_pitch' || poi.tourism === 'apartment' ||
-                   poi.tourism === 'guest_house' || poi.tourism === 'chalet' ||
-                   poiName.includes('camping') || poiName.includes('ferienwohnung');
-          }
-
-          // ℹ️ Info & Services (80 POIs - 6%)
-          if (selectedCategory === 'information') {
-            return poi.tourism === 'information' || poi.amenity === 'post_box' ||
-                   poi.amenity === 'atm' || poi.amenity === 'post_office' ||
-                   poi.amenity === 'townhall' || poi.amenity === 'police' ||
-                   poiName.includes('info') || poiName.includes('rathaus');
-          }
-
-          // ⛪ Kultur & Religion (36 POIs - 3%)
-          if (selectedCategory === 'place_of_worship') {
-            return poi.amenity === 'place_of_worship' || poi.building === 'church' ||
-                   poiName.includes('kirche') || poiName.includes('kapelle');
-          }
-
-          // 🏃 Sport & Freizeit (120 POIs - 9%)
-          if (selectedCategory === 'leisure') {
-            return poi.leisure === 'pitch' || poi.leisure === 'playground' ||
-                   poi.leisure === 'stadium' || poi.leisure === 'swimming_pool' ||
-                   poi.sport || poiName.includes('sportplatz') || poiName.includes('spielplatz');
-          }
-
-          // 🛒 Einkaufen - Verwendet jetzt die korrekte 'shop' Kategorie
-          if (selectedCategory === 'shop') {
-            const isShop = poiCategory === 'shop';
-
-            if (isShop) {
-              console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (category: ${poi.category})`);
-            }
-            return isShop;
-          }
-
-          // 🏥 Gesundheit & Bildung (28 POIs - 2%)
-          if (selectedCategory === 'healthcare') {
-            return poi.amenity === 'doctors' || poi.amenity === 'pharmacy' ||
-                   poi.amenity === 'dentist' || poi.amenity === 'school' ||
-                   poi.amenity === 'kindergarten' || poi.healthcare ||
-                   poiName.includes('arzt') || poiName.includes('apotheke') || poiName.includes('schule');
-          }
+          return categoryMatch || nameMatch || descriptionMatch;
         }
 
         // Special handling for accommodation types
@@ -926,11 +920,6 @@ export default function Navigation() {
     if (allPOIs && allPOIs.length > 0) {
       const actualCategories = Array.from(new Set(allPOIs.map(poi => poi.category))).sort();
       console.log('🔍 CATEGORY FILTER DEBUG: Available POI categories in data:', actualCategories);
-      console.log('🔍 CATEGORY FILTER DEBUG: Does clicked category exist in data?', actualCategories.includes(category));
-
-      // Show sample POIs for this category
-      const samplePOIs = allPOIs.filter(poi => poi.category === category).slice(0, 3);
-      console.log(`🔍 CATEGORY FILTER DEBUG: Sample POIs for "${category}":`, samplePOIs.map(poi => normalizePoiString(poi.name)));
     }
 
     setFilteredCategories(prev => {
@@ -939,12 +928,13 @@ export default function Navigation() {
         ? prev.filter(c => c !== category)
         : [...prev, category];
 
-      console.log('🔍 CATEGORY FILTER DEBUG: State change:', {
+      console.log('🔍 CATEGORY FILTER DEBUG: UI State change:', {
         action: isCurrentlySelected ? 'REMOVE' : 'ADD',
-        category: category,
+        buttonCategory: category,
         previousState: prev,
         newState: newCategories,
-        willShowPOIs: newCategories.length > 0
+        willShowPOIs: newCategories.length > 0,
+        buttonWillBeActive: !isCurrentlySelected
       });
 
       return newCategories;
