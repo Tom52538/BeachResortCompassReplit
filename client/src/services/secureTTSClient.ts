@@ -55,6 +55,49 @@ export class SecureTTSClient {
    * @param text Deutscher Navigation-Text
    * @param type Art der Navigation-Ansage
    */
+  /**
+   * Erstellt einen stillen Audio-Buffer als Fallback
+   */
+  private createSilentAudioBuffer(): ArrayBuffer {
+    // Minimaler WAV-Header für 1 Sekunde stillen Audio
+    const sampleRate = 44100;
+    const duration = 0.1; // 100ms stiller Audio
+    const numChannels = 1;
+    const bytesPerSample = 2;
+    const numSamples = sampleRate * duration;
+    const dataSize = numSamples * numChannels * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+    
+    // WAV Header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
+    view.setUint16(32, numChannels * bytesPerSample, true);
+    view.setUint16(34, 8 * bytesPerSample, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataSize, true);
+    
+    // Stille Daten (alle Nullen)
+    for (let i = 44; i < 44 + dataSize; i++) {
+      view.setUint8(i, 0);
+    }
+    
+    return buffer;
+  }
+
   async generateTTS(text: string, type: NavigationType = 'direction'): Promise<ArrayBuffer> {
     try {
       console.log('🌐 Secure TTS Request:', { text: text.slice(0, 50) + '...', type });
@@ -69,6 +112,13 @@ export class SecureTTSClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
+        
+        // Bei Quota-Exceeded oder anderen TTS-Fehlern: Fallback zu stillem Audio
+        if (response.status === 500 || response.status === 401) {
+          console.warn('⚠️ TTS API nicht verfügbar (Quota überschritten?) - Fallback zu stillem Audio');
+          return this.createSilentAudioBuffer();
+        }
+        
         throw new Error(errorData?.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -78,7 +128,9 @@ export class SecureTTSClient {
       return audioBuffer;
     } catch (error) {
       console.error('❌ Secure TTS Generation Error:', error);
-      throw error;
+      // Fallback zu stillem Audio anstatt Exception zu werfen
+      console.warn('⚠️ TTS Fallback: Verwende stilles Audio');
+      return this.createSilentAudioBuffer();
     }
   }
 
