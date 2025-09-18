@@ -132,21 +132,105 @@ export class SecureTTSClient {
    */
   async speak(text: string, type: NavigationType = 'direction'): Promise<void> {
     try {
-      const cacheKey = this.getCacheKey(text, type);
+      console.log('🎤 TTS SPEAK REQUEST:', { text: text.slice(0, 50) + '...', type });
 
-      // Cache-Check
+      // Cache-Prüfung
+      const cacheKey = this.getCacheKey(text, type);
       let audioBuffer = this.audioCache.get(cacheKey);
 
       if (!audioBuffer) {
-        console.log('🌐 Cache Miss - Generiere TTS:', text.slice(0, 30) + '...');
+        // Neue TTS-Generierung
+        console.log('🌐 Generating new TTS audio...');
         audioBuffer = await this.generateTTS(text, type);
         this.addToCache(cacheKey, audioBuffer);
+        console.log('✅ TTS audio generated and cached');
       } else {
-        console.log('⚡ Cache Hit - Sofortige Wiedergabe');
+        console.log('💾 TTS aus Cache verwendet:', text.slice(0, 50) + '...');
       }
 
-      await this.playAudio(audioBuffer);
-      console.log('✅ Sichere TTS-Wiedergabe abgeschlossen');
+      // FALLBACK: Use HTML5 Audio for better browser compatibility
+      try {
+        const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+
+        // Configure audio for optimal playback
+        audio.autoplay = true;
+        audio.volume = 1.0;
+        audio.preload = 'auto';
+
+        // Queue-Management für sequenzielle Wiedergabe
+        this.playbackQueue = this.playbackQueue.then(() => {
+          return new Promise<void>((resolve, reject) => {
+            const cleanup = () => {
+              URL.revokeObjectURL(audioUrl);
+            };
+
+            audio.onended = () => {
+              console.log('🔊 TTS HTML5 Audio beendet:', text.slice(0, 30) + '...');
+              cleanup();
+              resolve();
+            };
+
+            audio.onerror = (error) => {
+              console.error('❌ HTML5 Audio Error:', error);
+              cleanup();
+              reject(new Error('Audio playback failed'));
+            };
+
+            audio.oncanplaythrough = () => {
+              console.log('🔊 TTS HTML5 Audio ready to play');
+            };
+
+            // Attempt playback
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
+                console.log('🔊 TTS HTML5 Audio gestartet:', text.slice(0, 50) + '...');
+              }).catch((playError) => {
+                console.error('❌ HTML5 Audio Play Error:', playError);
+                console.warn('⚠️ Browser blockiert Auto-Play. User-Interaktion erforderlich.');
+                cleanup();
+                reject(new Error('Audio play blocked by browser policy'));
+              });
+            }
+          });
+        });
+
+        await this.playbackQueue;
+      } catch (audioError) {
+        console.error('❌ HTML5 Audio fallback failed:', audioError);
+
+        // SECONDARY FALLBACK: Try AudioContext
+        try {
+          console.log('🔄 Trying AudioContext fallback...');
+          const audioContext = await this.initAudioContext();
+          const audioData = await audioContext.decodeAudioData(audioBuffer.slice(0));
+
+          const source = audioContext.createBufferSource();
+          source.buffer = audioData;
+          source.connect(audioContext.destination);
+
+          await new Promise<void>((resolve, reject) => {
+            source.onended = () => {
+              console.log('🔊 TTS AudioContext beendet:', text.slice(0, 30) + '...');
+              resolve();
+            };
+
+            try {
+              source.start();
+              console.log('🔊 TTS AudioContext gestartet:', text.slice(0, 50) + '...');
+            } catch (startError) {
+              console.error('❌ AudioContext start error:', startError);
+              reject(startError);
+            }
+          });
+        } catch (contextError) {
+          console.error('❌ AudioContext fallback also failed:', contextError);
+          throw new Error('All audio playback methods failed');
+        }
+      }
     } catch (error) {
       console.error('❌ Secure TTS Error:', error);
       throw error;

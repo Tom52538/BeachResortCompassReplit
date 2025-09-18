@@ -56,6 +56,19 @@ export const GroundNavigation = ({
           setIsInitialized(true);
           ttsClientRef.current = new SecureTTSClient();
           console.log('🎤 TTS Client initialized for ground navigation');
+          
+          // Test TTS connection immediately
+          try {
+            const testResult = await ttsClientRef.current.testConnection();
+            console.log('🧪 TTS Connection Test Result:', testResult);
+            if (!testResult.available || !testResult.connected) {
+              throw new Error(testResult.error || 'TTS service not available');
+            }
+          } catch (testError) {
+            console.error('❌ TTS Connection Test Failed:', testError);
+            setNavigationError('TTS service unavailable - check console for details');
+          }
+          
           setNavigationError(null);
         } catch (error) {
           console.error('❌ Failed to initialize TTS client:', error);
@@ -810,32 +823,65 @@ export const GroundNavigation = ({
             <button
               onClick={async () => {
                 if (ttsClientRef.current) {
-                  console.log('🧪 Testing ElevenLabs Navigation System...');
-
-                  // Simulate realistic German navigation with ElevenLabs
+                  console.log('🧪 Testing ElevenLabs Navigation System with User Interaction...');
+                  
+                  // CRITICAL: User interaction enables audio playback
                   try {
-                    await ttsClientRef.current.speak('Navigation gestartet. Geradeaus weiterfahren für 200 Meter', 'start');
+                    // Test immediate audio playback (user gesture required)
+                    console.log('🎤 Testing immediate TTS with user gesture...');
+                    await ttsClientRef.current.speak('TTS Test erfolgreich. Navigation kann starten.', 'start');
+                    
+                    console.log('✅ FIRST TTS SUCCESS - Now testing navigation sequence...');
+                    
+                    // Now test the full navigation sequence
+                    setTimeout(async () => {
+                      try {
+                        await ttsClientRef.current?.speak('Navigation gestartet. Geradeaus weiterfahren für 200 Meter', 'start');
+                      } catch (error) {
+                        console.error('❌ Navigation start TTS failed:', error);
+                      }
+                    }, 1500);
 
                     setTimeout(async () => {
-                      await ttsClientRef.current?.speak('In 100 Metern links abbiegen', 'direction');
-                    }, 2000);
-
-                    setTimeout(async () => {
-                      await ttsClientRef.current?.speak('Gleich links abbiegen', 'direction');
+                      try {
+                        await ttsClientRef.current?.speak('In 100 Metern links abbiegen', 'direction');
+                      } catch (error) {
+                        console.error('❌ Direction TTS failed:', error);
+                      }
                     }, 4000);
 
                     setTimeout(async () => {
-                      await ttsClientRef.current?.speak('Links abbiegen auf Mariapolderseweg', 'direction');
+                      try {
+                        await ttsClientRef.current?.speak('Gleich links abbiegen', 'direction');
+                      } catch (error) {
+                        console.error('❌ Direction TTS failed:', error);
+                      }
                     }, 6000);
 
                     setTimeout(async () => {
-                      await ttsClientRef.current?.speak('Sie haben Ihr Ziel erreicht', 'arrival');
+                      try {
+                        await ttsClientRef.current?.speak('Links abbiegen auf Mariapolderseweg', 'direction');
+                      } catch (error) {
+                        console.error('❌ Direction TTS failed:', error);
+                      }
                     }, 8000);
 
-                    console.log('✅ ElevenLabs Navigation test sequence started');
+                    setTimeout(async () => {
+                      try {
+                        await ttsClientRef.current?.speak('Sie haben Ihr Ziel erreicht', 'arrival');
+                      } catch (error) {
+                        console.error('❌ Arrival TTS failed:', error);
+                      }
+                    }, 10000);
+
+                    console.log('✅ ElevenLabs Navigation test sequence started with user gesture');
                   } catch (error) {
-                    console.error('❌ Navigation test failed:', error);
+                    console.error('❌ Initial TTS test failed:', error);
+                    setNavigationError(`TTS Test Failed: ${error.message}`);
                   }
+                } else {
+                  console.error('❌ TTS Client not available for testing');
+                  setNavigationError('TTS Client not initialized - refresh page');
                 }
               }}
               className="p-3 rounded-full transition-all duration-200 hover:scale-105"
@@ -845,9 +891,9 @@ export const GroundNavigation = ({
                 border: '1px solid rgba(59, 130, 246, 0.3)',
                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
               }}
-              title="Test Navigation & Voice (Click to test without real GPS navigation)"
+              title="Test Navigation & Voice - CLICK REQUIRED for browser audio permission"
             >
-              <span className="text-sm font-bold text-blue-600">🧪</span>
+              <span className="text-sm font-bold text-blue-600">🧪 TTS</span>
             </button>
 
             <button
