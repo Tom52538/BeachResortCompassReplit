@@ -1331,17 +1331,7 @@ export default function Navigation() {
             <MobileMemoryMonitor />
           )}
 
-          {/* Top Bar */}
-          <TopBar
-            searchQuery={searchQuery}
-            onSearch={setSearchQuery}
-            showNetworkDebug={showNetworkDebug}
-            onToggleNetworkDebug={() => setShowNetworkDebug(!showNetworkDebug)}
-            showGridVisualization={showGridVisualization}
-            onToggleGridVisualization={() => setShowGridVisualization(!showGridVisualization)}
-            isNavigating={isNavigating}
-            routeTracker={routeTrackerRef.current} // Pass the ref or its current value
-          />
+          
 
           <div className="flex h-[calc(100vh-4rem)]">
             {/* Main Map Area */}
