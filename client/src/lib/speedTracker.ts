@@ -196,8 +196,45 @@ export class SpeedTracker {
     };
   }
 
-  // Quick method to get ETA for a specific travel mode
+  // Quick method to get ETA for a specific travel mode with German verb
   getETAForMode(remainingDistance: number, travelMode: 'car' | 'bike' | 'pedestrian'): ETAUpdate {
-    return this.calculateUpdatedETA(remainingDistance, travelMode);
+    const eta = this.calculateUpdatedETA(remainingDistance, travelMode);
+    
+    // Add German travel context
+    const verb = this.getGermanTravelVerb(travelMode);
+    
+    return {
+      ...eta,
+      travelContext: {
+        mode: travelMode,
+        verb: verb,
+        speedText: this.getSpeedDescription(travelMode)
+      }
+    };
+  }
+
+  private getGermanTravelVerb(mode: 'car' | 'bike' | 'pedestrian'): string {
+    switch (mode) {
+      case 'car':
+        return 'Fahren';
+      case 'bike': 
+        return 'Radfahren';
+      case 'pedestrian':
+      default:
+        return 'Gehen';
+    }
+  }
+
+  private getSpeedDescription(mode: 'car' | 'bike' | 'pedestrian'): string {
+    switch (mode) {
+      case 'car':
+        return '15 km/h (Campingplatz)';
+      case 'bike':
+        return '7.2 km/h (vorsichtig)';
+      case 'pedestrian':
+      default:
+        return '3.6 km/h (gemütlich)';
+    }
+  };
   }
 }

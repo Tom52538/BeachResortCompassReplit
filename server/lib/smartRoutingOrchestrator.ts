@@ -195,10 +195,14 @@ export class SmartRoutingOrchestrator {
       if (osmResult.success) {
         console.log(`🗺️ MODERN ENGINE: Generated ${osmResult.route.instructions?.length || 0} instructions:`, osmResult.route.instructions);
         
-        // Check instruction quality - if too generic, attempt Google Directions fallback but keep OSM as backup
-        const instructions = osmResult.route.instructions && osmResult.route.instructions.length > 0 
+        // Check instruction quality and apply German localization
+        let instructions = osmResult.route.instructions && osmResult.route.instructions.length > 0 
           ? osmResult.route.instructions 
-          : [`Walk ${osmResult.route.distance}m to destination`];
+          : [this.createGermanInstruction(osmResult.route.distance, mode)];
+        
+        // Apply German localization to all instructions
+        instructions = instructions.map(instruction => this.localizeToGerman(instruction, mode));
+        
         const hasGenericInstructions = this.hasLowQualityInstructions(instructions);
         
         if (hasGenericInstructions) {
@@ -239,12 +243,17 @@ export class SmartRoutingOrchestrator {
             const googleResult = await this.googleDirections.calculateRoute(start, end, mode);
             if (googleResult.success) {
               console.log('✅ GOOGLE UPGRADE: Using Google Directions instead of generic OSM instructions');
+              // Apply German localization to Google Directions instructions
+              const localizedInstructions = googleResult.instructions.map(instruction => 
+                this.localizeToGerman(instruction, mode)
+              );
+              
               const route: Route = {
                 success: true,
                 path: googleResult.path,
                 distance: googleResult.distance,
                 estimatedTime: googleResult.estimatedTime,
-                instructions: googleResult.instructions,
+                instructions: localizedInstructions,
                 method: 'google-directions-upgrade',
                 confidence: googleResult.confidence
               };
@@ -400,6 +409,76 @@ export class SmartRoutingOrchestrator {
         .filter(([, value]) => Date.now() - value.timestamp > this.CACHE_TTL)
         .forEach(([key]) => this.routeCache.delete(key));
     }
+  }
+
+  /**
+   * Create German instruction based on travel mode
+   */
+  private createGermanInstruction(distance: number, mode: string): string {
+    const verb = this.getGermanTravelVerb(mode);
+    const distanceText = distance >= 1000 
+      ? `${(distance / 1000).toFixed(1)} km` 
+      : `${Math.round(distance)} m`;
+    
+    return `${verb} ${distanceText} geradeaus zum Ziel`;
+  }
+
+  /**
+   * Get German travel verb based on mode
+   */
+  private getGermanTravelVerb(mode: string): string {
+    switch (mode) {
+      case 'driving':
+      case 'car':
+        return 'Fahren Sie';
+      case 'cycling':
+      case 'bike':
+        return 'Radeln Sie';
+      case 'walking':
+      case 'pedestrian':
+      default:
+        return 'Gehen Sie';
+    }
+  }
+
+  /**
+   * Localize instruction to German based on travel mode
+   */
+  private localizeToGerman(instruction: string, mode: string): string {
+    // Skip if already in German
+    if (this.isGermanInstruction(instruction)) {
+      return instruction;
+    }
+
+    const verb = this.getGermanTravelVerb(mode);
+    
+    // Common English to German replacements
+    let germanInstruction = instruction
+      .replace(/Head west/gi, `${verb} nach Westen`)
+      .replace(/Head east/gi, `${verb} nach Osten`)
+      .replace(/Head north/gi, `${verb} nach Norden`)
+      .replace(/Head south/gi, `${verb} nach Süden`)
+      .replace(/Turn left/gi, 'Links abbiegen')
+      .replace(/Turn right/gi, 'Rechts abbiegen')
+      .replace(/Continue straight/gi, `${verb} geradeaus weiter`)
+      .replace(/Walk/gi, verb)
+      .replace(/Drive/gi, verb)
+      .replace(/Cycle/gi, verb);
+
+    // Add distance and direction context for better navigation
+    if (germanInstruction.includes('auf') && !germanInstruction.includes(verb)) {
+      germanInstruction = `${verb} ${germanInstruction.toLowerCase()}`;
+    }
+
+    return germanInstruction;
+  }
+
+  /**
+   * Check if instruction is already in German
+   */
+  private isGermanInstruction(instruction: string): boolean {
+    const germanKeywords = ['gehen', 'fahren', 'radeln', 'geradeaus', 'links', 'rechts', 'abbiegen', 'weiter'];
+    return germanKeywords.some(keyword => instruction.toLowerCase().includes(keyword));
   }
 
   /**
