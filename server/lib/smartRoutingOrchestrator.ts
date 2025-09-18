@@ -101,12 +101,18 @@ export class SmartRoutingOrchestrator {
     try {
       const googleResult = await this.googleDirections.calculateRoute(start, end, mode);
       if (googleResult.success) {
+        // CRITICAL FIX: Apply German localization AND verb correction to direct Google fallback
+        const localizedInstructions = googleResult.instructions.map(instruction => {
+          const localized = this.localizeToGerman(instruction, mode);
+          return this.correctGermanVerbs(localized, mode);
+        });
+
         const route: Route = {
           success: true,
           path: googleResult.path,
           distance: googleResult.distance,
           estimatedTime: googleResult.estimatedTime,
-          instructions: googleResult.instructions,
+          instructions: localizedInstructions,
           method: 'google-directions-direct',
           confidence: googleResult.confidence,
           fallbackReason: fallbackReason // Add fallback reason to route
@@ -243,10 +249,12 @@ export class SmartRoutingOrchestrator {
             const googleResult = await this.googleDirections.calculateRoute(start, end, mode);
             if (googleResult.success) {
               console.log('✅ GOOGLE UPGRADE: Using Google Directions instead of generic OSM instructions');
-              // Apply German localization to Google Directions instructions
-              const localizedInstructions = googleResult.instructions.map(instruction => 
-                this.localizeToGerman(instruction, mode)
-              );
+              // Apply German localization AND verb correction to Google Directions instructions
+              const localizedInstructions = googleResult.instructions.map(instruction => {
+                const localized = this.localizeToGerman(instruction, mode);
+                // CRITICAL: Apply verb correction for mode-specific instructions
+                return this.correctGermanVerbs(localized, mode);
+              });
 
               const route: Route = {
                 success: true,
@@ -305,12 +313,18 @@ export class SmartRoutingOrchestrator {
       const googleResult = await this.googleDirections.calculateRoute(start, end, mode);
 
       if (googleResult.success) {
+        // CRITICAL FIX: Apply German localization AND verb correction to final Google fallback
+        const localizedInstructions = googleResult.instructions.map(instruction => {
+          const localized = this.localizeToGerman(instruction, mode);
+          return this.correctGermanVerbs(localized, mode);
+        });
+
         const route: Route = {
           success: true,
           path: googleResult.path,
           distance: googleResult.distance,
           estimatedTime: googleResult.estimatedTime,
-          instructions: googleResult.instructions,
+          instructions: localizedInstructions,
           method: 'google-directions-fallback',
           confidence: googleResult.confidence,
           fallbackReason: 'Lokales Routing-Netzwerk nicht verfügbar - verwende Google Directions'
