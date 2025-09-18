@@ -637,6 +637,65 @@ export const GroundNavigation = ({
     onEndNavigation();
   };
 
+  // Calculate REAL distance to next instruction using current GPS position
+  const calculateRealDistanceToNextInstruction = () => {
+    if (!currentPosition || !route.geometry || route.geometry.length === 0) {
+      return currentInstruction?.distance || '0m';
+    }
+
+    try {
+      // Get current GPS position
+      const currentLat = currentPosition.position.lat;
+      const currentLng = currentPosition.position.lng;
+
+      // Find next significant waypoint in route geometry
+      let nearestPointIndex = 0;
+      let minDistance = Infinity;
+
+      // Find closest point on route to current position
+      for (let i = 0; i < route.geometry.length; i++) {
+        const [routeLng, routeLat] = route.geometry[i];
+        const distance = calculateDistanceBetweenPoints(
+          currentLat, currentLng, routeLat, routeLng
+        );
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestPointIndex = i;
+        }
+      }
+
+      // Calculate distance to next instruction waypoint (ahead on route)
+      let targetIndex = Math.min(nearestPointIndex + 10, route.geometry.length - 1);
+      const [targetLng, targetLat] = route.geometry[targetIndex];
+      
+      const realDistance = calculateDistanceBetweenPoints(
+        currentLat, currentLng, targetLat, targetLng
+      );
+
+      return formatDistance(realDistance / 1000); // Convert to km for formatDistance
+    } catch (error) {
+      console.error('❌ Real distance calculation error:', error);
+      return currentInstruction?.distance || '0m';
+    }
+  };
+
+  // Helper function to calculate distance between two GPS points
+  const calculateDistanceBetweenPoints = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371000; // Earth radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lng2 - lng1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
+  };
+
   // Format remaining distance and time from route progress
   const formatDistance = (km: number) => {
     if (km < 1) return `${Math.round(km * 1000)}m`;
@@ -693,7 +752,7 @@ export const GroundNavigation = ({
                 textShadow: '0 1px 2px rgba(255, 255, 255, 0.6)'
               }}
             >
-              In {routeProgress ? formatDistance(routeProgress.distanceToNext) : currentInstruction.distance}
+              In {calculateRealDistanceToNextInstruction()}
             </p>
           </div>
           {isOffRoute && (
