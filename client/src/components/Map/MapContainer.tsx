@@ -22,7 +22,7 @@ Icon.Default.mergeOptions({
 // Helper for creating div icons (assuming divIcon is imported from leaflet or a custom hook)
 // If divIcon is not available globally, it needs to be imported. Assuming it's imported from leaflet.
 import { divIcon } from 'leaflet';
-import { NetworkOverlay } from './NetworkOverlay';
+import { NetworkOverlay, NetworkOverlayData } from './NetworkOverlay';
 
 
 interface MapContainerProps {
@@ -41,6 +41,7 @@ interface MapContainerProps {
   mapStyle: 'outdoors' | 'satellite' | 'streets' | 'navigation';
   destinationMarker?: { lat: number; lng: number } | null;
   showNetworkOverlay?: boolean;
+  networkOverlayData?: NetworkOverlayData | null;
   children?: React.ReactNode;
   rotation?: number;
   onRotate?: (rotation: number) => void;
@@ -195,6 +196,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   mapStyle,
   destinationMarker,
   showNetworkOverlay = false,
+  networkOverlayData = null,
   children,
   rotation = 0,
   onRotate,
@@ -443,7 +445,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         ))}
 
         {/* Network overlay - show routing network */}
-        <NetworkOverlay visible={showNetworkOverlay} />
+        <NetworkOverlay visible={showNetworkOverlay} data={networkOverlayData} />
 
         {/* Glassmorphism route line */}
         {route && <RoutePolyline route={route} />}

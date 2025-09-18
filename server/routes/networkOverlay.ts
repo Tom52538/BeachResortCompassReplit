@@ -25,11 +25,14 @@ interface NetworkOverlayData {
 }
 
 // Generate network overlay data from GeoJSON
-function generateNetworkOverlay(): NetworkOverlayData {
-  console.log('🗺️ NETWORK OVERLAY: Generating visualization data...');
+function generateNetworkOverlay(site: 'kamperland' | 'zuhause' = 'zuhause'): NetworkOverlayData {
+  console.log(`🗺️ NETWORK OVERLAY: Generating visualization data for site: ${site}`);
   
   try {
-    const geojsonPath = './server/data/roompot_routing_network.geojson';
+    const filename = site === 'kamperland' ? 'roompot_routing_network.geojson' : 'zuhause_routing_network.geojson';
+    const geojsonPath = `./server/data/${filename}`;
+    console.log(`🗺️ NETWORK OVERLAY: Loading data from ${geojsonPath}`);
+
     const geojsonData = JSON.parse(readFileSync(geojsonPath, 'utf-8'));
     
     const nodeMap = new Map();
@@ -174,8 +177,9 @@ function getComponentSize(startNodeId: string, nodeMap: Map<string, any>, visite
 // API endpoint
 router.get('/', (req: Request, res: Response) => {
   try {
-    console.log('🗺️ Network overlay data requested');
-    const overlayData = generateNetworkOverlay();
+    const site = req.query.site === 'kamperland' ? 'kamperland' : 'zuhause';
+    console.log(`🗺️ Network overlay data requested for site: ${site}`);
+    const overlayData = generateNetworkOverlay(site);
     
     res.json({
       success: true,

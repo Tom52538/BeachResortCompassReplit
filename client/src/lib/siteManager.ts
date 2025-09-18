@@ -79,6 +79,7 @@ class SiteManagerClass {
    * Change the current site and notify all components
    */
   setSite(newSite: Site): void {
+    console.log(`🎯 SITE MANAGER: setSite called with ${newSite}. Current site is ${this.currentSite}`);
     if (newSite === this.currentSite) {
       console.log(`🎯 SITE MANAGER: Site already set to "${newSite}", no change needed`);
       return;

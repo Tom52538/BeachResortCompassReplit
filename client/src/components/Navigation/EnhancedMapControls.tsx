@@ -21,6 +21,7 @@ interface EnhancedMapControlsProps {
   onToggleCompass: () => void;
   showNetworkOverlay: boolean;
   onToggleNetworkOverlay: () => void;
+  isNetworkOverlayLoading?: boolean;
 }
 
 const mapStyleConfig = {
@@ -51,7 +52,8 @@ export const EnhancedMapControls: React.FC<EnhancedMapControlsProps> = ({
   compassMode,
   onToggleCompass,
   showNetworkOverlay,
-  onToggleNetworkOverlay
+  onToggleNetworkOverlay,
+  isNetworkOverlayLoading
 }) => {
   const [showVoicePanel, setShowVoicePanel] = useState(false);
   const mapStyleOptions = Object.entries(mapStyleConfig) as [keyof typeof mapStyleConfig, typeof mapStyleConfig[keyof typeof mapStyleConfig]][];
@@ -183,7 +185,11 @@ export const EnhancedMapControls: React.FC<EnhancedMapControlsProps> = ({
         {/* Network Overlay Toggle */}
         {renderControlButton(
           onToggleNetworkOverlay,
-          <Layers className="w-5 h-5 text-white" />,
+          isNetworkOverlayLoading ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <Layers className="w-5 h-5 text-white" />
+          ),
           showNetworkOverlay ? 'Netzwerk-Overlay ausblenden' : 'Netzwerk-Overlay anzeigen',
           showNetworkOverlay
         )}
