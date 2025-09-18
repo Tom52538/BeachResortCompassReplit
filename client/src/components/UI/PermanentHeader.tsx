@@ -101,18 +101,7 @@ export const PermanentHeader = ({
         </div>
       </div>
 
-      {/* Site Indicator */}
-      <div className="px-4 pb-2">
-        <div className="flex items-center justify-center">
-          <div className="text-xs text-gray-500 px-3 py-1 rounded-full border border-white/20"
-               style={{
-                 background: 'rgba(255, 255, 255, 0.7)',
-                 backdropFilter: 'blur(6px)'
-               }}>
-            📍 {TEST_SITES.find(site => site.id === currentSite)?.name || currentSite}
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 };

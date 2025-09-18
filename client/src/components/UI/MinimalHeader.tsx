@@ -94,14 +94,7 @@ export const MinimalHeader = ({
         </div>
       </div>
 
-      {/* Current Site Indicator */}
-      <div className="px-4 pb-2">
-        <div className="flex items-center justify-center">
-          <div className="text-xs text-gray-500 bg-gray-100/80 px-2 py-1 rounded-full">
-            📍 {SITE_NAMES[currentSite]}
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 };
