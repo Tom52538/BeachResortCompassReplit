@@ -52,10 +52,10 @@ export class SmartRoutingOrchestrator {
   private determineRoutingNetwork(start: Point, end: Point): { name: string; file: string; coverage: string } {
     // Check if coordinates are in Kamperland/Roompot area
     const isKamperland = this.isInKamperlandArea(start) || this.isInKamperlandArea(end);
-    
+
     // Check if coordinates are in Zuhause/Gangelt area  
     const isZuhause = this.isInZuhauseArea(start) || this.isInZuhauseArea(end);
-    
+
     if (isZuhause) {
       return {
         name: 'zuhause-network',
@@ -166,17 +166,17 @@ export class SmartRoutingOrchestrator {
     try {
       // Load appropriate GeoJSON data for the Modern Routing Engine with vehicle filtering
       const geojsonPath = path.join(process.cwd(), routingNetwork.file);
-      
+
       // Check if network file exists
       if (!existsSync(geojsonPath)) {
         console.log(`❌ ROUTING NETWORK: File ${routingNetwork.file} not found, falling back to Google Directions`);
         const fallbackReason = `Ziel außerhalb des lokalen ${routingNetwork.coverage} Netzwerks - verwende Google Directions`;
         return this.tryGoogleDirections(start, end, mode, startTime, fallbackReason);
       }
-      
+
       const geojsonData = JSON.parse(readFileSync(geojsonPath, 'utf8'));
       console.log(`✅ ROUTING NETWORK: Loaded ${routingNetwork.name} from ${routingNetwork.file}`);
-      
+
       // Map profile to vehicle type for filtering - fix client/server mismatch
       let vehicleType: string;
       if (mode === 'driving') {
@@ -187,24 +187,24 @@ export class SmartRoutingOrchestrator {
         vehicleType = 'walking'; // pedestrian, walking, or default
       }
       console.log(`🚗 VEHICLE FILTERING: Mode "${mode}" mapped to vehicle type "${vehicleType}"`);
-      
+
       this.osmRouter.loadGeoJSON(geojsonData, vehicleType);
 
       const osmResult = this.osmRouter.findRoute(start.lat, start.lng, end.lat, end.lng, vehicleType);
 
       if (osmResult.success) {
         console.log(`🗺️ MODERN ENGINE: Generated ${osmResult.route.instructions?.length || 0} instructions:`, osmResult.route.instructions);
-        
+
         // Check instruction quality and apply German localization
         let instructions = osmResult.route.instructions && osmResult.route.instructions.length > 0 
           ? osmResult.route.instructions 
           : [this.createGermanInstruction(osmResult.route.distance, mode)];
-        
+
         // Apply German localization to all instructions
         instructions = instructions.map(instruction => this.localizeToGerman(instruction, mode));
-        
+
         const hasGenericInstructions = this.hasLowQualityInstructions(instructions);
-        
+
         if (hasGenericInstructions) {
           // Disable Google fallback for Zuhause routes during testing to verify local German instructions
           const isZuhauseRoute = this.isInZuhauseArea(start) || this.isInZuhauseArea(end);
@@ -224,9 +224,9 @@ export class SmartRoutingOrchestrator {
             console.log(`✅ ZUHAUSE LOCAL SUCCESS: ${osmResult.route.distance.toFixed(0)}m route with German instructions in ${processingTime}ms`);
             return localNetworkRoute;
           }
-          
+
           console.log(`⚠️ MODERN ENGINE: Low-quality generic instructions detected for ${routingNetwork.name}, trying Google Directions with local network as backup`);
-          
+
           // Store local network route as backup
           const localNetworkBackupRoute: Route = {
             success: true,
@@ -237,7 +237,7 @@ export class SmartRoutingOrchestrator {
             method: `${routingNetwork.name}-backup`,
             confidence: 0.8 // Higher confidence for custom network backup than generic OSM
           };
-          
+
           // Try Google Directions first
           try {
             const googleResult = await this.googleDirections.calculateRoute(start, end, mode);
@@ -247,7 +247,7 @@ export class SmartRoutingOrchestrator {
               const localizedInstructions = googleResult.instructions.map(instruction => 
                 this.localizeToGerman(instruction, mode)
               );
-              
+
               const route: Route = {
                 success: true,
                 path: googleResult.path,
@@ -331,9 +331,9 @@ export class SmartRoutingOrchestrator {
     // Final synthetic fallback - guarantee 100% route availability
     const processingTime = Date.now() - startTime;
     const straightLineDistance = this.calculateDistance(start, end);
-    
+
     console.log(`🚨 SYNTHETIC FALLBACK: Creating straight-line route after ${processingTime}ms`);
-    
+
     return {
       success: true,
       path: [[start.lng, start.lat], [end.lng, end.lat]], // Direct line
@@ -419,7 +419,7 @@ export class SmartRoutingOrchestrator {
     const distanceText = distance >= 1000 
       ? `${(distance / 1000).toFixed(1)} km` 
       : `${Math.round(distance)} m`;
-    
+
     return `${verb} ${distanceText} geradeaus zum Ziel`;
   }
 
@@ -452,7 +452,7 @@ export class SmartRoutingOrchestrator {
     }
 
     const verb = this.getGermanTravelVerb(mode);
-    
+
     // Common English to German replacements
     let germanInstruction = instruction
       .replace(/Head west/gi, `${verb} nach Westen`)
@@ -479,33 +479,47 @@ export class SmartRoutingOrchestrator {
    */
   private correctGermanVerbs(instruction: string, mode: string): string {
     const verb = this.getGermanTravelVerb(mode);
-    
+
     // Replace incorrect verbs with mode-appropriate ones
     let corrected = instruction;
-    
+
     if (mode === 'walking' || mode === 'pedestrian') {
-      // Replace "fahren" with "gehen" for walking
+      // COMPREHENSIVE: Replace ALL forms of "fahren" with "gehen" for walking
       corrected = corrected
-        .replace(/fahren/gi, 'gehen')
-        .replace(/fahren Sie/gi, 'Gehen Sie')
-        .replace(/Fahren Sie/gi, 'Gehen Sie');
+        // Replace all variations of "fahren"
+        .replace(/\bfahren\b/gi, 'gehen')
+        .replace(/\bfahren Sie\b/gi, 'Gehen Sie') 
+        .replace(/\bFahren Sie\b/gi, 'Gehen Sie')
+        .replace(/\bfahre\b/gi, 'gehe')
+        .replace(/\bfährt\b/gi, 'geht')
+        .replace(/\bfuhr\b/gi, 'ging')
+        // Handle compound words and phrases
+        .replace(/\bweiterfahren\b/gi, 'weitergehen')
+        .replace(/\bgeradeausfahren\b/gi, 'geradeaus gehen')
+        .replace(/\bAbfahren\b/gi, 'Abgehen')
+        // Fix any leftover patterns
+        .replace(/auf.*fahren/gi, (match) => match.replace(/fahren/gi, 'gehen'));
     } else if (mode === 'cycling' || mode === 'bike') {
       // Replace incorrect verbs with "radeln"
       corrected = corrected
-        .replace(/fahren/gi, 'radeln')
-        .replace(/gehen/gi, 'radeln')
-        .replace(/Gehen Sie/gi, 'Radeln Sie')
-        .replace(/Fahren Sie/gi, 'Radeln Sie');
+        .replace(/\bfahren\b/gi, 'radeln')
+        .replace(/\bgehen\b/gi, 'radeln')
+        .replace(/\bGehen Sie\b/gi, 'Radeln Sie')
+        .replace(/\bFahren Sie\b/gi, 'Radeln Sie')
+        .replace(/\bweiterfahren\b/gi, 'weiterradeln')
+        .replace(/\bweitergehen\b/gi, 'weiterradeln');
     } else if (mode === 'driving' || mode === 'car') {
       // Replace incorrect verbs with "fahren"
       corrected = corrected
-        .replace(/gehen/gi, 'fahren')
-        .replace(/radeln/gi, 'fahren')
-        .replace(/Gehen Sie/gi, 'Fahren Sie')
-        .replace(/Radeln Sie/gi, 'Fahren Sie');
+        .replace(/\bgehen\b/gi, 'fahren')
+        .replace(/\bradeln\b/gi, 'fahren')
+        .replace(/\bGehen Sie\b/gi, 'Fahren Sie')
+        .replace(/\bRadeln Sie\b/gi, 'Fahren Sie')
+        .replace(/\bweitergehen\b/gi, 'weiterfahren')
+        .replace(/\bweiterradeln\b/gi, 'weiterfahren');
     }
-    
-    console.log(`🇩🇪 VERB CORRECTION: "${instruction}" → "${corrected}" (mode: ${mode})`);
+
+    console.log(`🇩🇪 VERB CORRECTION (${mode}): "${instruction}" → "${corrected}"`);
     return corrected;
   }
 
@@ -522,25 +536,25 @@ export class SmartRoutingOrchestrator {
    */
   private hasLowQualityInstructions(instructions: string[]): boolean {
     if (!instructions || instructions.length === 0) return true;
-    
+
     // German instructions with street names are high-quality - case-insensitive check
     const joined = instructions.join(' ').toLowerCase();
     const germanCues = ["geradeaus", "links", "rechts", "abbiegen", "fahren", "straße", "str.", "auf"];
     const hasGerman = germanCues.some(keyword => joined.includes(keyword.toLowerCase()));
-    
+
     if (hasGerman) {
       console.log('✅ QUALITY CHECK: German navigation instructions detected - keeping local routing');
       return false; // German instructions are high quality
     }
-    
+
     // Check for exact generic patterns only
     const genericPattern = /^(?:🚶\s*)?walk \d+m to destination$/i;
     const isGeneric = instructions.length === 1 && genericPattern.test(instructions[0]);
-    
+
     if (isGeneric) {
       console.log('⚠️ QUALITY CHECK: Generic fallback instruction detected - trying Google upgrade');
     }
-    
+
     return isGeneric;
   }
 
