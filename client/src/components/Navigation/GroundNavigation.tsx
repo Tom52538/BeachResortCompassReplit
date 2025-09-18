@@ -106,7 +106,7 @@ export const GroundNavigation = ({
 
     console.log('🔄 STARTING REROUTING from position:', currentPosition.position);
     setIsRerouting(true);
-    
+
     try {
       // Extract destination from current route
       const geometry = route.geometry;
@@ -138,7 +138,7 @@ export const GroundNavigation = ({
       setIsOffRoute(false);
       setHasAnnouncedStart(false); // Force new start announcement
       hasAnnouncedStartRef.current = false;
-      
+
       // Reset announcement tracking completely
       lastAnnouncementRef.current = { step: -1, distance: 999, time: 0 };
 
@@ -237,18 +237,52 @@ export const GroundNavigation = ({
           hasAnnouncedStartRef.current = true;
           setHasAnnouncedStart(true);
 
-          // FIX: Get REAL first instruction from route.instructions instead of routeTracker
-          const firstInstruction = route.instructions && route.instructions.length > 0 
-            ? (typeof route.instructions[0] === 'string' ? route.instructions[0] : route.instructions[0].instruction)
-            : null;
+          // CRITICAL FIX: ALWAYS get fresh first instruction from current route
+          let firstInstruction = null;
+
+          // Log route data for debugging
+          console.log('🔍 ROUTE DEBUG:', {
+            hasInstructions: !!(route.instructions && route.instructions.length > 0),
+            instructionCount: route.instructions?.length || 0,
+            firstInstructionRaw: route.instructions?.[0]
+          });
+
+          // Extract first instruction from current route - NO CACHING
+          if (route.instructions && route.instructions.length > 0) {
+            const firstInstructionData = route.instructions[0];
+
+            if (typeof firstInstructionData === 'string') {
+              firstInstruction = firstInstructionData;
+            } else if (firstInstructionData && firstInstructionData.instruction) {
+              firstInstruction = firstInstructionData.instruction;
+            }
+
+            console.log('✅ EXTRACTED FIRST INSTRUCTION:', firstInstruction);
+          }
+
+          // NO FALLBACK to routeTracker - use ONLY current route data
+          if (!firstInstruction) {
+            console.error('❌ NO FIRST INSTRUCTION FOUND in route data');
+            console.log('Route instructions:', route.instructions);
+          }
 
           if (firstInstruction && ttsClientRef.current) {
-            // Use REAL first instruction instead of generic one
+            // Use the ACTUAL calculated route instruction - NEVER cached
             const realStartAnnouncement = `Navigation gestartet. ${firstInstruction}`;
 
             try {
+              console.log('🎤 ABOUT TO ANNOUNCE:', {
+                instruction: firstInstruction,
+                fullText: realStartAnnouncement,
+                routeKey: routeKey,
+                timestamp: new Date().toISOString()
+              });
+
               await ttsClientRef.current.speak(realStartAnnouncement, 'start');
-              console.log('🎤 FIXED: Using REAL first instruction:', realStartAnnouncement);
+
+              console.log('✅ SUCCESSFULLY ANNOUNCED FRESH INSTRUCTION');
+              console.log('🎤 Route-specific instruction:', firstInstruction);
+              console.log('🎤 Full announcement text:', realStartAnnouncement);
             } catch (error) {
               console.error('❌ Navigation Start TTS Error:', error);
               setNavigationError('Voice announcement failed - navigation continues');
@@ -399,7 +433,7 @@ export const GroundNavigation = ({
         // TRIGGER REROUTING IMMEDIATELY - don't wait for multiple off-route detections
         if (rerouteDecision.shouldReroute && !isRerouting) {
           console.log('🏕️ IMMEDIATE REROUTING TRIGGERED:', rerouteDecision.reason);
-          
+
           // Clear voice announcements to prevent loops
           if (ttsClientRef.current) {
             try {
@@ -409,10 +443,10 @@ export const GroundNavigation = ({
               console.warn('TTS cache clear warning:', error);
             }
           }
-          
+
           // Reset announcement tracking to prevent voice loops
           lastAnnouncementRef.current = { step: -1, distance: 999, time: 0 };
-          
+
           handleAutoReroute(rerouteDecision.distance || 0);
         }
       } else if (!progress.isOffRoute && isOffRoute) {
