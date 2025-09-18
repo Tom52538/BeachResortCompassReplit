@@ -61,6 +61,7 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     console.log(`🔍 POI BUTTON DEBUG: ===========================================`);
     console.log(`🔍 POI BUTTON DEBUG: Category button clicked: "${category}" for site: ${currentSite}`);
     console.log(`🔍 POI BUTTON DEBUG: Previous active categories:`, activeCategories);
+    console.log(`🔍 POI BUTTON DEBUG: Button category type:`, typeof category, category);
 
     // For Zuhause location, map to exact OSM categories based on analyzed data
     let mappedCategory = category;
@@ -80,6 +81,8 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     }
 
     console.log(`🔍 POI BUTTON DEBUG: Calling onCategorySelect with: "${mappedCategory}"`);
+    console.log(`🔍 POI BUTTON DEBUG: Expected button to become active: "${category}"`);
+    
     onCategorySelect(mappedCategory);
     setVisibleTooltip(category);
 
@@ -111,7 +114,13 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
   };
 
   const renderVerticalButton = (poi: any, index: number) => {
+    // Enhanced debugging for active state
+    console.log(`🔍 BUTTON RENDER DEBUG: Button ${index} - Category: "${poi.category}", Active categories:`, activeCategories);
+    
     const isButtonActive = activeCategories.includes(poi.category);
+    
+    console.log(`🔍 BUTTON ACTIVE DEBUG: Button "${poi.category}" - isActive: ${isButtonActive}`);
+    
     const displayIcon = poi.icon;
     const displayLabel = poi.label; // Use German labels directly from button definition
 
@@ -133,6 +142,8 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
               ? '0 0 20px rgba(34, 197, 94, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
               : 'none',
             transform: isButtonActive ? 'translateZ(0)' : 'none',
+            // Force repaint to ensure styles are applied
+            willChange: 'background, border, box-shadow, transform'
           }}
           aria-label={displayLabel}
           onMouseEnter={() => {
@@ -155,7 +166,9 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
                 : 'none',
               textShadow: isButtonActive 
                 ? '0 1px 2px rgba(0, 0, 0, 0.2)' 
-                : 'none'
+                : 'none',
+              // Force repaint for icon styles too
+              willChange: 'filter, text-shadow'
             }}
           >
             {displayIcon}
@@ -185,6 +198,11 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     );
   };
 
+  // Debug logging for button configuration and active state
+  console.log(`🔍 BUTTON PANEL DEBUG: Rendering ${POI_BUTTONS.length} buttons for site: ${currentSite}`);
+  console.log(`🔍 BUTTON PANEL DEBUG: Active categories:`, activeCategories);
+  console.log(`🔍 BUTTON PANEL DEBUG: Button categories:`, POI_BUTTONS.map(btn => btn.category));
+
   return (
     <div
       className="poi-left-panel"
@@ -207,7 +225,10 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     >
       <div className="flex flex-col">
         {/* Render all POI category buttons (including the rolling accommodation button) */}
-        {POI_BUTTONS.map((poi, index) => renderVerticalButton(poi, index))}
+        {POI_BUTTONS.map((poi, index) => {
+          console.log(`🔍 MAPPING DEBUG: Rendering button ${index}: category="${poi.category}", active=${activeCategories.includes(poi.category)}`);
+          return renderVerticalButton(poi, index);
+        })}
       </div>
       <style>{`
         .poi-left-panel {
