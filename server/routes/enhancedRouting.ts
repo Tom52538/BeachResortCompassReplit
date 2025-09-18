@@ -55,12 +55,15 @@ router.post('/enhanced', async (req, res) => {
     }
 
     console.log(`🎯 ENHANCED ROUTE REQUEST: ${from.lat},${from.lng} → ${to.lat},${to.lng} (${profile})`);
+    console.log(`🔥 DIRECT TEST: About to call SmartRoutingOrchestrator.calculateRoute with profile="${profile}"`);
 
     const result = await routingOrchestrator.calculateRoute(
       { lat: from.lat, lng: from.lng },
       { lat: to.lat, lng: to.lng },
       profile
     );
+    
+    console.log(`🔥 RESULT BACK: method="${result.method}", instructions count=${result.instructions?.length || 0}`);
 
     const response = {
       success: result.success,

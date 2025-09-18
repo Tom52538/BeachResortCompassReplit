@@ -154,6 +154,7 @@ export class SmartRoutingOrchestrator {
     const startTime = Date.now();
     const distance = this.calculateDistance(start, end);
     console.log(`🎯 ENHANCED ROUTING: ${start.lat.toFixed(6)},${start.lng.toFixed(6)} → ${end.lat.toFixed(6)},${end.lng.toFixed(6)} (${distance.toFixed(0)}m)`);
+    console.log(`🚗 DEBUG START: calculateRoute called with mode="${mode}"`);
 
     // Check cache first
     const cacheKey = this.generateCacheKey(start, end, mode);
