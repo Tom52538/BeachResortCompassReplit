@@ -26,71 +26,31 @@ interface NetworkOverlayData {
   };
 }
 
-interface NetworkOverlayProps {
-  visible: boolean;
+export interface NetworkOverlayData {
+  nodes: NetworkNode[];
+  edges: NetworkEdge[];
+  stats: {
+    totalNodes: number;
+    totalEdges: number;
+    components: number;
+    coverage: string;
+  };
 }
 
-export const NetworkOverlay: React.FC<NetworkOverlayProps> = ({ visible }) => {
-  const [networkData, setNetworkData] = useState<NetworkOverlayData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface NetworkOverlayProps {
+  visible: boolean;
+  data: NetworkOverlayData | null;
+}
 
-  useEffect(() => {
-    if (visible && !networkData) {
-      loadNetworkData();
-    }
-  }, [visible, networkData]);
-
-  const loadNetworkData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('🗺️ NETWORK OVERLAY: Loading network data...');
-      const response = await fetch('/api/network-overlay');
-      
-      if (!response.ok) {
-        throw new Error(`Network overlay request failed: ${response.status}`);
-      }
-      
-      const data: NetworkOverlayData = await response.json();
-      console.log('✅ NETWORK OVERLAY: Raw API response:', data);
-      
-      if (!data.nodes || !data.edges) {
-        throw new Error('Invalid network data structure');
-      }
-      
-      setNetworkData(data);
-      console.log('✅ NETWORK OVERLAY: Loaded', {
-        nodes: data.nodes.length,
-        edges: data.edges.length,
-        components: data.stats.components
-      });
-      
-    } catch (err) {
-      console.error('❌ NETWORK OVERLAY: Load failed:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!visible) {
+export const NetworkOverlay: React.FC<NetworkOverlayProps> = ({ visible, data }) => {
+  if (!visible || !data) {
     return null;
-  }
-
-  if (loading) {
-    return null; // Loading silently
-  }
-
-  if (error || !networkData) {
-    return null; // Failed silently
   }
 
   return (
     <>
       {/* Render network edges (roads/paths) */}
-      {networkData.edges.map(edge => (
+      {data.edges.map(edge => (
         <Polyline
           key={edge.id}
           positions={edge.coordinates.map(coord => [coord[1], coord[0]])} // Convert [lng,lat] to [lat,lng] for Leaflet
@@ -114,7 +74,7 @@ export const NetworkOverlay: React.FC<NetworkOverlayProps> = ({ visible }) => {
       ))}
 
       {/* Render network nodes */}
-      {networkData.nodes.map(node => (
+      {data.nodes.map(node => (
         <CircleMarker
           key={node.id}
           center={[node.coordinates[1], node.coordinates[0]]} // Convert [lng,lat] to [lat,lng] for Leaflet

@@ -17,6 +17,7 @@ import { useRouting } from '@/hooks/useRouting';
 import { useWeather } from '@/hooks/useWeather';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useNavigationTracking } from '@/hooks/useNavigationTracking';
+import { useNetworkOverlay } from '@/hooks/useNetworkOverlay';
 import { useSiteManager } from '@/lib/siteManager';
 import { mobileLogger } from '@/utils/mobileLogger';
 import { POI, RouteResponse, TestSite, TEST_SITES, Coordinates, Site } from '@/types/navigation';
@@ -78,6 +79,7 @@ export default function Navigation() {
 
   // Network overlay state
   const [showNetworkOverlay, setShowNetworkOverlay] = useState(false);
+  const { data: networkOverlayData, isLoading: isNetworkOverlayLoading } = useNetworkOverlay(showNetworkOverlay);
 
   // Drawer height state
   const [drawerHeight, setDrawerHeight] = useState<'peek' | 'half' | 'full'>('half');
@@ -966,10 +968,11 @@ export default function Navigation() {
   }, [currentSite, setSite]); // Added setSite to dependencies
 
   const handleSiteChange = useCallback((site: Site) => {
-    console.log(`🔄 Navigation: Site change requested - ${currentSite} -> ${site}`);
+    console.log(`🔄 Navigation: Site change requested - ${config.site} -> ${site}`);
 
     // Use SiteManager setSite function (already extracted at component top-level)
     setSite(site);
+    console.log(`🔄 Navigation: setSite called with ${site}`);
 
     // Clear navigation state when changing sites
     setSelectedPOI(null);
@@ -993,7 +996,7 @@ export default function Navigation() {
       title: t('alerts.siteChanged'),
       description: `${t('alerts.siteSwitched')} ${normalizePoiString(TEST_SITES.find(s => s.id === site)?.name) || site}`,
     });
-  }, [toast, currentSite, t, setSite]);
+  }, [toast, t, setSite]);
 
   const handleClearPOIs = useCallback(() => {
     setSearchQuery('');
@@ -1401,6 +1404,7 @@ export default function Navigation() {
                 mapStyle={mapStyle}
                 destinationMarker={destinationMarker}
                 showNetworkOverlay={showNetworkOverlay}
+                networkOverlayData={networkOverlayData}
                 rotation={mapRotation}
                 onRotate={handleRotate}
                 onRotateStart={handleRotateStart}
@@ -1466,6 +1470,7 @@ export default function Navigation() {
             }}
             showNetworkOverlay={showNetworkOverlay}
             onToggleNetworkOverlay={() => setShowNetworkOverlay(!showNetworkOverlay)}
+            isNetworkOverlayLoading={isNetworkOverlayLoading}
           />
 
 
