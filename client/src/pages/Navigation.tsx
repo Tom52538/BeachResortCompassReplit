@@ -39,11 +39,11 @@ import MobileMemoryMonitor from '@/components/UI/MobileMemoryMonitor'; // Assumi
 
 // Helper function to safely normalize POI strings for logging and display
 const normalizePoiString = (value: any): string => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  return String(value);
-};
+      if (typeof value === 'string') return value.toLowerCase().trim();
+      if (typeof value === 'number') return String(value).toLowerCase().trim();
+      if (value === null || value === undefined) return '';
+      return String(value).toLowerCase().trim();
+    };
 
 // Assume isDev is available globally or imported
 const isDev = process.env.NODE_ENV === 'development';
@@ -120,6 +120,7 @@ export default function Navigation() {
   const [currentInstruction, setCurrentInstruction] = useState<string>('');
   const [nextDistance, setNextDistance] = useState<string>('');
   const [routeProgress, setRouteProgress] = useState<any>(null);
+
 
   // Network Debugging State
   const [showNetworkDebug, setShowNetworkDebug] = useState(false);
@@ -435,7 +436,7 @@ export default function Navigation() {
                          safeName.includes('lodge') ||
                          safeRoompotCategory.includes('lodge');
 
-          console.log(`🏠 Lodge check: "${poi.name}" = ${isLodge}`, {
+          console.log('🏠 Lodge check: "${poi.name}" = ${isLodge}', {
             building_type: poi.building_type,
             roompot_category: poi.roompot_category,
             match: isLodge
@@ -1319,7 +1320,7 @@ export default function Navigation() {
           {/* Top Bar */}
           <TopBar
             searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+            onSearch={setSearchQuery}
             showNetworkDebug={showNetworkDebug}
             onToggleNetworkDebug={() => setShowNetworkDebug(!showNetworkDebug)}
             showGridVisualization={showGridVisualization}
