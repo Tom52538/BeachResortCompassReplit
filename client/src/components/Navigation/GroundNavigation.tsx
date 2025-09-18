@@ -56,7 +56,7 @@ export const GroundNavigation = ({
           setIsInitialized(true);
           ttsClientRef.current = new SecureTTSClient();
           console.log('🎤 TTS Client initialized for ground navigation');
-          
+
           // Test TTS connection immediately
           try {
             const testResult = await ttsClientRef.current.testConnection();
@@ -68,7 +68,7 @@ export const GroundNavigation = ({
             console.error('❌ TTS Connection Test Failed:', testError);
             setNavigationError('TTS service unavailable - check console for details');
           }
-          
+
           setNavigationError(null);
         } catch (error) {
           console.error('❌ Failed to initialize TTS client:', error);
@@ -255,7 +255,7 @@ export const GroundNavigation = ({
             try {
               console.log('🌐 ANNOUNCING GOOGLE FALLBACK:', route.fallbackReason);
               await ttsClientRef.current.speak(route.fallbackReason, 'info');
-              
+
               // Short pause before main navigation announcement
               await new Promise(resolve => setTimeout(resolve, 1500));
             } catch (error) {
@@ -285,7 +285,7 @@ export const GroundNavigation = ({
             };
 
             const currentPos = currentPosition.position;
-            
+
             // Calculate real distance using haversine formula
             const R = 6371e3; // Earth radius in meters
             const φ1 = currentPos.lat * Math.PI/180;
@@ -314,22 +314,30 @@ export const GroundNavigation = ({
             if (typeof firstInstructionData === 'string') {
               firstInstruction = firstInstructionData;
             } else if (firstInstructionData && firstInstructionData.instruction) {
-              firstInstruction = firstInstructionData.instruction;
-            }
+              // CRITICAL FIX: Translate Google Directions instructions to German for TTS
+              const originalInstruction = firstInstructionData.instruction;
+              firstInstruction = translateInstruction(originalInstruction, currentLanguage);
 
-            // REPLACE any distance in the instruction with ACTUAL calculated distance
-            if (firstInstruction && actualDistance !== null) {
-              // Remove any existing distance info and replace with real calculation
-              firstInstruction = firstInstruction.replace(/\d+\s*(m|meter|meters|km|kilometer|kilometers)/gi, '');
-              firstInstruction = `${actualDistance}m ${firstInstruction.trim()}`;
-              
-              console.log('✅ DISTANCE CORRECTED INSTRUCTION:', {
-                originalInstruction: route.instructions[0],
-                correctedInstruction: firstInstruction,
-                realDistance: actualDistance + 'm'
+              console.log('🌐 INSTRUCTION TRANSLATION:', {
+                original: originalInstruction,
+                translated: firstInstruction,
+                method: route.method || 'unknown'
               });
-            } else {
-              console.log('✅ EXTRACTED FIRST INSTRUCTION (no distance correction):', firstInstruction);
+
+              // REPLACE any distance in the instruction with ACTUAL calculated distance
+              if (firstInstruction && actualDistance !== null) {
+                // Remove any existing distance info and replace with real calculation
+                firstInstruction = firstInstruction.replace(/\d+\s*(m|meter|meters|km|kilometer|kilometers)/gi, '');
+                firstInstruction = `${actualDistance}m ${firstInstruction.trim()}`;
+
+                console.log('✅ DISTANCE CORRECTED INSTRUCTION:', {
+                  originalInstruction: firstInstructionData.instruction,
+                  correctedInstruction: firstInstruction,
+                  realDistance: actualDistance + 'm'
+                });
+              } else {
+                console.log('✅ EXTRACTED FIRST INSTRUCTION (no distance correction):', firstInstruction);
+              }
             }
           }
 
@@ -671,7 +679,7 @@ export const GroundNavigation = ({
         const distance = calculateDistanceBetweenPoints(
           currentLat, currentLng, routeLat, routeLng
         );
-        
+
         if (distance < minDistance) {
           minDistance = distance;
           nearestPointIndex = i;
@@ -681,7 +689,7 @@ export const GroundNavigation = ({
       // Calculate distance to next instruction waypoint (ahead on route)
       let targetIndex = Math.min(nearestPointIndex + 10, route.geometry.length - 1);
       const [targetLng, targetLat] = route.geometry[targetIndex];
-      
+
       const realDistance = calculateDistanceBetweenPoints(
         currentLat, currentLng, targetLat, targetLng
       );
@@ -824,15 +832,15 @@ export const GroundNavigation = ({
               onClick={async () => {
                 if (ttsClientRef.current) {
                   console.log('🧪 Testing ElevenLabs Navigation System with User Interaction...');
-                  
+
                   // CRITICAL: User interaction enables audio playback
                   try {
                     // Test immediate audio playback (user gesture required)
                     console.log('🎤 Testing immediate TTS with user gesture...');
                     await ttsClientRef.current.speak('TTS Test erfolgreich. Navigation kann starten.', 'start');
-                    
+
                     console.log('✅ FIRST TTS SUCCESS - Now testing navigation sequence...');
-                    
+
                     // Now test the full navigation sequence
                     setTimeout(async () => {
                       try {
