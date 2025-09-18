@@ -97,7 +97,7 @@ export class SmartRoutingOrchestrator {
   /**
    * Direct Google Directions fallback method
    */
-  private async tryGoogleDirections(start: Point, end: Point, mode: 'walking' | 'cycling' | 'driving', startTime: number): Promise<Route> {
+  private async tryGoogleDirections(start: Point, end: Point, mode: 'walking' | 'cycling' | 'driving', startTime: number, fallbackReason?: string): Promise<Route> {
     try {
       const googleResult = await this.googleDirections.calculateRoute(start, end, mode);
       if (googleResult.success) {
@@ -108,7 +108,8 @@ export class SmartRoutingOrchestrator {
           estimatedTime: googleResult.estimatedTime,
           instructions: googleResult.instructions,
           method: 'google-directions-direct',
-          confidence: googleResult.confidence
+          confidence: googleResult.confidence,
+          fallbackReason: fallbackReason // Add fallback reason to route
         };
         const cacheKey = this.generateCacheKey(start, end, mode);
         this.cacheRoute(cacheKey, route);
@@ -169,7 +170,8 @@ export class SmartRoutingOrchestrator {
       // Check if network file exists
       if (!existsSync(geojsonPath)) {
         console.log(`❌ ROUTING NETWORK: File ${routingNetwork.file} not found, falling back to Google Directions`);
-        return this.tryGoogleDirections(start, end, mode, startTime);
+        const fallbackReason = `Ziel außerhalb des lokalen ${routingNetwork.coverage} Netzwerks - verwende Google Directions`;
+        return this.tryGoogleDirections(start, end, mode, startTime, fallbackReason);
       }
       
       const geojsonData = JSON.parse(readFileSync(geojsonPath, 'utf8'));
@@ -301,7 +303,8 @@ export class SmartRoutingOrchestrator {
           estimatedTime: googleResult.estimatedTime,
           instructions: googleResult.instructions,
           method: 'google-directions-fallback',
-          confidence: googleResult.confidence
+          confidence: googleResult.confidence,
+          fallbackReason: 'Lokales Routing-Netzwerk nicht verfügbar - verwende Google Directions'
         };
 
         this.cacheRoute(cacheKey, route);

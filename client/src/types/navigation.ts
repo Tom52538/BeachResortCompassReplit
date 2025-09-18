@@ -23,7 +23,7 @@ export interface POI {
   rating?: number;
   image?: string;
   amenities?: string[];
-  
+
   // OSM properties (from backend POI data)
   amenity?: string;
   leisure?: string;
@@ -36,7 +36,7 @@ export interface POI {
   natural?: string;
   parking?: string;
   [key: string]: any; // Allow additional OSM properties
-  
+
   // Enrichment data properties
   enriched?: boolean;
   accommodation_id?: string;
@@ -128,14 +128,16 @@ export interface RouteInstruction {
 }
 
 export interface RouteResponse {
+  success: boolean;
   totalDistance: string;
   estimatedTime: string;
-  durationSeconds: number;
+  durationSeconds?: number;
   instructions: RouteInstruction[];
   geometry: [number, number][];
   nextInstruction: RouteInstruction;
   arrivalTime: string;
   eta?: string; // For compatibility with Navigation.tsx usage
+  fallbackReason?: string; // Grund für Google Directions Fallback
 }
 
 export interface WeatherData {

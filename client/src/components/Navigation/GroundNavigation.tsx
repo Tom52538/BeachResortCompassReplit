@@ -237,6 +237,19 @@ export const GroundNavigation = ({
           hasAnnouncedStartRef.current = true;
           setHasAnnouncedStart(true);
 
+          // CHECK: Fallback reason announcement FIRST if Google Directions was used
+          if (route.fallbackReason && ttsClientRef.current) {
+            try {
+              console.log('🌐 ANNOUNCING GOOGLE FALLBACK:', route.fallbackReason);
+              await ttsClientRef.current.speak(route.fallbackReason, 'info');
+              
+              // Short pause before main navigation announcement
+              await new Promise(resolve => setTimeout(resolve, 1500));
+            } catch (error) {
+              console.error('❌ Fallback announcement error:', error);
+            }
+          }
+
           // CRITICAL FIX: ALWAYS get fresh first instruction from current route
           let firstInstruction = null;
 
@@ -244,7 +257,8 @@ export const GroundNavigation = ({
           console.log('🔍 ROUTE DEBUG:', {
             hasInstructions: !!(route.instructions && route.instructions.length > 0),
             instructionCount: route.instructions?.length || 0,
-            firstInstructionRaw: route.instructions?.[0]
+            firstInstructionRaw: route.instructions?.[0],
+            fallbackReason: route.fallbackReason || 'none'
           });
 
           // Extract first instruction from current route - NO CACHING
@@ -275,7 +289,8 @@ export const GroundNavigation = ({
                 instruction: firstInstruction,
                 fullText: realStartAnnouncement,
                 routeKey: routeKey,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                fallbackUsed: !!route.fallbackReason
               });
 
               await ttsClientRef.current.speak(realStartAnnouncement, 'start');
