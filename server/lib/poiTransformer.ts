@@ -32,81 +32,218 @@ export interface GeoJSONCollection {
   features: GeoJSONFeature[];
 }
 
-// OSM tag to POI category mapping for campsite context
-const categoryMapping: Record<string, POICategory> = {
-  // Food & Drink - ensure restaurant maps properly
-  'restaurant': 'gastronomie',  // Direct mapping to button category
-  'cafe': 'gastronomie',
-  'bar': 'gastronomie', 
-  'pub': 'gastronomie',
-  'fast_food': 'gastronomie',
-  'food_court': 'gastronomie',
-  'ice_cream': 'gastronomie',
-  'biergarten': 'gastronomie',
+// Optimierte Kategorisierung basierend auf echter Datenanalyse
+function categorizeFeatureOptimized(properties: GeoJSONFeature['properties']): POICategory {
+  // 1. GASTRONOMIE - Höchste Priorität für Restaurants/Cafes
+  const gastroAmenities = ['restaurant', 'cafe', 'bar', 'pub', 'fast_food', 'biergarten', 'ice_cream'];
+  if (properties.amenity && gastroAmenities.includes(properties.amenity)) {
+    return 'gastronomie';
+  }
+  if (properties.cuisine) return 'gastronomie';
+  if (properties.cafe === 'yes') return 'gastronomie';
+  if (properties.brewery) return 'gastronomie';
+  if (properties.takeaway === 'yes' && (properties.amenity === 'restaurant' || properties.shop === 'bakery')) {
+    return 'gastronomie';
+  }
 
-  // Essential Services
-  'shop': 'services',
-  'pharmacy': 'services',
-  'bank': 'services',
-  'atm': 'services',
-  'information': 'services',
-  'reception': 'services',
-  'hospital': 'services',
-  'clinic': 'services',
-  'post_office': 'services',
-  'fuel': 'services',
-  'supermarket': 'services',
-  'convenience': 'services',
-  'retail': 'services',
-  'commercial': 'services',
+  // 2. SHOPPING - Alle shop-Properties + Brands
+  if (properties.shop) return 'services'; // Shopping wird als services kategorisiert
+  const shoppingAmenities = ['marketplace', 'vending_machine'];
+  if (properties.amenity && shoppingAmenities.includes(properties.amenity)) {
+    return 'services';
+  }
+  if (properties.brand) return 'services';
 
-  // Leisure & Recreation Activities
-  'swimming_pool': 'leisure',
-  'playground': 'leisure',
-  'sports_centre': 'leisure',
-  'fitness_centre': 'leisure',
-  'tennis': 'leisure',
-  'mini_golf': 'leisure',
-  'golf_course': 'leisure',
-  'beach_volleyball': 'leisure',
-  'attraction': 'leisure',
-  'viewpoint': 'leisure',
-  'picnic_table': 'leisure',
-  'bbq': 'leisure',
-  'bird_hide': 'leisure',
-  'marina': 'leisure',
+  // 3. SERVICES - Bank, Post, Gesundheit, Handwerk
+  const serviceAmenities = [
+    'bank', 'atm', 'post_office', 'pharmacy', 'hospital', 'clinic',
+    'dentist', 'veterinary', 'fuel', 'car_wash', 'car_repair'
+  ];
+  if (properties.amenity && serviceAmenities.includes(properties.amenity)) {
+    return 'services';
+  }
+  if (properties.office) return 'services';
+  if (properties.government) return 'services';
+  if (properties.healthcare) return 'services';
+  if (properties.craft) return 'services';
 
-  // Practical Facilities
-  'parking': 'parking',
-  'toilets': 'toilets',
-  'shower': 'facilities',
-  'waste_disposal': 'facilities',
-  'recycling': 'facilities',
-  'drinking_water': 'facilities',
-  'bicycle_parking': 'facilities',
-  'car_wash': 'facilities',
-  'charging_station': 'facilities',
-  'laundry': 'facilities',
+  // 4. LEISURE - Freizeit, Sport, Kultur
+  if (properties.leisure) return 'leisure';
+  if (properties.sport) return 'leisure';
+  const tourismLeisure = ['attraction', 'viewpoint', 'museum', 'monument', 'artwork'];
+  if (properties.tourism && tourismLeisure.includes(properties.tourism)) {
+    return 'leisure';
+  }
+  const leisureAmenities = ['cinema', 'theatre', 'community_centre', 'library'];
+  if (properties.amenity && leisureAmenities.includes(properties.amenity)) {
+    return 'leisure';
+  }
+  if (properties.historic) return 'leisure';
 
-  // Accommodation Types
-  'accommodation': 'accommodation',
-  'hotel': 'accommodation',
-  'guest_house': 'accommodation',
-  'apartment': 'accommodation',
-  'cabin': 'accommodation',
-  'chalet': 'accommodation',
-  'camp_site': 'accommodation',
-  'caravan_site': 'accommodation',
+  // 5. RELIGION - Kirchen, Friedhöfe
+  if (properties.religion) return 'other'; // Neue Kategorie 'religion' falls verfügbar
+  const religiousAmenities = ['place_of_worship', 'monastery', 'grave_yard'];
+  if (properties.amenity && religiousAmenities.includes(properties.amenity)) {
+    return 'other'; // oder neue Kategorie 'religion'
+  }
+  if (properties.denomination) return 'other';
+  if (properties.service_times) return 'other';
 
-  // Building Types
-  'house': 'accommodation',
-  'detached': 'accommodation',
-  'semidetached_house': 'accommodation',
-  'bungalow': 'accommodation',
-  'static_caravan': 'accommodation',
-  'beach_house': 'accommodation',
-  'strandhaus': 'accommodation'
-};
+  // 6. PARKING - Auto und Fahrrad
+  if (properties.amenity === 'parking') return 'parking';
+  if (properties.parking) return 'parking';
+  if (properties.bicycle_parking) return 'facilities';
+  if (properties.amenity === 'bicycle_parking') return 'facilities';
+
+  // 7. EDUCATION - Schulen, Kindergarten
+  const educationAmenities = ['school', 'kindergarten', 'university', 'college', 'library'];
+  if (properties.amenity && educationAmenities.includes(properties.amenity)) {
+    return 'other'; // oder neue Kategorie 'education'
+  }
+  if (properties.school_type) return 'other';
+  if (properties['isced:level']) return 'other';
+
+  // 8. INFRASTRUCTURE - Toiletten, Recycling, Utilities
+  const utilityAmenities = ['toilets', 'drinking_water', 'waste_disposal', 'recycling', 'charging_station'];
+  if (properties.amenity && utilityAmenities.includes(properties.amenity)) {
+    if (properties.amenity === 'toilets') return 'toilets';
+    return 'facilities';
+  }
+  if (properties.recycling_type) return 'facilities';
+  
+  // Check for recycling properties
+  const recyclingProps = [
+    'recycling:glass', 'recycling:paper', 'recycling:clothes', 'recycling:cardboard',
+    'recycling:cans', 'recycling:electrical_items', 'recycling:garden_waste'
+  ];
+  if (recyclingProps.some(prop => properties[prop])) return 'facilities';
+  
+  if (properties.man_made) return 'facilities';
+  if (properties.barrier) return 'facilities';
+  const emergencyAmenities = ['fire_station', 'police'];
+  if (properties.amenity && emergencyAmenities.includes(properties.amenity)) {
+    return 'services';
+  }
+
+  // Legacy Roompot-Kategorien (für Kompatibilität)
+  if (properties.roompot_category) {
+    const roompotCategory = properties.roompot_category.toLowerCase();
+    
+    if (roompotCategory.includes('lodge')) return 'lodge';
+    if (roompotCategory.includes('beach house') || roompotCategory.includes('strandhaus')) return 'beach_houses';
+    if (roompotCategory.includes('bungalow')) {
+      return properties.park_id === 'water-village' || roompotCategory.includes('water') ? 'bungalows_water' : 'bungalows';
+    }
+    if (roompotCategory.includes('chalet')) return 'chalets';
+    if (roompotCategory.includes('caravan') || roompotCategory.includes('camping')) return 'campgrounds';
+    
+    switch (properties.roompot_category) {
+      case 'Food & Drinks': return 'gastronomie';
+      case 'Shopping':
+      case 'Necessities': return 'services';
+      case 'Leisure & Entertainment': return 'leisure';
+      default: return 'accommodation';
+    }
+  }
+
+  // Tourism accommodations
+  const accommodationTourism = ['hotel', 'guest_house', 'camp_site', 'caravan_site'];
+  if (properties.tourism && accommodationTourism.includes(properties.tourism)) {
+    return 'accommodation';
+  }
+
+  // Building types
+  if (properties.building_type) {
+    const buildingType = properties.building_type.toLowerCase();
+    if (['house', 'detached', 'semidetached_house'].includes(buildingType)) return 'houses';
+    if (buildingType === 'bungalow') return 'bungalows';
+    if (['cabin', 'chalet'].includes(buildingType)) return 'chalets';
+    if (buildingType === 'beach_house' || buildingType === 'strandhaus') return 'beach_houses';
+  }
+
+  return 'other';
+}
+
+// Optimierte Name-Generierung
+function generateOptimizedName(properties: GeoJSONFeature['properties']): string | null {
+  // Priorisiere echte Namen
+  const realName = properties['name:de'] || properties.name || properties['name:en'] || properties['name:nl'];
+  if (realName && realName.trim()) return realName.trim();
+
+  // Generiere Namen basierend auf Properties
+  if (properties.amenity) {
+    const amenityNames: Record<string, string> = {
+      'restaurant': 'Restaurant',
+      'cafe': 'Café',
+      'bar': 'Bar',
+      'pub': 'Gasthaus',
+      'fast_food': 'Imbiss',
+      'biergarten': 'Biergarten',
+      'bank': 'Bank',
+      'atm': 'Geldautomat',
+      'post_office': 'Post',
+      'pharmacy': 'Apotheke',
+      'hospital': 'Krankenhaus',
+      'clinic': 'Klinik',
+      'fuel': 'Tankstelle',
+      'parking': 'Parkplatz',
+      'toilets': 'WC',
+      'place_of_worship': 'Kirche',
+      'school': 'Schule',
+      'kindergarten': 'Kindergarten',
+      'library': 'Bibliothek',
+      'community_centre': 'Gemeindezentrum'
+    };
+    
+    if (amenityNames[properties.amenity]) {
+      return amenityNames[properties.amenity];
+    }
+    // Fallback: Kapitalisiere amenity
+    return properties.amenity.charAt(0).toUpperCase() + properties.amenity.slice(1).replace(/_/g, ' ');
+  }
+
+  if (properties.shop) {
+    const shopNames: Record<string, string> = {
+      'supermarket': 'Supermarkt',
+      'convenience': 'Kiosk',
+      'bakery': 'Bäckerei',
+      'butcher': 'Metzgerei',
+      'clothes': 'Bekleidungsgeschäft',
+      'bicycle': 'Fahrradladen'
+    };
+    
+    if (shopNames[properties.shop]) {
+      return shopNames[properties.shop];
+    }
+    return properties.shop.charAt(0).toUpperCase() + properties.shop.slice(1).replace(/_/g, ' ');
+  }
+
+  if (properties.leisure) {
+    const leisureNames: Record<string, string> = {
+      'playground': 'Spielplatz',
+      'swimming_pool': 'Schwimmbad',
+      'sports_centre': 'Sportzentrum',
+      'park': 'Park',
+      'garden': 'Garten'
+    };
+    
+    if (leisureNames[properties.leisure]) {
+      return leisureNames[properties.leisure];
+    }
+    return properties.leisure.charAt(0).toUpperCase() + properties.leisure.slice(1).replace(/_/g, ' ');
+  }
+
+  if (properties.office) {
+    return properties.office.charAt(0).toUpperCase() + properties.office.slice(1).replace(/_/g, ' ');
+  }
+
+  if (properties.craft) {
+    return properties.craft.charAt(0).toUpperCase() + properties.craft.slice(1).replace(/_/g, ' ');
+  }
+
+  // Kein Name generierbar
+  return null;
+}
 
 function isValidCoordinate(lat: number, lng: number): boolean {
   return !isNaN(lat) &&
@@ -139,7 +276,6 @@ function getPoiCoordinates(geometry: GeoJSONFeature['geometry'], poiName: string
 
       return { lat, lng };
     } else if (geometry.type === 'Polygon') {
-      // Use Turf.js to calculate centroid for polygon POIs
       try {
         const centroid = turf.centroid({ type: 'Feature', geometry: geometry as any, properties: {} });
         const [lng, lat] = centroid.geometry.coordinates;
@@ -162,7 +298,6 @@ function getPoiCoordinates(geometry: GeoJSONFeature['geometry'], poiName: string
         return null;
       }
 
-      // Use the middle point of the line
       const midIndex = Math.floor(coords.length / 2);
       const midPoint = coords[midIndex];
 
@@ -189,111 +324,51 @@ function getPoiCoordinates(geometry: GeoJSONFeature['geometry'], poiName: string
   }
 }
 
-function categorizeFeature(properties: GeoJSONFeature['properties']): POICategory {
-  // PRIORITIZE RESTAURANTS - check amenity first for food establishments
-  if (properties.amenity) {
-    // Direct restaurant/food mapping
-    if (['restaurant', 'cafe', 'bar', 'pub', 'fast_food', 'biergarten'].includes(properties.amenity)) {
-      return 'gastronomie';
-    }
-    // Other amenities
-    if (categoryMapping[properties.amenity]) {
-      return categoryMapping[properties.amenity];
-    }
-  }
-
-  // Check leisure (for playgrounds, swimming pools, etc.)
-  if (properties.leisure && categoryMapping[properties.leisure]) {
-    return categoryMapping[properties.leisure];
-  }
-
-  // Check tourism
-  if (properties.tourism && categoryMapping[properties.tourism]) {
-    return categoryMapping[properties.tourism];
-  }
-
-  // Check shop types
-  if (properties.shop && categoryMapping[properties.shop]) {
-    return categoryMapping[properties.shop];
-  }
-
-  // Check sport
-  if (properties.sport && categoryMapping[properties.sport]) {
-    return categoryMapping[properties.sport];
-  }
-
-  // Check building types
-  if (properties.building_type && categoryMapping[properties.building_type]) {
-    return categoryMapping[properties.building_type];
-  }
-
-  // Default based on roompot_category
-  if (properties.roompot_category) {
-    switch (properties.roompot_category) {
-      case 'Food & Drinks':
-        return 'food-drink';
-      case 'Shopping':
-      case 'Necessities':
-        return 'services';
-      case 'Leisure & Entertainment':
-        return 'leisure';
-      case 'Beach House 4':
-      case 'Beach House 6a':
-      case 'Beach House 6b':
-      case 'Bungalows - Standard':
-      case 'Chalets/Lodges':
-        return 'accommodation';
-      default:
-        return 'other';
-    }
-  }
-
-  return 'other';
-}
-
 function extractAmenities(properties: GeoJSONFeature['properties']): string[] {
   const amenities: string[] = [];
 
-  // Sports and activities
   if (properties.sport) {
     amenities.push(`Sport: ${properties.sport.replace(/_/g, ' ')}`);
   }
 
-  // Contact information
-  if (properties.phone) {
-    amenities.push(`Phone: ${properties.phone}`);
+  if (properties.phone || properties['contact:phone']) {
+    const phone = properties.phone || properties['contact:phone'];
+    amenities.push(`Telefon: ${phone}`);
   }
 
-  if (properties.email) {
-    amenities.push(`Email: ${properties.email}`);
+  if (properties.email || properties['contact:email']) {
+    const email = properties.email || properties['contact:email'];
+    amenities.push(`E-Mail: ${email}`);
   }
 
-  if (properties.website || properties.url) {
-    const website = properties.website || properties.url;
+  if (properties.website || properties['contact:website'] || properties.url) {
+    const website = properties.website || properties['contact:website'] || properties.url;
     amenities.push(`Website: ${website}`);
   }
 
-  // Cuisine for restaurants
   if (properties.cuisine) {
-    amenities.push(`Cuisine: ${properties.cuisine}`);
+    amenities.push(`Küche: ${properties.cuisine}`);
   }
 
-  // Opening hours
   if (properties.opening_hours || properties['opening_hours:restaurant']) {
     const hours = properties.opening_hours || properties['opening_hours:restaurant'];
-    amenities.push(`Hours: ${hours}`);
+    amenities.push(`Öffnungszeiten: ${hours}`);
   }
 
-  // Address information
-  if (properties['addr:street'] && properties['addr:housenumber']) {
-    const address = `${properties['addr:housenumber']} ${properties['addr:street']}`;
-    if (properties['addr:city']) {
-      amenities.push(`Address: ${address}, ${properties['addr:city']}`);
+  // Adresse zusammensetzen
+  const street = properties['addr:street'];
+  const houseNumber = properties['addr:housenumber'];
+  const city = properties['addr:city'];
+  
+  if (street && houseNumber) {
+    const address = `${houseNumber} ${street}`;
+    if (city) {
+      amenities.push(`Adresse: ${address}, ${city}`);
     } else {
-      amenities.push(`Address: ${address}`);
+      amenities.push(`Adresse: ${address}`);
     }
-  } else if (properties['addr:street']) {
-    amenities.push(`Address: ${properties['addr:street']}`);
+  } else if (street) {
+    amenities.push(`Straße: ${street}`);
   }
 
   return amenities;
@@ -302,25 +377,32 @@ function extractAmenities(properties: GeoJSONFeature['properties']): string[] {
 function generateDescription(properties: GeoJSONFeature['properties']): string {
   const parts: string[] = [];
 
-  // Use existing description if available
   if (properties.description && typeof properties.description === 'string') {
     return properties.description;
   }
 
-  // Generate description from properties
+  if (properties['description:de']) {
+    return properties['description:de'];
+  }
+
+  // Generiere Beschreibung aus Properties
   if (properties.amenity) {
     parts.push(properties.amenity.replace(/_/g, ' '));
+  } else if (properties.shop) {
+    parts.push(`${properties.shop.replace(/_/g, ' ')} Geschäft`);
   } else if (properties.leisure) {
     parts.push(properties.leisure.replace(/_/g, ' '));
   } else if (properties.tourism) {
     parts.push(properties.tourism.replace(/_/g, ' '));
-  } else if (properties.shop) {
-    parts.push(`${properties.shop.replace(/_/g, ' ')} shop`);
   }
 
   if (properties.sport) {
     const sports = properties.sport.split(';').map(s => s.trim().replace(/_/g, ' '));
-    parts.push(`Sports: ${sports.join(', ')}`);
+    parts.push(`Sport: ${sports.join(', ')}`);
+  }
+
+  if (properties.cuisine) {
+    parts.push(`Küche: ${properties.cuisine}`);
   }
 
   return parts.length > 0 ? parts.join(' - ') : '';
@@ -330,7 +412,7 @@ export function transformGeoJSONToPOIs(
   geoJsonData: GeoJSONCollection,
   site: string
 ): POI[] {
-  console.log(`🔍 POI Transformer: Processing ${geoJsonData.features.length} raw features for site ${site}`);
+  console.log(`🔍 Optimized POI Transformer: Processing ${geoJsonData.features.length} raw features for site ${site}`);
 
   if (!geoJsonData?.features || !Array.isArray(geoJsonData.features)) {
     console.warn('No valid features array found in GeoJSON data');
@@ -354,139 +436,57 @@ export function transformGeoJSONToPOIs(
 
       const properties = feature.properties;
       
-      // Create name from multiple sources - prioritize actual names but allow category-based names
-      let name = properties['name:en'] || properties['name:nl'] || properties.name;
+      // Optimierte Name-Generierung
+      const name = generateOptimizedName(properties);
       
-      // If no name but has amenity, use amenity as name
-      if (!name && properties.amenity) {
-        name = properties.amenity.charAt(0).toUpperCase() + properties.amenity.slice(1).replace(/_/g, ' ');
-      }
-      
-      // If no name but has shop, use shop as name  
-      if (!name && properties.shop) {
-        name = properties.shop.charAt(0).toUpperCase() + properties.shop.slice(1).replace(/_/g, ' ');
-      }
-      
-      // If no name but has leisure, use leisure as name
-      if (!name && properties.leisure) {
-        name = properties.leisure.charAt(0).toUpperCase() + properties.leisure.slice(1).replace(/_/g, ' ');
-      }
-      
-      // If no name but has tourism, use tourism as name
-      if (!name && properties.tourism) {
-        name = properties.tourism.charAt(0).toUpperCase() + properties.tourism.slice(1).replace(/_/g, ' ');
-      }
-      
-      // Skip only if really no usable data
-      if (!name || typeof name !== 'string' || name.trim() === '') {
+      if (!name || name.trim() === '') {
         skippedNoNameCount++;
         return;
       }
 
-      // CRITICAL FIX: Pass the POI name to coordinate extraction for better error logging
       const coordinates = getPoiCoordinates(feature.geometry, name);
       if (!coordinates) {
         invalidCoordinatesCount++;
-        // Don't create the POI if coordinates are invalid
         return;
       }
 
-      const category = categorizeFeature(properties);
+      const category = categorizeFeatureOptimized(properties);
       const amenities = extractAmenities(properties);
       const description = generateDescription(properties);
 
-      // Create a temporary POI object to apply categorization logic that might add subcategory
-      let enrichedPOI: POI = {
+      const poi: POI = {
         id: properties['@id'] || feature.id?.toString() || `poi_${index + 1}`,
         name: name.trim(),
-        category: category, // Default category
+        category: category,
         coordinates: coordinates,
         description: description || undefined,
         amenities: amenities.length > 0 ? amenities : undefined,
         openingHours: properties.opening_hours || properties['opening_hours:restaurant'] || null,
 
-        // PRESERVE CRITICAL ACCOMMODATION PROPERTIES
+        // Preserve original properties for enrichment
         roompot_category: properties.roompot_category,
         lodge_number: properties.lodge_number,
         building_type: properties.building_type,
         enrichment_key: properties.enrichment_key,
 
-        // Include other original properties that might be useful for enrichment
+        // Include other original properties
         ...properties
       };
 
-      // Apply enhanced categorization logic
-      if (properties.roompot_category) {
-        const roompotCategory = properties.roompot_category.toLowerCase();
-
-        // Lodge mapping - FIRST AND MOST IMPORTANT
-        if (roompotCategory.includes('lodge')) {
-          enrichedPOI.category = 'lodge';
-          enrichedPOI.subcategory = properties.building_type || 'lodge';
-        }
-        // Beach house mapping
-        else if (roompotCategory.includes('beach house') || roompotCategory.includes('strandhaus')) {
-          enrichedPOI.category = 'beach_houses';
-          enrichedPOI.subcategory = properties.building_type || 'beach_house';
-        }
-        // Bungalow mapping (including water bungalows)
-        else if (roompotCategory.includes('bungalow')) {
-          if (properties.park_id === 'water-village' || roompotCategory.includes('water')) {
-            enrichedPOI.category = 'bungalows_water';
-          } else {
-            enrichedPOI.category = 'bungalows';
-          }
-          enrichedPOI.subcategory = properties.building_type || 'bungalow';
-        }
-        // Chalet mapping
-        else if (roompotCategory.includes('chalet')) {
-          enrichedPOI.category = 'chalets';
-          enrichedPOI.subcategory = properties.building_type || 'chalet';
-        }
-        // Caravan/Camping mapping
-        else if (roompotCategory.includes('caravan') || roompotCategory.includes('camping')) {
-          enrichedPOI.category = 'campgrounds';
-          enrichedPOI.subcategory = properties.building_type || 'camping';
-        }
-      }
-
-      // Additional check for Lodge names (fallback)
-      if (properties.name && properties.name.toLowerCase().includes('lodge') && enrichedPOI.category !== 'lodge') {
-        enrichedPOI.category = 'lodge';
-        enrichedPOI.subcategory = 'lodge';
-      }
-
-      // If the category is still 'accommodation' and a building_type is present, use it as category
-      if (enrichedPOI.category === 'accommodation' && properties.building_type) {
-        enrichedPOI.category = properties.building_type.toLowerCase();
-      }
-
-      // If category is still 'accommodation' and it's a 'house', 'detached' or 'semidetached_house'
-      if (enrichedPOI.category === 'accommodation' && ['house', 'detached', 'semidetached_house'].includes(properties.building_type?.toLowerCase())) {
-        enrichedPOI.category = 'houses';
-      }
-
-      // If category is still 'accommodation' and it's a 'bungalow'
-      if (enrichedPOI.category === 'accommodation' && properties.building_type?.toLowerCase() === 'bungalow') {
-        enrichedPOI.category = 'bungalows';
-      }
-
-
-      pois.push(enrichedPOI);
+      pois.push(poi);
       validCount++;
 
     } catch (error) {
-      const poiName = properties.name || `Feature ${index}`;
-      console.error(`❌ Failed to transform POI "${poiName}":`, (error as Error).message);
+      console.error(`❌ Failed to transform POI at index ${index}:`, (error as Error).message);
     }
   });
 
-  console.log(`✅ POI Processing Summary:`);
+  console.log(`✅ Optimized POI Processing Summary:`);
   console.log(`   - Processed: ${processedCount} features`);
   console.log(`   - Valid POIs: ${validCount}`);
   console.log(`   - Invalid coordinates: ${invalidCoordinatesCount}`);
   console.log(`   - Skipped (no name): ${skippedNoNameCount}`);
-  console.log(`   - Total skipped: ${processedCount - validCount}`);
+  console.log(`   - Coverage: ${((validCount/processedCount)*100).toFixed(1)}%`);
 
   return pois;
 }
