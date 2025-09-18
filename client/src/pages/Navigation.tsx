@@ -137,6 +137,7 @@ export default function Navigation() {
     adaptiveTracking: true
   });
 
+
   // Local tracking position state
   const [trackingPosition, setTrackingPosition] = useState<Coordinates | null>(null);
 
@@ -363,12 +364,12 @@ export default function Navigation() {
                    poi.sport || poiName.includes('sportplatz') || poiName.includes('spielplatz');
           }
 
-          // 🛒 Einkaufen - EINFACH: Hat das POI ein shop-Feld? -> Zeigen!
+          // 🛒 Einkaufen - Verwendet jetzt die korrekte 'shop' Kategorie
           if (selectedCategory === 'shop') {
-            const isShop = !!poi.shop; // Wenn shop-Feld existiert, zeigen!
-            
+            const isShop = poiCategory === 'shop';
+
             if (isShop) {
-              console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (shop: ${poi.shop})`);
+              console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (category: ${poi.category})`);
             }
             return isShop;
           }
@@ -536,15 +537,15 @@ export default function Navigation() {
     // Debug: Show which POIs matched
     if (displayPOIs.length > 0) {
       console.log(`🔍 FILTERING DEBUG: Matched POIs:`, displayPOIs.slice(0, 5).map(poi => ({ name: normalizePoiString(poi.name), category: normalizePoiString(poi.category) })));
-      
+
       // Special debug for shop filter
       if (filteredCategories.includes('shop')) {
         const shopPOIs = allPOIs.filter(poi => poi.shop);
         console.log(`🛒 SHOP DEBUG: Found ${shopPOIs.length} POIs with shop tag`);
-        console.log(`🛒 SHOP DEBUG: Sample shop POIs:`, shopPOIs.slice(0, 10).map(poi => ({ 
-          name: normalizePoiString(poi.name), 
-          shop: poi.shop, 
-          category: poi.category 
+        console.log(`🛒 SHOP DEBUG: Sample shop POIs:`, shopPOIs.slice(0, 10).map(poi => ({
+          name: normalizePoiString(poi.name),
+          shop: poi.shop,
+          category: poi.category
         })));
       }
     } else {
@@ -1476,7 +1477,7 @@ export default function Navigation() {
           )}
 
           {/* Enhanced POI Dialog for enriched accommodations */}
-          {showPOIDialog && selectedPOI && (
+                      {showPOIDialog && selectedPOI && (
             <EnhancedPOIDialog
               poi={selectedPOI}
               isOpen={showPOIDialog}

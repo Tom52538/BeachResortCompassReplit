@@ -32,42 +32,44 @@ export interface GeoJSONCollection {
   features: GeoJSONFeature[];
 }
 
-// Optimierte Kategorisierung basierend auf echter Datenanalyse
+// PRÄZISE Kategorisierung basierend auf Quick-Filter-Analyse
 function categorizeFeatureOptimized(properties: GeoJSONFeature['properties']): POICategory {
-  // 1. GASTRONOMIE - Höchste Priorität für Restaurants/Cafes
+  // 1. GASTRONOMIE (25 POIs erwartet)
   const gastroAmenities = ['restaurant', 'cafe', 'bar', 'pub', 'fast_food', 'biergarten', 'ice_cream'];
   if (properties.amenity && gastroAmenities.includes(properties.amenity)) {
     return 'gastronomie';
   }
   if (properties.cuisine) return 'gastronomie';
-  if (properties.cafe === 'yes') return 'gastronomie';
   if (properties.brewery) return 'gastronomie';
-  if (properties.takeaway === 'yes' && (properties.amenity === 'restaurant' || properties.shop === 'bakery')) {
-    return 'gastronomie';
-  }
 
-  // 2. SHOPPING - Alle shop-Properties + Brands
-  if (properties.shop) return 'services'; // Shopping wird als services kategorisiert
+  // 2. EINKAUFEN (70 POIs erwartet) - NICHT services!
+  if (properties.shop) return 'shop'; // FIXED: shop = shop category
+  if (properties.brand) return 'shop'; // Brands sind Shopping
   const shoppingAmenities = ['marketplace', 'vending_machine'];
   if (properties.amenity && shoppingAmenities.includes(properties.amenity)) {
-    return 'services';
+    return 'shop';
   }
-  if (properties.brand) return 'services';
 
-  // 3. SERVICES - Bank, Post, Gesundheit, Handwerk
-  const serviceAmenities = [
-    'bank', 'atm', 'post_office', 'pharmacy', 'hospital', 'clinic',
-    'dentist', 'veterinary', 'fuel', 'car_wash', 'car_repair'
-  ];
+  // 3. SERVICES (46 POIs erwartet) - Nur echte Services
+  const serviceAmenities = ['bank', 'atm', 'post_office', 'fuel'];
   if (properties.amenity && serviceAmenities.includes(properties.amenity)) {
     return 'services';
   }
   if (properties.office) return 'services';
-  if (properties.government) return 'services';
-  if (properties.healthcare) return 'services';
   if (properties.craft) return 'services';
 
-  // 4. LEISURE - Freizeit, Sport, Kultur
+  // 4. GESUNDHEIT & BILDUNG (17+14=31 POIs erwartet)
+  const healthAmenities = ['pharmacy', 'hospital', 'clinic', 'dentist', 'veterinary', 'doctors'];
+  const educationAmenities = ['school', 'kindergarten', 'university', 'college'];
+  if (properties.amenity && healthAmenities.includes(properties.amenity)) {
+    return 'healthcare';
+  }
+  if (properties.healthcare) return 'healthcare';
+  if (properties.amenity && educationAmenities.includes(properties.amenity)) {
+    return 'healthcare'; // Kombiniert als "Gesundheit & Bildung"
+  }
+
+  // 5. FREIZEIT (182 POIs erwartet)
   if (properties.leisure) return 'leisure';
   if (properties.sport) return 'leisure';
   const tourismLeisure = ['attraction', 'viewpoint', 'museum', 'monument', 'artwork'];
@@ -80,30 +82,23 @@ function categorizeFeatureOptimized(properties: GeoJSONFeature['properties']): P
   }
   if (properties.historic) return 'leisure';
 
-  // 5. RELIGION - Kirchen, Friedhöfe
-  if (properties.religion) return 'other'; // Neue Kategorie 'religion' falls verfügbar
+  // 6. RELIGION (38 POIs erwartet)
+  if (properties.religion) return 'religion';
   const religiousAmenities = ['place_of_worship', 'monastery', 'grave_yard'];
   if (properties.amenity && religiousAmenities.includes(properties.amenity)) {
-    return 'other'; // oder neue Kategorie 'religion'
+    return 'religion';
   }
-  if (properties.denomination) return 'other';
-  if (properties.service_times) return 'other';
+  if (properties.denomination) return 'religion';
+  if (properties.service_times) return 'religion';
 
-  // 6. PARKING - Auto und Fahrrad
+  // 7. PARKEN (204 POIs erwartet)
   if (properties.amenity === 'parking') return 'parking';
+  if (properties.amenity === 'parking_space') return 'parking';
   if (properties.parking) return 'parking';
-  if (properties.bicycle_parking) return 'facilities';
-  if (properties.amenity === 'bicycle_parking') return 'facilities';
+  if (properties.amenity === 'bicycle_parking') return 'parking'; // Auch Fahrrad-Parkplätze
+  if (properties.bicycle_parking) return 'parking';
 
-  // 7. EDUCATION - Schulen, Kindergarten
-  const educationAmenities = ['school', 'kindergarten', 'university', 'college', 'library'];
-  if (properties.amenity && educationAmenities.includes(properties.amenity)) {
-    return 'other'; // oder neue Kategorie 'education'
-  }
-  if (properties.school_type) return 'other';
-  if (properties['isced:level']) return 'other';
-
-  // 8. INFRASTRUCTURE - Toiletten, Recycling, Utilities
+  // 8. INFRASTRUKTUR (40 POIs erwartet)
   const utilityAmenities = ['toilets', 'drinking_water', 'waste_disposal', 'recycling', 'charging_station'];
   if (properties.amenity && utilityAmenities.includes(properties.amenity)) {
     if (properties.amenity === 'toilets') return 'toilets';
