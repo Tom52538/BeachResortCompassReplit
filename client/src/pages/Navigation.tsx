@@ -363,26 +363,12 @@ export default function Navigation() {
                    poi.sport || poiName.includes('sportplatz') || poiName.includes('spielplatz');
           }
 
-          // 🛒 Einkaufen (50+ POIs - 4%)
+          // 🛒 Einkaufen - EINFACH: Hat das POI ein shop-Feld? -> Zeigen!
           if (selectedCategory === 'shop') {
-            const isShop = poi.shop ||  // Alle shop= Tags
-                          poi.amenity === 'marketplace' ||
-                          poiName.includes('markt') || 
-                          poiName.includes('bäckerei') || 
-                          poiName.includes('bakery') ||
-                          poiName.includes('friseur') ||
-                          poiName.includes('laden') ||
-                          poiName.includes('geschäft') ||
-                          poiName.includes('supermarket') ||
-                          poiName.includes('penny') ||
-                          poiName.includes('aldi') ||
-                          poiName.includes('netto') ||
-                          poiName.includes('lidl') ||
-                          poiName.includes('rewe') ||
-                          poiName.includes('edeka');
-
+            const isShop = !!poi.shop; // Wenn shop-Feld existiert, zeigen!
+            
             if (isShop) {
-              console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (shop: ${poi.shop}, amenity: ${poi.amenity})`);
+              console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (shop: ${poi.shop})`);
             }
             return isShop;
           }
