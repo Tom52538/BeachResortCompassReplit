@@ -1,0 +1,22 @@
+Ich habe einen useEffect-Hook in client/src/pages/Navigation.tsx hinzugefügt, um sicherzustellen, dass die Live-Standortdaten (livePosition) korrekt an den trackingPosition-State übergeben werden. Dies ist die Grundlage für die dynamische Aktualisierung der Navigation.
+
+Updated
+client/src/pages/Navigation.tsx
+Ich habe die Logik für die Anzeige der Turn-by-Turn-Anweisungen korrigiert.
+
+Die TopManeuverPanel-Komponente wird jetzt dynamisch mit der aktuellen Anweisung und dem Manöver-Typ aktualisiert, basierend auf dem Fortschritt des Benutzers entlang der Route.
+
+Updated
+client/src/pages/Navigation.tsx
+Ich habe die Logik für die automatische Routen-Neuberechnung implementiert.
+
+Wenn ein Benutzer von der Route abweicht, wird nun nach einer kurzen Verzögerung automatisch eine neue Route vom aktuellen Standort zum Ziel berechnet und angezeigt.
+Diese Änderung behebt kritische Fehler in der Navigations-Engine, die verhinderten, dass Turn-by-Turn-Anweisungen und die Routenführung dynamisch aktualisiert wurden.
+
+Die folgenden Probleme wurden behoben:
+
+1.  **Fehlende Live-Positionsübernahme:** Die vom `useNavigationTracking`-Hook bereitgestellte Live-Position wurde nicht an den State übergeben, der für die Berechnung des Navigationsfortschritts zuständig ist. Ein `useEffect`-Hook wurde hinzugefügt, um den `trackingPosition`-State bei jeder Aktualisierung der Live-Position zu synchronisieren.
+
+2.  **Statische Turn-by-Turn-Anweisungen:** Die Komponente für die Navigationsanweisungen (`TopManeuverPanel`) zeigte immer nur die erste Anweisung der Route an. Dies wurde korrigiert, indem die Komponente nun dynamische State-Variablen (`currentInstruction`, `currentManeuverType`) verwendet, die während der Navigation kontinuierlich aktualisiert werden.
+
+3.  **Fehlende Routen-Neuberechnung:** Die `onOffRoute`-Callback-Funktion war implementiert, löste aber keine Neuberechnung aus. Die Funktion wurde erweitert, um bei Abweichung von der Route die `handleReroute`-Funktion aufzurufen. Diese berechnet die Route vom aktuellen Standort des Benutzers zum Ziel neu. Eine Debounce-Logik wurde hinzugefügt, um zu häufige Aufrufe zu verhindern.
