@@ -281,6 +281,7 @@ export const translateText = (text: string, lang: SupportedLanguage): string => 
       'chalets': 'Chalets',
       'accommodations': 'Unterkünfte',
       'accommodations_rolling': 'Alle Unterkünfte',
+      'gastronomie': 'Gastronomie',
 
       // Common UI elements
       'Loading...': 'Wird geladen...',
@@ -1043,7 +1044,6 @@ export const translateInstruction = (instruction: string, lang: SupportedLanguag
     // Walking instructions (most specific first)
     'Walk 396m to destination!': '396m zu Fuß zum Ziel!',
     'Walk to destination': 'Zu Fuß zum Ziel',
-    'to destination': 'zum Ziel',
     'destination': 'Ziel',
 
     // Distance patterns
