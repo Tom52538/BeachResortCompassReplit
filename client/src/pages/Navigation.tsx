@@ -116,6 +116,8 @@ export default function Navigation() {
   // Navigation tracking state - ElevenLabs TTS
   const secureTTSRef = useRef<SecureTTSClient | null>(null);
   const routeTrackerRef = useRef<RouteTracker | null>(null);
+  const reroutingRef = useRef(false);
+  const destinationRef = useRef<Coordinates | null>(null);
   const campgroundRerouteRef = useRef<CampgroundRerouteDetector | null>(null);
   const [currentInstruction, setCurrentInstruction] = useState<string>('');
   const [nextDistance, setNextDistance] = useState<string>('');
@@ -788,6 +790,9 @@ export default function Navigation() {
     }
 
     const destination = { lat: poi.coordinates.lat, lng: poi.coordinates.lng };
+    
+    // CRITICAL: Set destination for re-routing capability
+    destinationRef.current = destination;
 
     const startTime = performance.now();
     mobileLogger.log('NAVIGATION', `Starting navigation to ${normalizePoiString(poi.name)} with mode: ${travelMode}`);
@@ -1222,13 +1227,43 @@ export default function Navigation() {
           handleEndNavigation();
         },
         (offRouteDistance) => {
-          // Off route detection
+          // Off route detection with real re-routing
           console.log('Off route detected, distance:', offRouteDistance);
           if (secureTTSRef.current && voiceEnabled) {
             console.log('🔄 ElevenLabs Route neu berechnen');
             secureTTSRef.current.speak('Route wird neu berechnet', 'warning').catch(err =>
               console.error('TTS Error:', err)
             );
+          }
+
+          // Hysterese: erst ab 12-15m wirklich rerouten, um Ping-Pong zu vermeiden
+          if (!reroutingRef.current && offRouteDistance > 12 && destinationRef.current) {
+            reroutingRef.current = true;
+            (async () => {
+              try {
+                const profile = travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking';
+                const newRoute = await getRoute.mutateAsync({
+                  from: trackingPosition || currentPosition,  // sicherheitshalber mit fallback
+                  to: destinationRef.current!,         // Ziel beibehalten
+                  mode: profile
+                });
+                setCurrentRoute(newRoute);
+                setCurrentInstruction(newRoute.instructions?.[0]?.instruction || 'Weiter geradeaus');
+                setNextDistance(newRoute.instructions?.[0]?.distance || '0 m');
+
+                // Tracker neu starten
+                if (routeTrackerRef.current) {
+                  routeTrackerRef.current.reset();
+                  routeTrackerRef.current = null;
+                }
+                // Trigger useEffect to create new tracker with new route
+              } catch (err) {
+                console.error('Re-route error', err);
+              } finally {
+                // kleine Abkühlphase
+                setTimeout(() => { reroutingRef.current = false; }, 3000);
+              }
+            })();
           }
         }
       );
@@ -1259,7 +1294,11 @@ export default function Navigation() {
       // KRITISCHER FIX: Aktualisiere currentInstruction bei jedem Step-Change
       if (progress && currentRoute?.instructions?.[progress.currentStep]) {
         const newInstruction = currentRoute.instructions[progress.currentStep];
-        setCurrentInstruction(newInstruction);
+        // Extract instruction string from RouteInstruction object
+        const instructionText = typeof newInstruction === 'string' 
+          ? newInstruction 
+          : newInstruction.instruction || 'Weiter geradeaus';
+        setCurrentInstruction(instructionText);
       }
 
       // Update map center to follow user during navigation
@@ -1472,9 +1511,11 @@ export default function Navigation() {
             <>
               {/* Top: Current Maneuver */}
               <TopManeuverPanel
-                instruction={typeof currentRoute.instructions[0]?.instruction === 'string' ? currentRoute.instructions[0].instruction : 'Weiter geradeaus'}
+                instruction={currentInstruction || (typeof currentRoute.instructions[0]?.instruction === 'string' ? currentRoute.instructions[0].instruction : 'Weiter geradeaus')}
                 distance={nextDistance}
-                maneuverType={currentRoute.instructions[0]?.maneuverType}
+                maneuverType={routeProgress?.currentStep >= 0 && currentRoute.instructions[routeProgress.currentStep] 
+                  ? currentRoute.instructions[routeProgress.currentStep]?.maneuverType 
+                  : currentRoute.instructions[0]?.maneuverType}
               />
 
               {/* Bottom: Navigation Summary with End Button */}
