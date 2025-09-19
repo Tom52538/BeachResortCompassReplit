@@ -134,8 +134,9 @@ router.post('/directions', async (req, res) => {
       });
     }
 
-    // Use OSM-only routing through the orchestrator
-    const route = await routingOrchestrator.calculateRoute(from, to, mode);
+    // Use OSM-only routing through the orchestrator (lazy-loaded)
+    const orchestrator = getRoutingOrchestrator();
+    const route = await orchestrator.calculateRoute(from, to, mode);
 
     const response = {
       success: route.success,
@@ -169,7 +170,8 @@ router.post('/directions', async (req, res) => {
 // Network statistics endpoint
 router.get('/stats', async (req, res) => {
   try {
-    const stats = routingOrchestrator.getStats();
+    const orchestrator = getRoutingOrchestrator();
+    const stats = orchestrator.getStats();
     res.json({
       success: true,
       stats,
@@ -196,14 +198,15 @@ router.post('/test', async (req, res) => {
     
     console.log('🧪 TESTING ROUTE:', { from: testFrom, to: testTo, vehicleType });
 
-    // Test both walking and driving routes
-    const walkingResult = await routingOrchestrator.calculateRoute(
+    // Test both walking and driving routes (lazy-loaded)
+    const orchestrator = getRoutingOrchestrator();
+    const walkingResult = await orchestrator.calculateRoute(
       testFrom,
       testTo,
       'walking'
     );
     
-    const drivingResult = await routingOrchestrator.calculateRoute(
+    const drivingResult = await orchestrator.calculateRoute(
       testFrom,
       testTo,
       'driving'
@@ -247,7 +250,8 @@ router.post('/test', async (req, res) => {
 // Network health check endpoint
 router.get('/network-status', async (req, res) => {
   try {
-    const stats = routingOrchestrator.getStats();
+    const orchestrator = getRoutingOrchestrator();
+    const stats = orchestrator.getStats();
     
     res.json({
       success: true,
