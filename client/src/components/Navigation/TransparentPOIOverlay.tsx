@@ -97,7 +97,7 @@ export const TransparentPOIOverlay: React.FC<TransparentPOIOverlayProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-bold text-gray-800 mb-1 truncate">{poi.name}</h3>
-              <p className="text-gray-600 mb-2">{translateText(poi.category)}</p>
+              
               {poi.distance && (
                 <div className="flex items-center text-sm text-gray-500">
                   <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />

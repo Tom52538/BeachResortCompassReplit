@@ -155,10 +155,7 @@ export const SmartBottomDrawer = ({
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">{t('poi.category')}:</span>
-                <span className="text-sm font-medium text-gray-900 capitalize">{selectedPOI.category}</span>
-              </div>
+              
               
               {selectedPOI.distance && (
                 <div className="flex items-center space-x-2">

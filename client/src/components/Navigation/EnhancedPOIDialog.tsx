@@ -792,7 +792,7 @@ export const EnhancedPOIDialog = ({ poi, isOpen, onClose, onNavigate }: Enhanced
             </Button>
           </div>
         )}
-        
+
       </DialogContent>
     </Dialog>
   );
