@@ -255,7 +255,7 @@ export const translateText = (text: string, lang: SupportedLanguage): string => 
       'lodge': 'Lodge',
       'Lodge': 'Lodge',
       'Lodge 4': 'Lodge 4',
-      
+
       // Accommodation descriptions and pricing
       'Comfortable lodge accommodation in Water Village, perfect for families seeking a unique water-based camping experience.': 'Komfortable Lodge-Unterkunft im Water Village, perfekt für Familien, die ein einzigartiges wasserbasiertes Camping-Erlebnis suchen.',
       'from €149 per night': 'ab €149 pro Nacht',
@@ -281,7 +281,7 @@ export const translateText = (text: string, lang: SupportedLanguage): string => 
       'chalets': 'Chalets',
       'accommodations': 'Unterkünfte',
       'accommodations_rolling': 'Alle Unterkünfte',
-      
+
       // Common UI elements
       'Loading...': 'Wird geladen...',
       'Error': 'Fehler',
@@ -585,7 +585,8 @@ export const translations = {
       'accommodations': 'Unterkünfte',
       'entertainment': 'Unterhaltung',
       'essential': 'Grundversorgung',
-      'facilities': 'Einrichtungen'
+      'facilities': 'Einrichtungen',
+      'gastronomie': 'Gastronomie'
     },
     weather: {
       condition: 'Bedingung',
@@ -828,14 +829,19 @@ export const translations = {
       routeEnded: 'Navigatie beëindigd'
     },
     accommodation: {
+      capacity: 'Tot',
+      guests: 'gasten',
+      from: 'vanaf',
+      per_night: 'per nacht',
       features: 'Voorzieningen',
+      no_additional_info: 'Geen aanvullende informatie beschikbaar',
+      upTo: 'Tot',
+      guestsCount: 'gasten',
+      website: 'Website bezoeken',
       priceFrom: 'vanaf',
       perNight: 'per nacht',
       viewDetails: 'Details bekijken',
-      bookNow: 'Nu boeken',
-      upTo: 'Tot',
-      guests: 'gasten',
-      website: 'Website bezoeken'
+      bookNow: 'Nu boeken'
     }
   },
   it: {
