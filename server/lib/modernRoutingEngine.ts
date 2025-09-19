@@ -222,7 +222,7 @@ class ModernRoutingEngine {
     
     console.log(`🗺️ INSTRUCTION GENERATION: Processing ${coordinates.length} coordinates for ${vehicleType}`);
     const instructions: string[] = [];
-    const significantPoints = this.findSignificantTurns(coordinates);
+    const significantPoints = this.findSignificantTurns(coordinates, vehicleType);
     
     // Get appropriate German verb based on vehicle type
     const verb = this.getGermanVerbForVehicle(vehicleType);
@@ -252,9 +252,9 @@ class ModernRoutingEngine {
         // Last instruction - arrival
         instruction = 'Sie haben Ihr Ziel erreicht';
       } else {
-        // Calculate turn direction with road name
+        // Calculate turn direction with road name using vehicle-specific thresholds
         const prevIndex = significantPoints[i - 1];
-        const maneuver = this.calculateTurnDirection(coordinates, prevIndex, currentIndex, nextIndex);
+        const maneuver = this.calculateTurnDirection(coordinates, prevIndex, currentIndex, nextIndex, vehicleType);
         if (roadName) {
           instruction = `${maneuver} auf ${roadName} und ${this.formatDistance(distance)} ${verb}`;
         } else {
@@ -314,14 +314,25 @@ class ModernRoutingEngine {
   }
   
   // Find points where significant direction changes occur
-  private findSignificantTurns(coordinates: number[][]): number[] {
+  private findSignificantTurns(coordinates: number[][], vehicleType: string = 'walking'): number[] {
     if (coordinates.length <= 3) {
       return [0, coordinates.length - 1];
     }
     
     const significantIndices: number[] = [0]; // Always include start
-    const minTurnAngle = 20; // Minimum angle in degrees to consider a turn
-    const minSegmentDistance = 15; // Minimum 15m between turns
+    
+    // 🏕️ CAMPGROUND OPTIMIZATION: Finer turn detection for walking/pedestrian mode
+    let minTurnAngle: number;
+    let minSegmentDistance: number;
+    
+    if (vehicleType === 'walking' || vehicleType === 'pedestrian') {
+      minTurnAngle = 12; // Finer detection for campground paths (was 20°)
+      minSegmentDistance = 8; // Shorter segments for detailed navigation (was 15m)
+      console.log('🏕️ CAMPGROUND MODE: Using fine turn detection (12°, 8m segments)');
+    } else {
+      minTurnAngle = 20; // Standard for car/bike
+      minSegmentDistance = 15; // Standard for car/bike
+    }
     
     for (let i = 1; i < coordinates.length - 1; i++) {
       const prev = { lat: coordinates[i - 1][1], lng: coordinates[i - 1][0] };
@@ -341,30 +352,43 @@ class ModernRoutingEngine {
     return significantIndices;
   }
   
-  // Calculate turn direction based on three points
-  private calculateTurnDirection(coordinates: number[][], prevIndex: number, currentIndex: number, nextIndex: number): string {
+  // Calculate turn direction based on three points with vehicle-specific thresholds
+  private calculateTurnDirection(coordinates: number[][], prevIndex: number, currentIndex: number, nextIndex: number, vehicleType: string = 'walking'): string {
     const prev = { lat: coordinates[prevIndex][1], lng: coordinates[prevIndex][0] };
     const current = { lat: coordinates[currentIndex][1], lng: coordinates[currentIndex][0] };
     const next = { lat: coordinates[nextIndex][1], lng: coordinates[nextIndex][0] };
     
     const angle = this.calculateTurnAngle(prev, current, next);
     
-    if (Math.abs(angle) < 15) {
+    // 🏕️ CAMPGROUND OPTIMIZATION: Finer angle thresholds for walking mode
+    let straightThreshold: number, slightTurnThreshold: number, normalTurnThreshold: number;
+    
+    if (vehicleType === 'walking' || vehicleType === 'pedestrian') {
+      straightThreshold = 10; // More sensitive straight detection (was 15°)
+      slightTurnThreshold = 30; // Finer slight turn detection (was 45°)
+      normalTurnThreshold = 100; // Adjusted normal turn threshold (was 120°)
+    } else {
+      straightThreshold = 15; // Standard for car/bike
+      slightTurnThreshold = 45; // Standard for car/bike
+      normalTurnThreshold = 120; // Standard for car/bike
+    }
+    
+    if (Math.abs(angle) < straightThreshold) {
       return 'Geradeaus';
     } else if (angle > 0) {
       // Right turn
-      if (angle < 45) {
+      if (angle < slightTurnThreshold) {
         return 'Leicht rechts';
-      } else if (angle < 120) {
+      } else if (angle < normalTurnThreshold) {
         return 'Rechts abbiegen';
       } else {
         return 'Scharf rechts abbiegen';
       }
     } else {
       // Left turn  
-      if (angle > -45) {
+      if (angle > -slightTurnThreshold) {
         return 'Leicht links';
-      } else if (angle > -120) {
+      } else if (angle > -normalTurnThreshold) {
         return 'Links abbiegen';
       } else {
         return 'Scharf links abbiegen';
