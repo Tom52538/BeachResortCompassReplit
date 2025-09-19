@@ -197,8 +197,10 @@ export default function Navigation() {
     console.log('🧭 MAP ROTATION EFFECT: mapOrientation =', mapOrientation, 'currentBearing =', currentBearing);
     if (mapOrientation === 'driving') {
       // Rotate map against the bearing so "driving direction is up"
-      setMapRotation(-currentBearing);
-      console.log('🧭 DRIVING MODE: Map rotation set to', -currentBearing, 'degrees (bearing:', currentBearing, ')');
+      const newRotation = -currentBearing;
+      setMapRotation(newRotation);
+      console.log('🧭 DRIVING MODE: Map rotation set to', newRotation, 'degrees (bearing:', currentBearing, ')');
+      console.log('🧭 ROTATION STATE: mapRotation will be:', newRotation);
     } else if (mapOrientation === 'north') {
       setMapRotation(0);
       console.log('🧭 NORTH MODE: Map rotation reset to 0 degrees');
@@ -1247,17 +1249,19 @@ export default function Navigation() {
         (offRouteDistance) => {
           // Off route detection with real re-routing
           console.log('Off route detected, distance:', offRouteDistance);
+
+          // CRITICAL: Mock GPS Mode - disable off-route re-routing to prevent loops
+          if (!useRealGPS) {
+            console.log('🔍 MOCK GPS MODE: Off-route re-routing disabled to prevent loops - NO TTS');
+            return;
+          }
+
+          // Only announce re-routing if we're actually doing it
           if (secureTTSRef.current && voiceEnabled) {
             console.log('🔄 ElevenLabs Route neu berechnen');
             secureTTSRef.current.speak('Route wird neu berechnet', 'warning').catch(err =>
               console.error('TTS Error:', err)
             );
-          }
-
-          // CRITICAL: Mock GPS Mode - disable off-route re-routing to prevent loops
-          if (!useRealGPS) {
-            console.log('🔍 MOCK GPS MODE: Off-route re-routing disabled to prevent loops');
-            return;
           }
           
           // Hysterese: 5m für Campingplatz/Dorf Navigation - schnelle Reaktion bei kurzen Wegen
