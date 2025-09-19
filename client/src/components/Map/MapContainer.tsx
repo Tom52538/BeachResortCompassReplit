@@ -357,15 +357,17 @@ export const MapContainer: React.FC<MapContainerProps> = ({
 
 
   return (
-    <div className="map-container relative">
+    <div 
+      className="map-container relative"
+      style={{
+        transform: `rotate(${rotation}deg)`,
+        transition: 'transform 0.3s ease-out'
+      }}
+    >
       <LeafletMapContainer
         center={[safeCenter.lat, safeCenter.lng]}
         zoom={zoom}
         className="w-full h-full z-0"
-        style={{
-          transform: `rotate(${rotation}deg)`,
-          transition: 'transform 0.3s ease-out'
-        }}
         zoomControl={false}
         attributionControl={false}
       >

@@ -163,7 +163,7 @@ export default function Navigation() {
   useEffect(() => {
     if (mapOrientation === 'driving') {
       // Calculate bearing from movement when using real GPS
-      if (useRealGPS && livePosition && lastPositionRef.current) {
+      if (useRealGPS && livePosition && lastPositionRef.current && isNavigating) {
         const bearing = calculateBearing(lastPositionRef.current, livePosition.position);
         if (!isNaN(bearing)) {
           console.log('📍 Calculated bearing from movement:', bearing);
@@ -180,9 +180,6 @@ export default function Navigation() {
         );
         console.log('📍 Using route geometry bearing for mock GPS:', routeBearing);
         setCurrentBearing(routeBearing);
-      } else if (routeProgress?.heading) {
-        console.log('📍 Using route progress bearing:', routeProgress.heading);
-        setCurrentBearing(routeProgress.heading);
       } else {
         // Default driving direction simulation for testing
         setCurrentBearing(45); // Northeast direction for testing
@@ -193,10 +190,11 @@ export default function Navigation() {
         lastPositionRef.current = livePosition.position;
       }
     }
-  }, [livePosition, mapOrientation, useRealGPS, currentRoute, routeProgress]);
+  }, [livePosition, mapOrientation, useRealGPS, currentRoute, isNavigating]);
 
-  // NEW: Synchronize driving mode with map rotation
+  // NEW: Synchronize driving mode with map rotation - Debug Added
   useEffect(() => {
+    console.log('🧭 MAP ROTATION EFFECT: mapOrientation =', mapOrientation, 'currentBearing =', currentBearing);
     if (mapOrientation === 'driving') {
       // Rotate map against the bearing so "driving direction is up"
       setMapRotation(-currentBearing);
