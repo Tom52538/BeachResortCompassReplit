@@ -140,13 +140,20 @@ export default function Navigation() {
   });
 
 
-  // Local tracking position state
-  const [trackingPosition, setTrackingPosition] = useState<Coordinates | null>(null);
-
-
-  // Use live position only when navigating AND using real GPS, otherwise use mock position
-  // Use real GPS position when navigating, otherwise use current position
-  // const trackingPosition = (isNavigating && useRealGPS && livePosition?.position) || currentPosition;
+  // CRITICAL FIX: Properly set trackingPosition for navigation
+  // Use live position when navigating with real GPS, otherwise use current position
+  const trackingPosition = useMemo(() => {
+    if (isNavigating) {
+      if (useRealGPS && livePosition?.position) {
+        console.log('🔍 TRACKING POSITION: Using live GPS position for navigation', livePosition.position);
+        return livePosition.position;
+      } else {
+        console.log('🔍 TRACKING POSITION: Using mock position for navigation', currentPosition);
+        return currentPosition;
+      }
+    }
+    return null; // Not navigating
+  }, [isNavigating, useRealGPS, livePosition?.position, currentPosition]);
 
   // Calculate bearing for driving direction mode
   const [currentBearing, setCurrentBearing] = useState(0);
@@ -890,7 +897,7 @@ export default function Navigation() {
     setCurrentRoute(null);
     setDestinationMarker(null);
     setCurrentInstruction('');
-    setTrackingPosition(null);
+    // trackingPosition is now computed, no need to set it manually
     setUIMode('start'); // Changed from 'normal' to 'start' for consistency with initial UI state
     setOverlayStates(prev => ({ ...prev, navigation: false }));
 
@@ -905,7 +912,7 @@ export default function Navigation() {
 
     mobileLogger.log('NAVIGATION', 'Navigation ended by user');
     console.log('Navigation ended successfully');
-  }, [setTrackingPosition]); // Added setTrackingPosition to dependencies
+  }, []); // No dependencies needed
 
   // This handler is likely intended to close the POI overlay/dialog.
   // Updated to also close the new dialog state.
