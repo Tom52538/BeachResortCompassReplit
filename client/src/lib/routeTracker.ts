@@ -29,7 +29,7 @@ export class RouteTracker {
 
   // Thresholds for navigation decisions - Made more conservative for accuracy
   private readonly STEP_ADVANCE_THRESHOLD = 0.015; // 15 meters - more precise
-  private readonly OFF_ROUTE_THRESHOLD = 0.030; // 30 meters - more responsive
+  private readonly OFF_ROUTE_THRESHOLD = 0.050; // 50 meters - prevent mock GPS false positives
   private readonly ROUTE_COMPLETE_THRESHOLD = 0.008; // 8 meters - prevent premature completion
 
   constructor(

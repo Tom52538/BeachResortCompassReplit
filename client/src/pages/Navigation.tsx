@@ -1243,6 +1243,12 @@ export default function Navigation() {
             );
           }
 
+          // CRITICAL: Mock GPS Mode - disable off-route re-routing to prevent loops
+          if (!useRealGPS) {
+            console.log('🔍 MOCK GPS MODE: Off-route re-routing disabled to prevent loops');
+            return;
+          }
+          
           // Hysterese: erst ab 12-15m wirklich rerouten, um Ping-Pong zu vermeiden
           if (!reroutingRef.current && offRouteDistance > 12 && destinationRef.current) {
             reroutingRef.current = true;
