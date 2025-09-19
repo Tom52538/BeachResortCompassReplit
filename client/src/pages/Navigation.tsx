@@ -157,10 +157,11 @@ export default function Navigation() {
 
   // Calculate bearing for driving direction mode
   const [currentBearing, setCurrentBearing] = useState(0);
+  const [mapRotation, setMapRotation] = useState(0);
   const lastPositionRef = useRef<Coordinates | null>(null);
 
   useEffect(() => {
-    if (mapOrientation === 'driving' && isNavigating) {
+    if (mapOrientation === 'driving') {
       // Calculate bearing from movement when using real GPS
       if (useRealGPS && livePosition && lastPositionRef.current) {
         const bearing = calculateBearing(lastPositionRef.current, livePosition.position);
@@ -192,7 +193,19 @@ export default function Navigation() {
         lastPositionRef.current = livePosition.position;
       }
     }
-  }, [livePosition, mapOrientation, isNavigating, useRealGPS, currentRoute, routeProgress]);
+  }, [livePosition, mapOrientation, useRealGPS, currentRoute, routeProgress]);
+
+  // NEW: Synchronize driving mode with map rotation
+  useEffect(() => {
+    if (mapOrientation === 'driving') {
+      // Rotate map against the bearing so "driving direction is up"
+      setMapRotation(-currentBearing);
+      console.log('🧭 DRIVING MODE: Map rotation set to', -currentBearing, 'degrees (bearing:', currentBearing, ')');
+    } else if (mapOrientation === 'north') {
+      setMapRotation(0);
+      console.log('🧭 NORTH MODE: Map rotation reset to 0 degrees');
+    }
+  }, [mapOrientation, currentBearing]);
 
   // Debug logging for position tracking
   useEffect(() => {
@@ -1392,6 +1405,7 @@ export default function Navigation() {
                 center={mapCenter}
                 zoom={mapZoom}
                 currentPosition={trackingPosition || currentPosition}
+                rotation={mapRotation}
                 pois={(() => {
                   let poisToShow = displayPOIs;
 

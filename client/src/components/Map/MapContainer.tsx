@@ -41,6 +41,7 @@ interface MapContainerProps {
   mapStyle: 'outdoors' | 'satellite' | 'streets' | 'navigation';
   destinationMarker?: { lat: number; lng: number } | null;
   showNetworkOverlay?: boolean;
+  rotation?: number;
   children?: React.ReactNode;
 }
 
@@ -192,6 +193,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   mapStyle,
   destinationMarker,
   showNetworkOverlay = false,
+  rotation = 0,
   children
 }) => {
   const mapRef = useRef<LeafletMap | null>(null);
@@ -360,6 +362,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         center={[safeCenter.lat, safeCenter.lng]}
         zoom={zoom}
         className="w-full h-full z-0"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: 'transform 0.3s ease-out'
+        }}
         zoomControl={false}
         attributionControl={false}
       >

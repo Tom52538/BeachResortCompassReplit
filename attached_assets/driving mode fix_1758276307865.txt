@@ -1,0 +1,96 @@
+Hier ist ein klarer Fix-Vorschlag, den du direkt an einen Replit-Developer weitergeben kannst. Er koppelt den Driving-Mode an die tatsächliche Kartenrotation und behebt nebenbei einen kleinen Lng/Lat-Tippfehler.
+
+Ziel
+- Wenn auf den „Driving Mode“-Button geklickt wird, soll die Karte während der Navigation mit der Fahrtrichtung (Bearing) mitdrehen.
+- Beim Zurückschalten auf North-Up soll die Rotation auf 0 zurückgesetzt sein (besteht bereits).
+- Kleiner Bugfix: falscher Lng-Wert im Fehlerpfad von handleNavigateToPOI.
+
+1) Navigation.tsx: Rotation an Bearing koppeln
+- Hintergrund: Der Button toggelt mapOrientation, aber mapRotation wird nie mit currentBearing synchronisiert. MapContainer rotiert nur über das rotation-Prop. Deshalb ist kein sichtbarer Effekt zu sehen.
+
+Änderung: Füge einen Effect hinzu, der bei mapOrientation === 'driving' die Rotation laufend an currentBearing koppelt und bei 'north' auf 0 setzt. In der Regel muss die Karte „gegen die Fahrtrichtung“ rotiert werden (negatives Vorzeichen), damit „Fahrtrichtung nach oben“ zeigt.
+
+```typescript name=client/src/pages/Navigation.tsx
+// ... oberhalb existiert bereits:
+// const [mapRotation, setMapRotation] = useState(0);
+// const [currentBearing, setCurrentBearing] = useState(0);
+
+// NEU: Synchronisiert Driving-Mode mit der Kartenrotation
+useEffect(() => {
+  if (mapOrientation === 'driving') {
+    // Hinweis: Bei Bedarf das Vorzeichen auf +currentBearing ändern,
+    // falls die Drehrichtung visuell invertiert ist.
+    setMapRotation(-currentBearing);
+  } else if (mapOrientation === 'north') {
+    setMapRotation(0);
+  }
+}, [mapOrientation, currentBearing]);
+```
+
+Platzierung: Direkt unterhalb der Definitionen von mapRotation und currentBearing (bzw. nach dem Effect, der currentBearing berechnet). Dadurch wird die Rotation sofort aktualisiert, sobald Bearing-Werte ankommen.
+
+Wichtig zu wissen:
+- currentBearing wird in deinem Code nur berechnet, wenn mapOrientation === 'driving' UND isNavigating. Das ist logisch korrekt (nur während echter Navigation drehen). Wenn du möchtest, dass sich die Karte auch ohne aktive Navigation sichtbar dreht (z. B. auf einen Default-Winkel), siehe Option 2 unten.
+
+2) Optional (sichtbare Reaktion auch ohne Navigation)
+Wenn du willst, dass der Button bereits ohne aktive Navigation eine sichtbare Rotation zeigt, entferne die Abhängigkeit von isNavigating in der Bearing-Berechnung. So wird beim Umschalten z. B. der Default 45° gesetzt und sichtbar.
+
+Ersetze:
+```typescript
+useEffect(() => {
+  if (mapOrientation === 'driving' && isNavigating) {
+    // ... aktuelle Bearing-Logik ...
+  }
+}, [livePosition, mapOrientation, isNavigating, useRealGPS, currentRoute, routeProgress]);
+```
+
+durch:
+```typescript
+useEffect(() => {
+  if (mapOrientation === 'driving') {
+    // ... gleiche Logik wie vorher ...
+    // bleibt gleich, nur ohne das && isNavigating-Gate,
+    // damit zumindest ein Default-Bearing (45°) gesetzt wird,
+    // wenn keine Live-Bewegung vorliegt.
+  }
+}, [livePosition, mapOrientation, useRealGPS, currentRoute, routeProgress]);
+```
+
+Damit wird der in deinem Code ohnehin definierte Default (45°) sofort angewendet, sobald Driving-Mode aktiv ist.
+
+3) Kleiner Bugfix: falscher Lng-Wert im Fehlerpfad
+Im Catch-Block von handleNavigateToPOI wird versehentlich currentPosition.lat für lng verwendet. Korrigieren:
+
+Vorher:
+```typescript name=client/src/pages/Navigation.tsx
+const failedCoords = {
+  start: { lat: currentPosition.lat, lng: currentPosition.lat },
+  end: { lat: destination.lat, lng: destination.lng }
+};
+```
+
+Nachher:
+```typescript name=client/src/pages/Navigation.tsx
+const failedCoords = {
+  start: { lat: currentPosition.lat, lng: currentPosition.lng },
+  end: { lat: destination.lat, lng: destination.lng }
+};
+```
+
+Test-Plan (manuell)
+- Ohne Navigation:
+  - Option A (minimal): Button-Toggle ändert den Button-Status, aber die Karte dreht sich noch nicht. Das ist beabsichtigt.
+  - Option B (mit optionaler Änderung): Beim Umschalten auf Driving-Mode sollte die Karte sofort auf ca. 45° rotieren.
+- Mit aktiver Navigation:
+  - Route starten, Driving-Mode aktiv.
+  - Beim Bewegen (oder Mock-Route) sollte die Karte den Heading aufnehmen und flüssig drehen.
+  - Wechsel zurück auf North-Up setzt Rotation sichtbar auf 0.
+- Fehlerpfad:
+  - Routing absichtlich scheitern lassen (z. B. durch offline/ungültiges Ziel).
+  - Prüfen, dass failedCoords.start.lng korrekt currentPosition.lng ist (Logs/Overlay).
+
+Hinweise
+- Falls die Karte „falsch herum“ dreht, einfach das Vorzeichen im Setzen der Rotation ändern: setMapRotation(currentBearing) statt setMapRotation(-currentBearing).
+- Die Map hat bereits eine CSS-Transition (0.1s). Bei Rucklern kann man leicht erhöhen (z. B. 0.2–0.3s) in MapContainer.tsx beim Setzen des style.transition.
+
+Damit sollte der Button-Klick wieder eine sichtbare Reaktion erzeugen und das Verhalten dem Label „Switch to Driving Mode“ entsprechen.
