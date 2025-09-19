@@ -106,28 +106,13 @@ function categorizeFeatureOptimized(properties: GeoJSONFeature['properties']): P
   if (properties.amenity && gastroAmenities.includes(properties.amenity)) {
     return 'gastronomie';
   }
-
-  // 8. INFRASTRUKTUR (40 POIs erwartet)
-  const utilityAmenities = ['toilets', 'drinking_water', 'waste_disposal', 'recycling', 'charging_station'];
-  if (properties.amenity && utilityAmenities.includes(properties.amenity)) {
-    if (properties.amenity === 'toilets') return 'toilets';
-    return 'facilities';
-  }
-  if (properties.recycling_type) return 'facilities';
   
-  // Check for recycling properties
-  const recyclingProps = [
-    'recycling:glass', 'recycling:paper', 'recycling:clothes', 'recycling:cardboard',
-    'recycling:cans', 'recycling:electrical_items', 'recycling:garden_waste'
-  ];
-  if (recyclingProps.some(prop => properties[prop])) return 'facilities';
-  
-  if (properties.man_made) return 'facilities';
-  if (properties.barrier) return 'facilities';
+  // 9. EMERGENCY & INFRASTRUCTURE
   const emergencyAmenities = ['fire_station', 'police'];
   if (properties.amenity && emergencyAmenities.includes(properties.amenity)) {
     return 'services';
   }
+  if (properties.man_made || properties.barrier) return 'facilities';
 
   // Legacy Roompot-Kategorien (für Kompatibilität)
   if (properties.roompot_category) {
