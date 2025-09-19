@@ -27,9 +27,9 @@ export class RouteTracker {
   private timeBasedUpdateTimer: NodeJS.Timeout | null = null;
   private navigationStartTime: number = 0;
 
-  // Thresholds for navigation decisions - Made more conservative for accuracy
+  // Thresholds for navigation decisions - Optimized for campground/village navigation
   private readonly STEP_ADVANCE_THRESHOLD = 0.015; // 15 meters - more precise
-  private readonly OFF_ROUTE_THRESHOLD = 0.050; // 50 meters - prevent mock GPS false positives
+  private readonly OFF_ROUTE_THRESHOLD = 0.005; // 5 meters - perfect for campground/village short-distance navigation
   private readonly ROUTE_COMPLETE_THRESHOLD = 0.008; // 8 meters - prevent premature completion
 
   constructor(

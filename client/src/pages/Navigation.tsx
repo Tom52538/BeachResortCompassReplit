@@ -1249,8 +1249,8 @@ export default function Navigation() {
             return;
           }
           
-          // Hysterese: erst ab 12-15m wirklich rerouten, um Ping-Pong zu vermeiden
-          if (!reroutingRef.current && offRouteDistance > 12 && destinationRef.current) {
+          // Hysterese: 5m für Campingplatz/Dorf Navigation - schnelle Reaktion bei kurzen Wegen
+          if (!reroutingRef.current && offRouteDistance > 5 && destinationRef.current) {
             reroutingRef.current = true;
             (async () => {
               try {
