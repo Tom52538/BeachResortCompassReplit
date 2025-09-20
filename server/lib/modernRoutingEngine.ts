@@ -43,8 +43,8 @@ class ModernRoutingEngine {
     return calculateDistance(lat1, lng1, lat2, lng2);
   }
   
-  // Load GeoJSON network data with road type filtering
-  loadGeoJSON(geojsonData: any, vehicleType: string = 'walking'): void {
+  // Load GeoJSON network data with road type filtering - now async
+  async loadGeoJSON(geojsonData: any, vehicleType: string = 'walking'): Promise<void> {
     console.log('🔧 MODERN ROUTING: Loading GeoJSON data for vehicle type:', vehicleType);
     
     // Clear existing data
@@ -73,6 +73,11 @@ class ModernRoutingEngine {
         }
         
         console.log(`🛣️ Including ${roadType} path for ${vehicleType} (${coordinates.length} coords)`);
+        
+        // Yield control periodically for large datasets
+        if (edgeCount % 100 === 0) {
+          await new Promise(resolve => setImmediate(resolve));
+        }
         
         // Add nodes and edges
         for (let i = 0; i < coordinates.length; i++) {
