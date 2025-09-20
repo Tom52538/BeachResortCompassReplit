@@ -121,6 +121,7 @@ export default function Navigation() {
   const routeTrackerRef = useRef<RouteTracker | null>(null);
   const campgroundRerouteRef = useRef<CampgroundRerouteDetector | null>(null);
   const [currentInstruction, setCurrentInstruction] = useState<string>('');
+  const [currentManeuverType, setCurrentManeuverType] = useState<string>('');
   const [nextDistance, setNextDistance] = useState<string>('');
   const [routeProgress, setRouteProgress] = useState<any>(null);
 
@@ -141,6 +142,14 @@ export default function Navigation() {
 
   // Local tracking position state
   const [trackingPosition, setTrackingPosition] = useState<Coordinates | null>(null);
+
+  // Update tracking position from live GPS data
+  useEffect(() => {
+    if (livePosition) {
+      console.log('🛰️ Live position update received, updating tracking position:', livePosition.position);
+      setTrackingPosition(livePosition.position);
+    }
+  }, [livePosition]);
 
 
   // Use live position only when navigating AND using real GPS, otherwise use mock position
@@ -875,6 +884,47 @@ export default function Navigation() {
     }
   }, [currentPosition, getRoute, toast, travelMode]); // Added currentPosition to dependencies
 
+  const lastRerouteTimeRef = useRef<number>(0);
+
+  const handleReroute = useCallback(async () => {
+    if (!trackingPosition || !destinationMarker) {
+      console.warn('Cannot reroute: missing tracking position or destination.');
+      return;
+    }
+
+    console.log('🔄 Recalculating route...');
+    toast({
+      title: "Route wird neu berechnet...",
+      description: "Sie haben die Route verlassen.",
+    });
+
+    try {
+      const profile = travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking';
+      const newRoute = await getRoute.mutateAsync({
+        from: trackingPosition,
+        to: destinationMarker,
+        mode: profile
+      });
+
+      if (newRoute) {
+        setCurrentRoute(newRoute);
+        toast({
+          title: "Neue Route berechnet",
+          description: "Folgen Sie der aktualisierten Route.",
+        });
+      } else {
+        throw new Error("Received null route from server.");
+      }
+    } catch (error) {
+      console.error('❌ Failed to recalculate route:', error);
+      toast({
+        title: "Neuberechnung fehlgeschlagen",
+        description: "Konnte keine neue Route finden.",
+        variant: "destructive",
+      });
+    }
+  }, [trackingPosition, destinationMarker, travelMode, getRoute, toast]);
+
   const handleEndNavigation = useCallback(() => {
     setIsNavigating(false);
     setCurrentRoute(null);
@@ -1207,7 +1257,6 @@ export default function Navigation() {
           // Update current instruction when step changes
           if (currentRoute.instructions[step]) {
             const instruction = currentRoute.instructions[step].instruction;
-            setCurrentInstruction(instruction);
 
             // Voice announcement mit ElevenLabs TTS
             if (secureTTSRef.current && voiceEnabled) {
@@ -1231,13 +1280,25 @@ export default function Navigation() {
         },
         (offRouteDistance) => {
           // Off route detection
-          console.log('Off route detected, distance:', offRouteDistance);
+          console.log(`Off route detected, distance: ${offRouteDistance}m`);
+
+          const now = Date.now();
+          // Debounce: Only reroute every 5 seconds
+          if (now - lastRerouteTimeRef.current < 5000) {
+            console.log('Rerouting throttled.');
+            return;
+          }
+          lastRerouteTimeRef.current = now;
+
           if (secureTTSRef.current && voiceEnabled) {
             console.log('🔄 ElevenLabs Route neu berechnen');
             secureTTSRef.current.speak('Route wird neu berechnet', 'warning').catch(err =>
               console.error('TTS Error:', err)
             );
           }
+
+          // Trigger rerouting
+          handleReroute();
         }
       );
 
@@ -1264,10 +1325,17 @@ export default function Navigation() {
       setRouteProgress(progress);
       setNextDistance(formatDistance(progress.distanceToNext));
 
-      // KRITISCHER FIX: Aktualisiere currentInstruction bei jedem Step-Change
+      // Update current instruction based on progress
       if (progress && currentRoute?.instructions?.[progress.currentStep]) {
-        const newInstruction = currentRoute.instructions[progress.currentStep];
-        setCurrentInstruction(newInstruction);
+        const instruction = currentRoute.instructions[progress.currentStep];
+        if (instruction) {
+          if (instruction.instruction !== currentInstruction) {
+            setCurrentInstruction(instruction.instruction);
+          }
+          if (instruction.maneuverType !== currentManeuverType) {
+            setCurrentManeuverType(instruction.maneuverType);
+          }
+        }
       }
 
       // Update map center to follow user during navigation
@@ -1499,9 +1567,9 @@ export default function Navigation() {
             <>
               {/* Top: Current Maneuver */}
               <TopManeuverPanel
-                instruction={typeof currentRoute.instructions[0]?.instruction === 'string' ? currentRoute.instructions[0].instruction : 'Weiter geradeaus'}
+                instruction={currentInstruction || (currentRoute.instructions[0]?.instruction || 'Weiter geradeaus')}
                 distance={nextDistance}
-                maneuverType={currentRoute.instructions[0]?.maneuverType}
+                maneuverType={currentManeuverType || (currentRoute.instructions[0]?.maneuverType || 'straight')}
               />
 
               {/* Bottom: Navigation Summary with End Button */}
