@@ -1248,7 +1248,7 @@ export default function Navigation() {
 
   // Navigation tracking - Initialize route tracker when navigation starts
   useEffect(() => {
-    if (isNavigating && currentRoute && trackingPosition) {
+    if (isNavigating && currentRoute) {
       console.log('Initializing route tracker for navigation');
 
       routeTrackerRef.current = new RouteTracker(
@@ -1305,6 +1305,7 @@ export default function Navigation() {
       // Set initial instruction
       if (currentRoute.instructions.length > 0) {
         setCurrentInstruction(currentRoute.instructions[0].instruction);
+        setCurrentManeuverType(currentRoute.instructions[0].maneuverType);
         setNextDistance(currentRoute.instructions[0].distance);
       }
     }
@@ -1315,7 +1316,7 @@ export default function Navigation() {
         routeTrackerRef.current = null;
       }
     };
-  }, [isNavigating, currentRoute, voiceEnabled, handleEndNavigation]);
+  }, [isNavigating, currentRoute, voiceEnabled, handleEndNavigation, handleReroute]);
 
   // Live position tracking during navigation
   useEffect(() => {
