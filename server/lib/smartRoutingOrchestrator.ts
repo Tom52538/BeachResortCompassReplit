@@ -16,16 +16,17 @@ interface Point {
 
 interface Route {
   success: boolean;
-  path: number[][]; // Typically [lng, lat]
-  distance: number;
-  estimatedTime: number;
-  instructions: string[];
+  path?: number[][]; // Typically [lng, lat]
+  distance?: number;
+  estimatedTime?: number;
+  instructions?: string[];
   method: string;
-  confidence: number;
+  confidence?: number;
   error?: string;
   message?: string;
   degradationStage?: number;
   userInstructions?: string[];
+  fallbackReason?: string;
 }
 
 export class SmartRoutingOrchestrator {
@@ -208,7 +209,7 @@ export class SmartRoutingOrchestrator {
           : [this.createGermanInstruction(osmResult.route.distance, mode)];
 
         // Apply German localization to all instructions
-        instructions = instructions.map(instruction => this.localizeToGerman(instruction, mode));
+        instructions = instructions.map((instruction: string) => this.localizeToGerman(instruction, mode));
 
         const hasGenericInstructions = this.hasLowQualityInstructions(instructions);
 
@@ -298,7 +299,7 @@ export class SmartRoutingOrchestrator {
 
           this.cacheRoute(cacheKey, route);
           const processingTime = Date.now() - startTime;
-          console.log(`✅ MODERN ENGINE SUCCESS: ${osmResult.route.distance.toFixed(0)}m route in ${processingTime}ms with ${route.instructions.length} instructions`);
+          console.log(`✅ MODERN ENGINE SUCCESS: ${osmResult.route.distance.toFixed(0)}m route in ${processingTime}ms with ${route.instructions?.length || 0} instructions`);
           return route;
         }
       }
