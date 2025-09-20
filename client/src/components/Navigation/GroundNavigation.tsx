@@ -12,6 +12,7 @@ import { offlineStorage } from '@/lib/offlineStorage';
 import { useLanguage } from '@/hooks/useLanguage';
 import { getTranslation, translateInstruction } from '@/lib/i18n';
 import { SecureTTSClient } from '@/services/secureTTSClient';
+import { formatDistance as formatDistanceUtil } from '@/lib/mapUtils';
 
 interface GroundNavigationProps {
   route: RouteResponse;
@@ -694,7 +695,7 @@ export const GroundNavigation = ({
         currentLat, currentLng, targetLat, targetLng
       );
 
-      return formatDistance(realDistance / 1000); // Convert to km for formatDistance
+      return formatDistanceUtil(realDistance); // Use mapUtils formatDistance for meters
     } catch (error) {
       console.error('❌ Real distance calculation error:', error);
       return currentInstruction?.distance || '0m';
