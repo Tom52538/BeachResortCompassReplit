@@ -79,7 +79,7 @@ export const TopManeuverPanel: React.FC<TopManeuverPanelProps> = ({
           {formatInstruction(instruction, distance)}
         </div>
         <div className="text-sm font-medium opacity-90 leading-tight">
-          In {distance}
+          {distance}
         </div>
       </div>
     </div>
