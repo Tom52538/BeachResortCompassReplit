@@ -263,11 +263,14 @@ export class MapboxRoutingService {
       const totalDistance = turf.length(routeLine) * 1000;
       const progressPercentage = ((totalDistance - distanceRemaining) / totalDistance) * 100;
 
+      // Calculate distance to next significant waypoint (not total remaining)
+      const nextWaypointDistance = Math.min(distanceRemaining, 50); // Max 50m for next instruction
+      
       return {
         progressPercentage: Math.max(0, Math.min(100, progressPercentage)),
         distanceRemaining,
         nextWaypointIndex: 0,
-        distanceToNext: distanceRemaining
+        distanceToNext: nextWaypointDistance // Distance to next instruction, not total remaining
       };
     } catch (error) {
       console.error('Route progress calculation error:', error);
