@@ -72,10 +72,8 @@ class ModernRoutingEngine {
           continue;
         }
         
-        console.log(`🛣️ Including ${roadType} path for ${vehicleType} (${coordinates.length} coords)`);
-        
-        // Yield control periodically for large datasets
-        if (edgeCount % 100 === 0) {
+        // Yield control periodically for large datasets - check feature count, not edge count
+        if ((filteredEdgeCount + edgeCount) % 100 === 0) {
           await new Promise(resolve => setImmediate(resolve));
         }
         
