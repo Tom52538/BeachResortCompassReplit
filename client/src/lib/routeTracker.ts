@@ -268,8 +268,8 @@ export class RouteTracker {
     
     console.log('🗺️ ROUTE TRACKER: Progress calculated:', {
       currentStep: progress.currentStep,
-      distanceToNext: Math.round(progress.distanceToNext * 1000) + 'm',
-      distanceRemaining: Math.round(progress.distanceRemaining * 1000) + 'm',
+      distanceToNext: Math.round(progress.distanceToNext) + 'm', // distanceToNext is already in meters
+      distanceRemaining: Math.round(progress.distanceRemaining) + 'm', // distanceRemaining is already in meters
       percentComplete: Math.round(progress.percentComplete) + '%',
       estimatedTimeRemaining: Math.round(progress.estimatedTimeRemaining / 60) + 'min',
       currentSpeed: Math.round(progress.currentSpeed) + 'km/h'
