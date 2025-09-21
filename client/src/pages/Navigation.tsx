@@ -116,13 +116,14 @@ export default function Navigation() {
   // Travel mode state for routing
   const [travelMode, setTravelMode] = useState<'car' | 'bike' | 'pedestrian'>('pedestrian');
 
-  // Navigation tracking state - ElevenLabs TTS
+  // Navigation tracking state
   const secureTTSRef = useRef<SecureTTSClient | null>(null);
   const routeTrackerRef = useRef<RouteTracker | null>(null);
-  const campgroundRerouteRef = useRef<CampgroundRerouteDetector | null>(null);
-  const [currentInstruction, setCurrentInstruction] = useState<string>('');
+  const rerouteServiceRef = useRef(new CampgroundRerouteDetector());
+  const [currentInstruction, setCurrentInstruction] = useState<string | null>(null);
   const [nextDistance, setNextDistance] = useState<string>('');
   const [routeProgress, setRouteProgress] = useState<any>(null);
+  const [isRerouting, setIsRerouting] = useState(false);
 
   // Network Debugging State
   const [showNetworkDebug, setShowNetworkDebug] = useState(false);
@@ -132,20 +133,15 @@ export default function Navigation() {
   const [routingResult, setRoutingResult] = useState<any>(null);
 
 
-  // Initialize navigation tracking - but only when using real GPS
+  // Initialize navigation tracking
   const { currentPosition: livePosition, error: navigationError, isTracking } = useNavigationTracking(isNavigating, useRealGPS, currentPosition, {
     enableHighAccuracy: true,
-    updateInterval: 1000,
+    updateInterval: 1000, // Frequent updates for navigation
     adaptiveTracking: true
   });
 
-  // Local tracking position state
-  const [trackingPosition, setTrackingPosition] = useState<Coordinates | null>(null);
-
-
-  // Use live position only when navigating AND using real GPS, otherwise use mock position
-  // Use real GPS position when navigating, otherwise use current position
-  // const trackingPosition = (isNavigating && useRealGPS && livePosition?.position) || currentPosition;
+  // Use the live position if available and navigating, otherwise use the general location
+  const trackingPosition = (isNavigating && livePosition?.position) ? livePosition.position : currentPosition;
 
   // Calculate bearing for driving direction mode
   const [currentBearing, setCurrentBearing] = useState(0);
@@ -1196,84 +1192,82 @@ export default function Navigation() {
     console.log(`🎤 ElevenLabs TTS ${voiceEnabled ? 'aktiviert' : 'deaktiviert'}`);
   }, [voiceEnabled]);
 
-  // Navigation tracking - Initialize route tracker when navigation starts
+  // Navigation Tracking Effect
   useEffect(() => {
     if (isNavigating && currentRoute && trackingPosition) {
-      console.log('Initializing route tracker for navigation');
-
-      routeTrackerRef.current = new RouteTracker(
-        currentRoute,
-        (step) => {
-          // Update current instruction when step changes
-          if (currentRoute.instructions[step]) {
-            const instruction = currentRoute.instructions[step].instruction;
-            setCurrentInstruction(instruction);
-
-            // Voice announcement mit ElevenLabs TTS
-            if (secureTTSRef.current && voiceEnabled) {
-              console.log('🎤 ElevenLabs Navigation:', instruction);
-              secureTTSRef.current.speak(instruction, 'direction').catch(err =>
-                console.error('TTS Error:', err)
-              );
+      // Initialize RouteTracker if it doesn't exist for the current route
+      if (!routeTrackerRef.current || (currentRoute.id && routeTrackerRef.current.getRouteId() !== currentRoute.id)) {
+        routeTrackerRef.current = new RouteTracker(
+          currentRoute,
+          (stepIndex) => { // onStepChange
+            const instruction = currentRoute.instructions[stepIndex];
+            if (instruction) {
+              setCurrentInstruction(instruction.instruction);
+              if (voiceEnabled && secureTTSRef.current) {
+                secureTTSRef.current.speak(instruction.instruction, 'direction');
+              }
             }
+          },
+          () => { // onCompletion
+            if (voiceEnabled && secureTTSRef.current) {
+              secureTTSRef.current.speak('Sie haben Ihr Ziel erreicht.', 'arrival');
+            }
+            handleEndNavigation();
+          },
+          (distance) => { // onOffRoute
+             console.log(`User is ${distance}m off route.`);
+             // Rerouting logic will be handled in a separate effect
           }
-        },
-        () => {
-          // Navigation completed
-          console.log('Navigation completed');
-          if (secureTTSRef.current && voiceEnabled) {
-            console.log('🎯 ElevenLabs Ziel erreicht');
-            secureTTSRef.current.speak('Sie haben Ihr Ziel erreicht', 'arrival').catch(err =>
-              console.error('TTS Error:', err)
-            );
-          }
-          handleEndNavigation();
-        },
-        (offRouteDistance) => {
-          // Off route detection
-          console.log('Off route detected, distance:', offRouteDistance);
-          if (secureTTSRef.current && voiceEnabled) {
-            console.log('🔄 ElevenLabs Route neu berechnen');
-            secureTTSRef.current.speak('Route wird neu berechnet', 'warning').catch(err =>
-              console.error('TTS Error:', err)
-            );
-          }
-        }
-      );
-
-      // Set initial instruction
-      if (currentRoute.instructions.length > 0) {
-        setCurrentInstruction(currentRoute.instructions[0].instruction);
-        setNextDistance(currentRoute.instructions[0].distance);
+        );
+        console.log('✅ RouteTracker initialized for new route.');
       }
-    }
 
-    return () => {
+      // Update position and handle progress
       if (routeTrackerRef.current) {
-        routeTrackerRef.current.reset();
-        routeTrackerRef.current = null;
+          const progress = routeTrackerRef.current.updatePosition(trackingPosition, travelMode);
+          setRouteProgress(progress);
+          setNextDistance(formatDistance(progress.distanceToNext));
+
+          const currentStepInstruction = currentRoute.instructions[progress.currentStep]?.instruction;
+          if (currentInstruction !== currentStepInstruction) {
+              setCurrentInstruction(currentStepInstruction);
+          }
+
+          // Center map on user
+          setMapCenter(trackingPosition);
       }
-    };
-  }, [isNavigating, currentRoute, voiceEnabled, handleEndNavigation]);
-
-  // Live position tracking during navigation
-  useEffect(() => {
-    if (isNavigating && routeTrackerRef.current && trackingPosition) {
-      const progress = routeTrackerRef.current.updatePosition(trackingPosition, travelMode);
-
-      setRouteProgress(progress);
-      setNextDistance(formatDistance(progress.distanceToNext));
-
-      // KRITISCHER FIX: Aktualisiere currentInstruction bei jedem Step-Change
-      if (progress && currentRoute?.instructions?.[progress.currentStep]) {
-        const newInstruction = currentRoute.instructions[progress.currentStep];
-        setCurrentInstruction(newInstruction);
-      }
-
-      // Update map center to follow user during navigation
-      setMapCenter(trackingPosition);
     }
-  }, [isNavigating, trackingPosition, useRealGPS, currentRoute, travelMode]);
+  }, [isNavigating, currentRoute, trackingPosition, travelMode, voiceEnabled, handleEndNavigation, currentInstruction]);
+
+  // Re-routing Effect
+  useEffect(() => {
+    if (isNavigating && routeProgress?.isOffRoute && !isRerouting && destinationMarker) {
+      const shouldReroute = rerouteServiceRef.current.shouldReroute(routeProgress.offRouteDistance, 3);
+      if (shouldReroute) {
+        setIsRerouting(true);
+        console.log('🔄 Triggering re-route...');
+        if (voiceEnabled && secureTTSRef.current) {
+          secureTTSRef.current.speak('Route wird neu berechnet.', 'warning');
+        }
+
+        const rerouteRequest = {
+          currentPosition: trackingPosition,
+          destination: destinationMarker,
+          profile: travelMode === 'car' ? 'driving-car' : travelMode === 'bike' ? 'cycling-regular' : 'foot-walking' as 'foot-walking' | 'cycling-regular' | 'driving-car'
+        };
+
+        rerouteServiceRef.current.calculateNewRoute(rerouteRequest).then(newRoute => {
+          setCurrentRoute(newRoute);
+          console.log('✅ Re-route successful.');
+        }).catch(error => {
+          console.error('❌ Re-route failed:', error);
+          toast({ title: "Re-routing failed", variant: "destructive" });
+        }).finally(() => {
+          setIsRerouting(false);
+        });
+      }
+    }
+  }, [isNavigating, routeProgress, isRerouting, trackingPosition, destinationMarker, travelMode, voiceEnabled, toast]);
 
   console.log('🔍 Navigation: Starting render...', {
     position: !!trackingPosition,
