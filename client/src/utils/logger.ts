@@ -23,29 +23,32 @@ class Logger {
     this.isNode = typeof window === 'undefined' && typeof process !== 'undefined';
     
     if (this.isNode) {
-      try {
-        // Dynamic import for Node.js modules to avoid bundling issues
-        this.loadNodeModules();
-      } catch (error) {
-        console.warn('⚠️ Logger: File logging not available:', error);
-      }
+      // Use synchronous loading for constructor
+      this.loadNodeModulesSync();
     } else {
       console.log('🌐 Logger: Browser environment detected - console logging only');
     }
   }
 
-  private async loadNodeModules() {
+  private loadNodeModulesSync() {
     try {
-      const fsModule = await import('fs');
-      const pathModule = await import('path');
-      this.fs = fsModule;
-      this.path = pathModule;
-      
-      // Set up file logging for server/Node environment
-      this.logFile = this.path.join(process.cwd(), 'navigation.log');
-      console.log(`📁 Logger: File logging enabled - ${this.logFile}`);
+      // Use createRequire for ESM compatibility
+      import('module').then(({ createRequire }) => {
+        const require = createRequire(import.meta.url);
+        this.fs = require('fs');
+        this.path = require('path');
+        
+        // Set up file logging for server/Node environment
+        this.logFile = this.path.join(process.cwd(), 'navigation.log');
+        console.log(`📁 Logger: File logging enabled - ${this.logFile}`);
+        
+        // Initialize file logging by writing a startup message
+        this.info('Logger initialized with file logging');
+      }).catch(error => {
+        console.warn('⚠️ Logger: Failed to enable file logging:', error);
+      });
     } catch (error) {
-      console.warn('⚠️ Logger: Failed to load Node.js modules:', error);
+      console.warn('⚠️ Logger: File logging not available:', error);
     }
   }
 
