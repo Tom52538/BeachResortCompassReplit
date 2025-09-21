@@ -316,15 +316,15 @@ export class VoiceGuide {
   }
 
   announceOffRoute() {
-    this.speak('You are off the planned route. Recalculating...', 'high');
+    this.speak('Sie haben die Route verlassen. Neue Route wird berechnet...', 'high');
   }
 
   announceDestinationReached() {
-    this.speak('You have arrived at your destination', 'high');
+    this.speak('Sie haben Ihr Ziel erreicht', 'high');
   }
 
   announceRerouting() {
-    this.speak('Route recalculated', 'high');
+    this.speak('Route neu berechnet', 'high');
   }
 
   // Test voice functionality
@@ -336,7 +336,7 @@ export class VoiceGuide {
       }
 
       try {
-        const utterance = new SpeechSynthesisUtterance('Voice test successful');
+        const utterance = new SpeechSynthesisUtterance('Stimmtest erfolgreich');
         utterance.volume = 1;
         utterance.rate = 0.8;
         
