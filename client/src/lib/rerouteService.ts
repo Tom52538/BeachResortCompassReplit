@@ -23,7 +23,20 @@ export class RerouteService {
     });
     
     try {
-      const response = await fetch(`${this.baseUrl}/route`, {
+      // Map the client-specific profile names to the backend-expected profile names
+      const mapProfile = (profile?: 'foot-walking' | 'cycling-regular' | 'driving-car'): 'walking' | 'cycling' | 'driving' => {
+        switch (profile) {
+          case 'cycling-regular':
+            return 'cycling';
+          case 'driving-car':
+            return 'driving';
+          case 'foot-walking':
+          default:
+            return 'walking';
+        }
+      };
+
+      const response = await fetch(`${this.baseUrl}/route/enhanced`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -31,7 +44,7 @@ export class RerouteService {
         body: JSON.stringify({
           from: request.currentPosition,
           to: request.destination,
-          profile: request.profile || 'foot-walking'
+          profile: mapProfile(request.profile)
         })
       });
 

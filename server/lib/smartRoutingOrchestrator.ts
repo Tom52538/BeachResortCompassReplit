@@ -30,20 +30,17 @@ interface Route {
 
 export class SmartRoutingOrchestrator {
   private routeCache = new Map<string, { route: Route; timestamp: number }>();
+  private engineCache = new Map<string, ModernRoutingEngine>(); // Cache for routing engines
   private readonly CACHE_TTL = 3600000; // 1 hour
-  private osmRouter: ModernRoutingEngine;
-  // private campgroundWrapper: CampgroundRoutingWrapper; // Disabled - wrapper not available
   private googleDirections: GoogleDirectionsService;
   private useWrapper: boolean = false; // Disabled - wrapper not available
 
   constructor() {
-    console.log('🎯 ENHANCED ROUTING: Initializing Direct Routing (wrapper disabled)');
+    console.log('🎯 ENHANCED ROUTING: Initializing Smart Routing Orchestrator');
     this.routeCache.clear();
-    this.osmRouter = new ModernRoutingEngine();
-    // this.campgroundWrapper = new CampgroundRoutingWrapper(); // Disabled - wrapper not available
+    this.engineCache.clear();
     this.googleDirections = new GoogleDirectionsService();
-    // this.campgroundWrapper.setOrchestrator(this); // Disabled - wrapper not available
-    console.log('✅ Direct routing ready - location-based routing networks + Google fallback enabled');
+    console.log('✅ Orchestrator ready - location-based routing networks + Google fallback enabled');
   }
 
   /**
@@ -162,33 +159,20 @@ export class SmartRoutingOrchestrator {
     const routingNetwork = this.determineRoutingNetwork(start, end);
     console.log(`🗺️ LOCATION-BASED ROUTING: Using ${routingNetwork.name} for this route`);
 
+    // Map profile to vehicle type for filtering
+    const vehicleType = this.mapProfileToVehicleType(mode);
+    console.log(`🚗 VEHICLE FILTERING: Mode "${mode}" mapped to vehicle type "${vehicleType}"`);
+
     try {
-      // Load appropriate GeoJSON data for the Modern Routing Engine with vehicle filtering
-      const geojsonPath = path.join(process.cwd(), routingNetwork.file);
-      
-      // Check if network file exists
-      if (!existsSync(geojsonPath)) {
-        console.log(`❌ ROUTING NETWORK: File ${routingNetwork.file} not found, falling back to Google Directions`);
+      // Get a cached or new routing engine instance
+      const osmRouter = this.getRoutingEngine(routingNetwork.name, routingNetwork.file, vehicleType);
+
+      if (!osmRouter) {
+        console.log(`❌ ROUTING ENGINE: Failed to load network ${routingNetwork.name}, falling back to Google Directions`);
         return this.tryGoogleDirections(start, end, mode, startTime);
       }
-      
-      const geojsonData = JSON.parse(readFileSync(geojsonPath, 'utf8'));
-      console.log(`✅ ROUTING NETWORK: Loaded ${routingNetwork.name} from ${routingNetwork.file}`);
-      
-      // Map profile to vehicle type for filtering - fix client/server mismatch
-      let vehicleType: string;
-      if (mode === 'driving') {
-        vehicleType = 'driving';
-      } else if (mode === 'cycling') {
-        vehicleType = 'cycling';  
-      } else {
-        vehicleType = 'walking'; // pedestrian, walking, or default
-      }
-      console.log(`🚗 VEHICLE FILTERING: Mode "${mode}" mapped to vehicle type "${vehicleType}"`);
-      
-      this.osmRouter.loadGeoJSON(geojsonData, vehicleType);
 
-      const osmResult = this.osmRouter.findRoute(start.lat, start.lng, end.lat, end.lng, vehicleType);
+      const osmResult = osmRouter.findRoute(start.lat, start.lng, end.lat, end.lng, vehicleType);
 
       if (osmResult.success) {
         console.log(`🗺️ MODERN ENGINE: Generated ${osmResult.route.instructions?.length || 0} instructions:`, osmResult.route.instructions);
@@ -426,12 +410,62 @@ export class SmartRoutingOrchestrator {
     return isGeneric;
   }
 
+  /**
+   * Get a cached or new routing engine instance for a specific network and vehicle type.
+   */
+  private getRoutingEngine(networkName: string, networkFile: string, vehicleType: string): ModernRoutingEngine | null {
+    const cacheKey = `${networkName}-${vehicleType}`;
+
+    // Return cached engine if available
+    if (this.engineCache.has(cacheKey)) {
+      console.log(`✅ ENGINE CACHE: Using cached engine for ${cacheKey}`);
+      return this.engineCache.get(cacheKey)!;
+    }
+
+    // If not cached, create a new engine instance
+    console.log(`🔧 ENGINE CACHE: Creating new engine for ${cacheKey}`);
+    const geojsonPath = path.join(process.cwd(), networkFile);
+
+    if (!existsSync(geojsonPath)) {
+      console.error(`❌ ROUTING NETWORK: File ${networkFile} not found.`);
+      return null;
+    }
+
+    try {
+      const geojsonData = JSON.parse(readFileSync(geojsonPath, 'utf8'));
+      const newEngine = new ModernRoutingEngine();
+      newEngine.loadGeoJSON(geojsonData, vehicleType);
+
+      this.engineCache.set(cacheKey, newEngine);
+      console.log(`✅ ENGINE CACHE: New engine for ${cacheKey} created and cached.`);
+      return newEngine;
+    } catch (error) {
+      console.error(`💥 Failed to load GeoJSON and initialize engine for ${networkName}:`, error);
+      return null;
+    }
+  }
+
+  private mapProfileToVehicleType(profile: 'walking' | 'cycling' | 'driving'): string {
+    switch (profile) {
+      case 'driving':
+        return 'driving';
+      case 'cycling':
+        return 'cycling';
+      case 'walking':
+      default:
+        return 'walking';
+    }
+  }
+
   getStats() {
     const cacheEntries = Array.from(this.routeCache.values());
     const failedRoutes = cacheEntries.filter(entry => !entry.route.success).length;
     const totalCached = cacheEntries.length;
-    const osmStats = this.osmRouter.getStats();
-    // const wrapperStats = this.campgroundWrapper?.getStats(); // Disabled - wrapper not available
+
+    const engineStats = Array.from(this.engineCache.entries()).reduce((acc, [key, engine]) => {
+      acc[key] = engine.getStats();
+      return acc;
+    }, {} as Record<string, any>);
 
     const degradationStats = cacheEntries.reduce((acc, entry) => {
       const stage = entry.route.degradationStage;
@@ -444,12 +478,12 @@ export class SmartRoutingOrchestrator {
     return {
       phase: 'ENHANCED_ROUTING',
       description: '2-stage direct routing (OSM + Google) with 100% success rate',
-      cacheSize: totalCached,
+      routeCacheSize: totalCached,
+      engineCacheSize: this.engineCache.size,
       failureRate: totalCached > 0 ? (failedRoutes / totalCached * 100).toFixed(1) + '%' : '0%',
       wrapperEnabled: this.useWrapper,
       degradationStats,
-      // wrapperStats, // Disabled - wrapper not available
-      osmStats
+      engineStats
     };
   }
 }
