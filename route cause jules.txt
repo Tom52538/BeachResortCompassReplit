@@ -1,0 +1,24 @@
+1. Hauptproblem: Kernlogik der Navigation war unterbrochen
+Fehlerursache:
+
+Fehlerhafter Datenfluss der GPS-Position: In der Komponente client/src/pages/Navigation.tsx wurde die live GPS-Position vom useNavigationTracking-Hook nicht an die Navigationslogik weitergegeben. Die Komponente arbeitete nur mit der Startposition, weshalb keine Aktualisierungen stattfanden.
+RouteTracker nicht initialisiert: Aufgrund des fehlenden GPS-Updates wurde die RouteTracker-Klasse (welche den Fortschritt auf der Route berechnet) nie korrekt initialisiert oder aktualisiert.
+Fehlende Re-Routing-Implementierung: Die Logik, die eine Routenabweichung erkennt und eine Neuberechnung anstößt, war in der Komponente nicht implementiert.
+Durchgeführte Reparaturen:
+
+Korrektur des Datenflusses: Die Komponente wurde so refaktoriert, dass sie nun die live GPS-Position (livePosition) für alle Navigationsberechnungen verwendet.
+Implementierung der Navigations-Logik: Die useEffect-Hooks wurden neu geschrieben. Ein Hook verwaltet jetzt den Lebenszyklus des RouteTracker und aktualisiert den Routenfortschritt bei jeder Positionsänderung. Dies reaktiviert die Turn-by-Turn-Funktionalität.
+Implementierung der Re-Routing-Logik: Ein weiterer useEffect-Hook wurde hinzugefügt. Er überwacht den isOffRoute-Status vom RouteTracker. Wenn der Nutzer vom Weg abkommt, wird nun der rerouteService aufgerufen, um eine neue Route zu berechnen und die Ansicht zu aktualisieren.
+2. Nebenproblem: Gemischtsprachige Sprachansagen
+Fehlerursache: In der Datei client/src/lib/voiceGuide.ts waren einige ereignisbasierte Ansagen (z.B. "You are off the planned route") fest auf Englisch im Code hinterlegt.
+Durchgeführte Reparaturen: Alle festcodierten englischen Texte wurden in ihre deutschen Entsprechungen übersetzt, um eine konsistente deutsche Sprachausgabe zu gewährleisten.
+3. Nebenproblem: Ineffizientes Backend-Routing
+Fehlerursache: Der server/lib/smartRoutingOrchestrator.ts hat bei jeder Anfrage die komplette Routing-Karte (GeoJSON) neu geladen und verarbeitet, was zu schlechter Performance führte.
+Durchgeführte Reparaturen: Ein Caching-Mechanismus wurde implementiert. Der Routing-Graph für jedes Gebiet wird jetzt beim ersten Mal geladen und im Speicher gehalten. Alle folgenden Anfragen für dieses Gebiet sind dadurch signifikant schneller, was besonders das Re-Routing verbessert.
+Empfehlungen für den Test
+Der andere Entwickler sollte Folgendes überprüfen:
+
+Turn-by-Turn-Test: Eine Navigation starten und (mit einem echten oder simulierten GPS) überprüfen, ob sich die Anweisungen und die Position auf der Karte korrekt aktualisieren.
+Re-Routing-Test: Während der Navigation absichtlich von der Route abweichen. Das System sollte dies erkennen und automatisch eine neue, korrekte Route berechnen.
+Sprach-Test: Überprüfen, ob alle Sprachansagen (Abbiegehinweise, Neuberechnung, Ankunft) durchgehend auf Deutsch sind.
+Mit diesen Änderungen sollte das System nun robust und voll funktionsfähig sein.
