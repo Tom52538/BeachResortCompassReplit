@@ -20,6 +20,7 @@ import { useNavigationTracking } from '@/hooks/useNavigationTracking';
 import { useNetworkOverlay } from '@/hooks/useNetworkOverlay';
 import { useSiteManager } from '@/lib/siteManager';
 import { mobileLogger } from '@/utils/mobileLogger';
+import { log } from '@/utils/logger';
 import { POI, RouteResponse, TestSite, TEST_SITES, Coordinates, Site } from '@/types/navigation';
 import { calculateDistance, formatDistance, calculateBearing } from '@/lib/mapUtils';
 import { useToast } from '@/hooks/use-toast';
@@ -140,6 +141,18 @@ export default function Navigation() {
     adaptiveTracking: true
   });
 
+  // Log navigation tracking initialization and errors
+  useEffect(() => {
+    if (navigationError) {
+      log('ERROR', 'Navigation tracking error', { 
+        error: navigationError, 
+        isNavigating, 
+        useRealGPS,
+        position: currentPosition 
+      });
+    }
+  }, [navigationError, isNavigating, useRealGPS, currentPosition]);
+
   // Use the live position if available and navigating, otherwise use the general location
   const trackingPosition = (isNavigating && livePosition?.position) ? livePosition.position : currentPosition;
 
@@ -153,6 +166,11 @@ export default function Navigation() {
       if (useRealGPS && livePosition && lastPositionRef.current) {
         const bearing = calculateBearing(lastPositionRef.current, livePosition.position);
         if (!isNaN(bearing)) {
+          log('DEBUG', 'GPS bearing calculated from movement', { 
+            bearing, 
+            from: lastPositionRef.current, 
+            to: livePosition.position 
+          });
           console.log('📍 Calculated bearing from movement:', bearing);
           setCurrentBearing(bearing);
         }
@@ -165,6 +183,11 @@ export default function Navigation() {
           { lat: start[1], lng: start[0] },
           { lat: end[1], lng: end[0] }
         );
+        log('DEBUG', 'Using route geometry for mock GPS bearing', { 
+          routeBearing, 
+          start: [start[1], start[0]], 
+          end: [end[1], end[0]] 
+        });
         console.log('📍 Using route geometry bearing for mock GPS:', routeBearing);
         setCurrentBearing(routeBearing);
       } else if (routeProgress?.heading) {
@@ -850,8 +873,21 @@ export default function Navigation() {
       setOverlayStates(prev => ({ ...prev, navigation: true }));
 
       // Navigation started - no confirmation dialog needed
+      log('INFO', 'POI Navigation started successfully', { 
+        destination: poi.name, 
+        voiceEnabled, 
+        travelMode,
+        routeDistance: route?.distance,
+        routeTime: route?.estimatedTime 
+      });
       console.log('✅ POI Navigation successfully started with voice:', voiceEnabled);
     } catch (error) {
+      log('ERROR', 'Routing failed during POI navigation', { 
+        error: error instanceof Error ? error.message : error,
+        destination: poi.name,
+        position: currentPosition,
+        travelMode 
+      });
       console.error('🗺️ ROUTING ERROR:', error);
       // Track failed route for network debugging
       const failedCoords = {

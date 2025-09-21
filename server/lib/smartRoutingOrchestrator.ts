@@ -5,6 +5,7 @@ import ModernRoutingEngine from './modernRoutingEngine.js';
 import { GoogleDirectionsService } from './googleDirectionsService.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { log } from '../../client/src/utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,10 +37,15 @@ export class SmartRoutingOrchestrator {
   private useWrapper: boolean = false; // Disabled - wrapper not available
 
   constructor() {
+    log('INFO', 'Smart Routing Orchestrator initializing');
     console.log('🎯 ENHANCED ROUTING: Initializing Smart Routing Orchestrator');
     this.routeCache.clear();
     this.engineCache.clear();
     this.googleDirections = new GoogleDirectionsService();
+    log('INFO', 'Smart Routing Orchestrator ready', { 
+      cacheSize: this.routeCache.size, 
+      engineCacheSize: this.engineCache.size 
+    });
     console.log('✅ Orchestrator ready - location-based routing networks + Google fallback enabled');
   }
 
@@ -143,20 +149,34 @@ export class SmartRoutingOrchestrator {
   ): Promise<Route> {
     const startTime = Date.now();
     const distance = this.calculateDistance(start, end);
+    
+    log('INFO', 'Route calculation started', { 
+      start, 
+      end, 
+      mode, 
+      distance: Math.round(distance) 
+    });
     console.log(`🎯 ENHANCED ROUTING: ${start.lat.toFixed(6)},${start.lng.toFixed(6)} → ${end.lat.toFixed(6)},${end.lng.toFixed(6)} (${distance.toFixed(0)}m)`);
 
     // Check cache first
     const cacheKey = this.generateCacheKey(start, end, mode);
     const cached = this.getFromCache(cacheKey);
     if (cached) {
+      log('DEBUG', 'Cache hit for route', { cacheKey });
       console.log('💾 CACHE HIT: Returning cached route');
       return cached;
+    } else {
+      log('DEBUG', 'Cache miss for route', { cacheKey });
     }
 
     // Wrapper disabled - proceeding directly to OSM routing
 
     // Determine which routing network to use based on location
     const routingNetwork = this.determineRoutingNetwork(start, end);
+    log('INFO', 'Routing network selected', { 
+      network: routingNetwork.name, 
+      coverage: routingNetwork.coverage 
+    });
     console.log(`🗺️ LOCATION-BASED ROUTING: Using ${routingNetwork.name} for this route`);
 
     // Map profile to vehicle type for filtering

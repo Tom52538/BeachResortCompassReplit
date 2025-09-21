@@ -1,5 +1,6 @@
 import { detectBrowserLanguage, voiceInstructions, SupportedLanguage } from './i18n';
 import { detectUserLanguage } from './languageDetection';
+import { log } from '@/utils/logger';
 
 export class VoiceGuide {
   private synthesis: SpeechSynthesis;
@@ -27,6 +28,7 @@ export class VoiceGuide {
   constructor() {
     // Check if speech synthesis is available
     if (typeof window === 'undefined' || !window.speechSynthesis) {
+      log('WARN', 'Speech synthesis not available in this browser');
       console.warn('Speech synthesis not available in this browser');
       this.synthesis = null as any;
       this.currentLanguage = detectUserLanguage() as SupportedLanguage;
@@ -35,6 +37,7 @@ export class VoiceGuide {
 
     this.synthesis = window.speechSynthesis;
     this.currentLanguage = detectUserLanguage() as SupportedLanguage;
+    log('INFO', 'VoiceGuide initialized', { language: this.currentLanguage });
     console.log(`🎙️ Voice guidance language: ${this.currentLanguage}`);
     
     try {
@@ -48,7 +51,12 @@ export class VoiceGuide {
       setTimeout(() => {
         this.initializeVoices();
       }, 100);
+      
+      log('INFO', 'VoiceGuide initialization completed successfully');
     } catch (error) {
+      log('ERROR', 'Voice guide initialization failed', { 
+        error: error instanceof Error ? error.message : error 
+      });
       console.error('Voice guide initialization error:', error);
     }
   }
@@ -212,15 +220,21 @@ export class VoiceGuide {
   }
 
   speak(text: string, priority: 'low' | 'medium' | 'high' = 'medium') {
-    if (!this.isEnabled || !this.synthesis) return;
+    if (!this.isEnabled || !this.synthesis) {
+      log('WARN', 'Speech not available or disabled', { isEnabled: this.isEnabled, hasSynthesis: !!this.synthesis });
+      return;
+    }
 
     try {
+      log('DEBUG', 'Voice announcement queued', { text, priority, queueLength: this.announcementQueue.length });
+      
       if (priority === 'high') {
         // High priority: clear queue and current speech
         this.synthesis.cancel();
         this.announcementQueue = [];
         this.isSpeaking = false;
         this.announcementQueue.push({ text, priority });
+        log('INFO', 'High priority voice announcement', { text });
       } else {
         // Add to queue
         this.announcementQueue.push({ text, priority });
@@ -228,6 +242,11 @@ export class VoiceGuide {
       
       this.processQueue();
     } catch (error) {
+      log('ERROR', 'VoiceGuide speak error', { 
+        error: error instanceof Error ? error.message : error, 
+        text, 
+        priority 
+      });
       console.error('VoiceGuide speak error:', error);
     }
   }
@@ -312,18 +331,22 @@ export class VoiceGuide {
   }
 
   announceNavigationStart(firstInstruction: string) {
+    log('INFO', 'Navigation start announcement', { firstInstruction });
     this.speak(`Navigation gestartet. ${firstInstruction}`, 'high');
   }
 
   announceOffRoute() {
+    log('WARN', 'Off-route announcement triggered');
     this.speak('Sie haben die Route verlassen. Neue Route wird berechnet...', 'high');
   }
 
   announceDestinationReached() {
+    log('INFO', 'Destination reached announcement');
     this.speak('Sie haben Ihr Ziel erreicht', 'high');
   }
 
   announceRerouting() {
+    log('INFO', 'Rerouting announcement');
     this.speak('Route neu berechnet', 'high');
   }
 
