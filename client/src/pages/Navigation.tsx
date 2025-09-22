@@ -52,8 +52,8 @@ const isDev =
   (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.DEV === true) ||
   ((import.meta as any)?.env?.MODE && (import.meta as any).env.MODE !== 'production');
 
-// Distance helper functions (kmToMeters, formatDistanceMeters, etc.) removed
-// and replaced by centralized utilities in /utils/format.ts
+// All local distance helpers (kmToMeters, formatDistanceMeters, etc.) have been removed.
+// The new centralized utilities from /utils/format.ts are now used.
 
 export default function Navigation() {
   // Use SiteManager as single source of truth for site management
@@ -1329,7 +1329,6 @@ export default function Navigation() {
       <ErrorBoundary
         onError={(error) => {
           console.error('🚨 Navigation page error:', error);
-          // Clear navigation state on error
           setIsNavigating(false);
           setSelectedPOI(null);
         }}
@@ -1349,25 +1348,22 @@ export default function Navigation() {
         }
       >
         <div className="navigation-page h-screen w-screen overflow-hidden bg-gray-50">
-          {/* Mobile Memory Monitor - only show in development */}
-          {isDev && (
-            <MobileMemoryMonitor />
+          {isDev && <MobileMemoryMonitor />}
+
+          {!isNavigating && (
+            <TopBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              showNetworkDebug={showNetworkDebug}
+              onToggleNetworkDebug={() => setShowNetworkDebug(!showNetworkDebug)}
+              showGridVisualization={showGridVisualization}
+              onToggleGridVisualization={() => setShowGridVisualization(!showGridVisualization)}
+              isNavigating={isNavigating}
+              routeTracker={routeTrackerRef.current}
+            />
           )}
 
-          {/* Top Bar */}
-          <TopBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            showNetworkDebug={showNetworkDebug}
-            onToggleNetworkDebug={() => setShowNetworkDebug(!showNetworkDebug)}
-            showGridVisualization={showGridVisualization}
-            onToggleGridVisualization={() => setShowGridVisualization(!showGridVisualization)}
-            isNavigating={isNavigating}
-            routeTracker={routeTrackerRef.current} // Pass the ref or its current value
-          />
-
           <div className="flex h-[calc(100vh-4rem)]">
-            {/* Main Map Area */}
             <div className="flex-1 relative">
               <MapContainer
                 center={mapCenter}
@@ -1375,42 +1371,17 @@ export default function Navigation() {
                 currentPosition={trackingPosition || currentPosition}
                 pois={(() => {
                   let poisToShow = displayPOIs;
-
-                  // SMART POI FILTERING: During navigation, hide ALL POIs for clean map view
                   if (isNavigating) {
-                    if (isDev) console.log('🎯 SMART FILTERING: Navigation active - hiding ALL POIs for clean navigation view');
-                    if (isDev) console.log('🎯 Navigation state:', { isNavigating, selectedPOI: selectedPOI?.name, currentRoute: !!currentRoute });
-
-                    // Hide ALL POIs during navigation for minimal distraction
-                    poisToShow = [];
-
-                    // Only show the destination POI if we have one selected
-                    if (selectedPOI) {
-                      // Find the selected POI in the full displayPOIs array
-                      const destinationPOI = displayPOIs.find(poi => poi.id === selectedPOI.id);
-                      if (destinationPOI) {
-                        poisToShow = [destinationPOI];
-                        if (isDev) console.log('🎯 SMART FILTERING: Showing only destination POI:', normalizePoiString(destinationPOI.name));
-                      } else {
-                        if (isDev) console.log('🎯 SMART FILTERING: Selected POI not found in displayPOIs, showing empty array');
-                      }
-                    }
+                    poisToShow = selectedPOI ? [selectedPOI] : [];
                   }
-
                   const poisWithDistance = poisToShow.map(poi => {
-                    // Assumption: calculateDistance returns kilometers → convert to meters
                     const km = calculateDistance(trackingPosition || currentPosition, poi.coordinates);
                     const meters = km * 1000;
                     return {
                       ...poi,
-                      distance: formatDistance(meters)
+                      distance: meters
                     };
                   });
-
-                  if (isDev) console.log(`🗺️ MAP CONTAINER DEBUG: Passing ${poisWithDistance.length} POIs to map (Navigation: ${isNavigating})`);
-                  if (poisWithDistance.length > 0) {
-                    if (isDev) console.log(`🗺️ MAP CONTAINER DEBUG: First POI:`, normalizePoiString(poisWithDistance[0].name));
-                  }
                   return poisWithDistance;
                 })()}
                 selectedPOI={selectedPOI}
@@ -1428,16 +1399,12 @@ export default function Navigation() {
                 rotation={mapRotation}
                 onRotate={handleRotate}
                 onRotateStart={handleRotateStart}
-              >
-              </MapContainer>
+              />
             </div>
           </div>
 
-
-          {/* EXPLORATION MODE - Only visible when NOT navigating */}
           {!isNavigating && (
             <>
-              {/* Permanent Header - Search and Location Selection */}
               <div className="z-[1000]">
                 <PermanentHeader
                   searchQuery={searchQuery}
@@ -1448,24 +1415,15 @@ export default function Navigation() {
                   onClear={handleClearPOIs}
                 />
               </div>
-
-              {/* Lightweight POI Buttons - Left Side - Vertical Stack - Properly Centered */}
               <LightweightPOIButtons
                 onCategorySelect={handleCategoryFilter}
                 activeCategories={filteredCategories}
                 selectedPOI={!!selectedPOI}
               />
-
-
-
-              {/* Camping Weather Widget */}
               <CampingWeatherWidget coordinates={currentPosition} />
             </>
           )}
 
-
-
-          {/* Enhanced Map Controls - Always Visible (Right Side) */}
           <EnhancedMapControls
             onToggleVoice={handleToggleVoice}
             onMapStyleChange={handleMapStyleChange}
@@ -1480,10 +1438,8 @@ export default function Navigation() {
             onCenterOnLocation={handleCenterOnLocation}
             compassMode={mapOrientation === 'driving' ? 'bearing' : mapOrientation === 'manual' ? 'manual' : 'north'}
             onToggleCompass={() => {
-              if (mapOrientation === 'north') {
-                setMapOrientation('driving');
-              } else {
-                // If in 'driving' or 'manual' mode, reset to north
+              if (mapOrientation === 'north') setMapOrientation('driving');
+              else {
                 setMapRotation(0);
                 setMapOrientation('north');
               }
@@ -1493,8 +1449,6 @@ export default function Navigation() {
             isNetworkOverlayLoading={isNetworkOverlayLoading}
           />
 
-
-          {/* POI Info Overlay - Positioned below button rows */}
           {showPOIOverlay && selectedPOI && (
             <TransparentPOIOverlay
               poi={selectedPOI}
@@ -1503,7 +1457,6 @@ export default function Navigation() {
             />
           )}
 
-          {/* Enhanced POI Dialog for enriched accommodations */}
           {showPOIDialog && selectedPOI && (
             <EnhancedPOIDialog
               poi={selectedPOI}
@@ -1513,70 +1466,47 @@ export default function Navigation() {
             />
           )}
 
-
-          {/*NAVIGATION MODE - Only visible when actively navigating */}
           {isNavigating && currentRoute && currentRoute.instructions && currentRoute.instructions.length > 0 && (
-            <>
-              {/* Top: Current Maneuver */}
-              {/* Top: Current Maneuver */}
-              <TopManeuverPanel
-                instruction={typeof currentRoute.instructions[0]?.instruction === 'string' ? currentRoute.instructions[0].instruction : 'Weiter geradeaus'}
-                distance={nextDistance} // darf string/number sein, Panel koerziert
-                distanceToNext={(routeProgress as any)?.distanceToNextMeters ?? (routeProgress as any)?.distanceToNext}
-                maneuverType={currentRoute.instructions[0]?.maneuverType}
-              />
-
-              {/* Bottom: Navigation Summary with End Button */}
-              <BottomSummaryPanel
-                // Sekunden (rohe ETA). Falls dynamicETA fehlt, versuch durationSeconds, sonst kann ein String bleiben – wird koerziert/angezeigt.
-                timeRemaining={
-                  routeProgress?.dynamicETA?.estimatedTimeRemaining ??
-                  (currentRoute as any)?.durationSeconds ??
-                  (typeof currentRoute.estimatedTime === 'string' ? currentRoute.estimatedTime : null)
-                }
-                // Meter (roh). Falls fehlend: parse evtl. String-Fallback aus currentRoute.totalDistance.
-                distanceRemaining={(() => {
-                  const metersFromProgress =
-                    (routeProgress as any)?.distanceRemainingMeters ??
-                    (typeof (routeProgress as any)?.distanceRemaining === 'number'
-                      ? ((routeProgress as any).distanceRemaining * 1000) // km -> m
-                      : null);
-
-                  if (typeof metersFromProgress === 'number') return metersFromProgress;
-
-                  // Fallback: parse aus String wie "396 m" oder "3.1 km"
-                  const fallbackStr = (currentRoute as any)?.totalDistance;
-                  const parsed = typeof fallbackStr === 'string' ? coerceMeters(fallbackStr) : null;
-                  return parsed ?? null;
-                })()}
-                // Date bevorzugt, aber String wird akzeptiert
-                eta={routeProgress?.dynamicETA?.estimatedArrival ??
-                    (currentRoute as any)?.arrivalTime ?? // kann String sein, wird als Label genommen
-                    (typeof currentRoute.eta === 'string' ? currentRoute.eta : null)}
-                onEndNavigation={handleEndNavigation}
-                debug={isDev}
-              />
-
-              {/* Filter Modal - Preserved */}
-              {/* The FilterModal is no longer directly controlled by a button click,
-                  but the state and component remain in case it's needed for future refinements
-                  or if the LightweightPOIButtons are expanded to trigger it. */}
-              <div style={{ display: showFilterModal ? 'block' : 'none' }}>
-                {/* Placeholder for FilterModal if needed in future, managed via state */}
-              </div>
-
-              {/* POI Detail Overlay */}
-              {showPOIOverlay && selectedPOI && (
-                <TransparentPOIOverlay
-                  poi={selectedPOI}
-                  onNavigate={handleNavigateToPOI}
-                  onClose={handleCloseOverlay}
+            <div className="nav-panel-container">
+              <div className="nav-panel nav-panel-top">
+                <TopManeuverPanel
+                  instruction={typeof currentRoute.instructions[0]?.instruction === 'string' ? currentRoute.instructions[0].instruction : 'Weiter geradeaus'}
+                  distance={nextDistance}
+                  distanceToNext={(routeProgress as any)?.distanceToNextMeters ?? (routeProgress as any)?.distanceToNext}
+                  maneuverType={currentRoute.instructions[0]?.maneuverType}
                 />
-              )}
+              </div>
+              <div className="nav-panel nav-panel-bottom">
+                <BottomSummaryPanel
+                  timeRemaining={
+                    routeProgress?.dynamicETA?.estimatedTimeRemaining ??
+                    (currentRoute as any)?.durationSeconds ??
+                    (typeof currentRoute.estimatedTime === 'string' ? currentRoute.estimatedTime : null)
+                  }
+                  distanceRemaining={(() => {
+                    const metersFromProgress =
+                      (routeProgress as any)?.distanceRemainingMeters ??
+                      (typeof (routeProgress as any)?.distanceRemaining === 'number'
+                        ? ((routeProgress as any).distanceRemaining * 1000) // km -> m
+                        : null);
 
-            </>
+                    if (typeof metersFromProgress === 'number') return metersFromProgress;
+
+                    const fallbackStr = (currentRoute as any)?.totalDistance;
+                    const parsed = typeof fallbackStr === 'string' ? coerceMeters(fallbackStr) : null;
+                    return parsed ?? null;
+                  })()}
+                  eta={
+                    routeProgress?.dynamicETA?.estimatedArrival ??
+                    (currentRoute as any)?.arrivalTime ??
+                    (typeof currentRoute.eta === 'string' ? currentRoute.eta : null)
+                  }
+                  onEndNavigation={handleEndNavigation}
+                  debug={isDev}
+                />
+              </div>
+            </div>
           )}
-
         </div>
       </ErrorBoundary>
     );
