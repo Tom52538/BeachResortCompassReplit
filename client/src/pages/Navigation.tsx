@@ -57,7 +57,7 @@ export default function Navigation() {
   const { data: allPOIs = [], isLoading: poisLoading } = usePOI(currentSite);
 
   // Debug: Log the site synchronization - now using SiteManager
-  console.log(`🔍 SITE SYNC DEBUG: Navigation.tsx currentSite=${currentSite}, SiteManager config=${JSON.stringify(config)}`);
+  if (isDev) console.log(`🔍 SITE SYNC DEBUG: Navigation.tsx currentSite=${currentSite}, SiteManager config=${JSON.stringify(config)}`);
   const { data: weather } = useWeather(currentPosition.lat, currentPosition.lng);
   const { getRoute } = useRouting();
   const { toast } = useToast();
@@ -153,7 +153,7 @@ export default function Navigation() {
       if (useRealGPS && livePosition && lastPositionRef.current) {
         const bearing = calculateBearing(lastPositionRef.current, livePosition.position);
         if (!isNaN(bearing)) {
-          console.log('📍 Calculated bearing from movement:', bearing);
+          if (isDev) console.log('📍 Calculated bearing from movement:', bearing);
           setCurrentBearing(bearing);
         }
       }
@@ -165,15 +165,15 @@ export default function Navigation() {
           { lat: start[1], lng: start[0] },
           { lat: end[1], lng: end[0] }
         );
-        console.log('📍 Using route geometry bearing for mock GPS:', routeBearing);
+        if (isDev) console.log('📍 Using route geometry bearing for mock GPS:', routeBearing);
         setCurrentBearing(routeBearing);
       } else if (routeProgress?.heading) {
-        console.log('📍 Using route progress bearing:', routeProgress.heading);
+        if (isDev) console.log('📍 Using route progress bearing:', routeProgress.heading);
         setCurrentBearing(routeProgress.heading);
       } else {
         // Default driving direction simulation for testing
         setCurrentBearing(45); // Northeast direction for testing
-        console.log('📍 Using default test bearing: 45 degrees');
+        if (isDev) console.log('📍 Using default test bearing: 45 degrees');
       }
       // Store current position for next calculation
       if (livePosition) {
@@ -184,14 +184,14 @@ export default function Navigation() {
 
   // Debug logging for position tracking
   useEffect(() => {
-    console.log(`🔍 NAVIGATION DEBUG: Position tracking - isNavigating: ${isNavigating}, useRealGPS: ${useRealGPS}, livePosition:`, livePosition, 'trackingPosition:', trackingPosition);
+    if (isDev) console.log(`🔍 NAVIGATION DEBUG: Position tracking - isNavigating: ${isNavigating}, useRealGPS: ${useRealGPS}, livePosition:`, livePosition, 'trackingPosition:', trackingPosition);
 
     if (isNavigating && !useRealGPS) {
-      console.log(`🔍NAVIGATION DEBUG: Navigation started with MOCK GPS - position should stay locked to:`, currentPosition);
+      if (isDev) console.log(`🔍NAVIGATION DEBUG: Navigation started with MOCK GPS - position should stay locked to:`, currentPosition);
     }
 
     if (isNavigating && useRealGPS) {
-      console.log(`🔍NAVIGATION DEBUG: Navigation started with REAL GPS - using live tracking`);
+      if (isDev) console.log(`🔍NAVIGATION DEBUG: Navigation started with REAL GPS - using live tracking`);
     }
   }, [isNavigating, useRealGPS, livePosition, trackingPosition, currentPosition]);
 
@@ -214,22 +214,22 @@ export default function Navigation() {
   if (searchQuery.trim().length > 0) {
     // Use search results (already filtered by category if single category selected)
     displayPOIs = searchResults;
-    console.log(`🔍 DISPLAY POIs: Showing ${searchResults.length} search results for "${searchQuery}"`);
+    if (isDev) console.log(`🔍 DISPLAY POIs: Showing ${searchResults.length} search results for "${searchQuery}"`);
 
     // If search is active but no results, show message
     if (searchResults.length === 0) {
-      console.log(`🔍 DISPLAY POIs: No search results found for "${searchQuery}" - API may have failed`);
+      if (isDev) console.log(`🔍 DISPLAY POIs: No search results found for "${searchQuery}" - API may have failed`);
     }
   } else if (filteredCategories.length > 0 && allPOIs) {
     // Debug: Show actual categories in the POI data
     if (allPOIs.length > 0) {
       const actualCategories = Array.from(new Set(allPOIs.map(poi => poi.category))).sort();
-      console.log(`🔍 FILTERING DEBUG: Available categories in POI data:`, actualCategories);
-      console.log(`🔍 FILTERING DEBUG: Selected categories:`, filteredCategories);
+      if (isDev) console.log(`🔍 FILTERING DEBUG: Available categories in POI data:`, actualCategories);
+      if (isDev) console.log(`🔍 FILTERING DEBUG: Selected categories:`, filteredCategories);
 
       // Show sample POIs for debugging
       const samplePOIs = allPOIs.slice(0, 5);
-      console.log(`🔍 FILTERING DEBUG: Sample POIs:`, samplePOIs.map(poi => ({ name: poi.name, category: poi.category })));
+      if (isDev) console.log(`🔍 FILTERING DEBUG: Sample POIs:`, samplePOIs.map(poi => ({ name: poi.name, category: poi.category })));
     }
 
     // Filter POIs directly when categories are selected
@@ -246,7 +246,7 @@ export default function Navigation() {
       const matchesCategory = filteredCategories.some(selectedCat => {
         const selectedCategory = selectedCat.toLowerCase();
 
-        console.log(`🔍 FILTER MATCH DEBUG: Checking POI "${normalizePoiString(poi.name)}" (category: "${normalizePoiString(poi.category)}") against filter "${selectedCategory}"`);
+        if (isDev) console.log(`🔍 FILTER MATCH DEBUG: Checking POI "${normalizePoiString(poi.name)}" (category: "${normalizePoiString(poi.category)}") against filter "${selectedCategory}"`);
 
         // Direct match
         if (poiCategory === selectedCategory) return true;
@@ -328,7 +328,7 @@ export default function Navigation() {
                                  poiName.includes('grill');
 
             if (isGastronomie) {
-              console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
+              if (isDev) console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
             }
             return isGastronomie;
           }
@@ -388,7 +388,7 @@ export default function Navigation() {
           const hasBeachHouseInCategory = roompotCat.includes('beach house');
 
           const isActualBeachHouse = hasBeachHouseBuildingType || hasBeachHouseInName || hasBeachHouseInCategory;
-          console.log(`🏖️ Beach house check for "${normalizePoiString(poi.name)}": ${isActualBeachHouse}`);
+          if (isDev) console.log(`🏖️ Beach house check for "${normalizePoiString(poi.name)}": ${isActualBeachHouse}`);
           return isActualBeachHouse;
         }
 
@@ -434,7 +434,7 @@ export default function Navigation() {
                          safeName.includes('lodge') ||
                          safeRoompotCategory.includes('lodge');
 
-          console.log(`🏠 Lodge check: "${poi.name}" = ${isLodge}`, {
+          if (isDev) console.log(`🏠 Lodge check: "${poi.name}" = ${isLodge}`, {
             building_type: poi.building_type,
             roompot_category: poi.roompot_category,
             match: isLodge
@@ -465,7 +465,7 @@ export default function Navigation() {
         if (selectedCategory.includes(':')) {
           const [osmKey, osmValue] = selectedCategory.split(':');
           if (poi[osmKey] === osmValue) {
-            console.log(`✅ DIRECT OSM MATCH: ${normalizePoiString(poi.name)} matches ${selectedCategory}`);
+            if (isDev) console.log(`✅ DIRECT OSM MATCH: ${normalizePoiString(poi.name)} matches ${selectedCategory}`);
             return true;
           }
         }
@@ -481,7 +481,7 @@ export default function Navigation() {
                                  poi.amenity === 'biergarten';
 
             if (isGastronomie) {
-              console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
+              if (isDev) console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
               return true;
             }
           }
@@ -517,15 +517,15 @@ export default function Navigation() {
       return matchesCategory;
     });
 
-    console.log(`🔍 DISPLAY POIs: Showing ${displayPOIs.length} POIs for categories:`, filteredCategories);
+    if (isDev) console.log(`🔍 DISPLAY POIs: Showing ${displayPOIs.length} POIs for categories:`, filteredCategories);
 
     // Debug: Show which POIs matched
     if (displayPOIs.length > 0) {
-      console.log(`🔍 FILTERING DEBUG: Matched POIs:`, displayPOIs.slice(0, 5).map(poi => ({ name: normalizePoiString(poi.name), category: normalizePoiString(poi.category) })));
+      if (isDev) console.log(`🔍 FILTERING DEBUG: Matched POIs:`, displayPOIs.slice(0, 5).map(poi => ({ name: normalizePoiString(poi.name), category: normalizePoiString(poi.category) })));
     } else {
-      console.log(`🔍 FILTERING DEBUG: No POIs matched filters. Analyzing...`);
-      console.log(`🔍 FILTERING DEBUG: Filter categories:`, filteredCategories);
-      console.log(`🔍 FILTERING DEBUG: Sample POI data:`, allPOIs.slice(0, 10).map(poi => ({
+      if (isDev) console.log(`🔍 FILTERING DEBUG: No POIs matched filters. Analyzing...`);
+      if (isDev) console.log(`🔍 FILTERING DEBUG: Filter categories:`, filteredCategories);
+      if (isDev) console.log(`🔍 FILTERING DEBUG: Sample POI data:`, allPOIs.slice(0, 10).map(poi => ({
         name: normalizePoiString(poi.name),
         category: normalizePoiString(poi.category),
         description: normalizePoiString(poi.description)?.substring(0, 50) + '...'
@@ -538,12 +538,12 @@ export default function Navigation() {
         const desc = normalizePoiString(poi.description).toLowerCase();
         return name.includes('toilet') || name.includes('wc') || cat.includes('toilet') || desc.includes('toilet');
       });
-      console.log(`🔍 FILTERING DEBUG: Found ${toiletPOIs.length} toilet-related POIs:`, toiletPOIs.slice(0, 3).map(poi => normalizePoiString(poi.name)));
+      if (isDev) console.log(`🔍 FILTERING DEBUG: Found ${toiletPOIs.length} toilet-related POIs:`, toiletPOIs.slice(0, 3).map(poi => normalizePoiString(poi.name)));
     }
   } else {
     // CLEAN MAP: Hide POIs by default - user can search or filter to find what they need
     displayPOIs = [];
-    console.log(`🔍 DISPLAY POIs: Clean map mode - no POIs shown (use search or filters to find destinations)`);
+    if (isDev) console.log(`🔍 DISPLAY POIs: Clean map mode - no POIs shown (use search or filters to find destinations)`);
   }
 
   const handleSearch = useCallback((query: string) => {
@@ -584,8 +584,8 @@ export default function Navigation() {
   }, [getCurrentPosition, toast]);
 
   const handlePOIClick = useCallback(async (poi: POI) => {
-    console.log('🔍 handlePOIClick called with:', poi);
-    console.log('🔍 handlePOIClick POI details:', {
+    if (isDev) console.log('🔍 handlePOIClick called with:', poi);
+    if (isDev) console.log('🔍 handlePOIClick POI details:', {
       id: poi?.id,
       name: normalizePoiString(poi?.name),
       category: normalizePoiString(poi?.category),
@@ -597,7 +597,7 @@ export default function Navigation() {
       return;
     }
 
-    console.log('🔍 Setting POI states for:', normalizePoiString(poi.name));
+    if (isDev) console.log('🔍 Setting POI states for:', normalizePoiString(poi.name));
 
     // Check if this is an enriched POI (accommodation types) that needs full data
     const isEnrichedPOI = normalizePoiString(poi.category).includes('beach_house') ||
@@ -613,7 +613,7 @@ export default function Navigation() {
                          normalizePoiString(poi.category).includes('lodges') ||
                          normalizePoiString(poi.name).toLowerCase().includes('lodge');
 
-    console.log('🔍 POI classification:', {
+    if (isDev) console.log('🔍 POI classification:', {
       isEnrichedPOI,
       poiName: normalizePoiString(poi.name),
       poiCategory: normalizePoiString(poi.category),
@@ -625,15 +625,15 @@ export default function Navigation() {
 
     // For accommodation types, fetch enriched data from the dedicated endpoint
     if (isEnrichedPOI) {
-      console.log('🏠 Enriched POI detected, fetching full data for:', normalizePoiString(poi.name));
+      if (isDev) console.log('🏠 Enriched POI detected, fetching full data for:', normalizePoiString(poi.name));
       try {
         const response = await fetch(`/api/pois/${poi.id}?site=kamperland`);
         if (response.ok) {
           const enrichedData = await response.json();
-          console.log('🏠 FETCHED ENRICHED POI DATA:', enrichedData);
+          if (isDev) console.log('🏠 FETCHED ENRICHED POI DATA:', enrichedData);
           finalPOI = enrichedData;
         } else {
-          console.log('🔍 Failed to fetch enriched data, using basic POI data');
+          if (isDev) console.log('🔍 Failed to fetch enriched data, using basic POI data');
         }
       } catch (error) {
         console.error('🔍 Error fetching enriched POI data:', error);
@@ -647,11 +647,11 @@ export default function Navigation() {
     setOverlayStates(prev => ({ ...prev, poiInfo: true, search: false }));
 
     if (isEnrichedPOI) {
-      console.log('🏠 Enriched POI detected - showing enhanced dialog for:', normalizePoiString(finalPOI.name));
+      if (isDev) console.log('🏠 Enriched POI detected - showing enhanced dialog for:', normalizePoiString(finalPOI.name));
       setShowPOIDialog(true);
       setShowPOIOverlay(false);
     } else {
-      console.log('📍 Regular POI detected - showing standard overlay for:', normalizePoiString(finalPOI.name));
+      if (isDev) console.log('📍 Regular POI detected - showing standard overlay for:', normalizePoiString(finalPOI.name));
       setShowPOIOverlay(true);
       setShowPOIDialog(false);
     }
@@ -662,7 +662,7 @@ export default function Navigation() {
   }, []);
 
   const handlePOISelect = useCallback((poi: POI) => {
-    console.log(`🔍NAVIGATION: POI Selected: ${normalizePoiString(poi.name)}`);
+    if (isDev) console.log(`🔍NAVIGATION: POI Selected: ${normalizePoiString(poi.name)}`);
     // Use the same logic as handlePOIClick for consistency
     handlePOIClick(poi);
   }, [handlePOIClick]);
@@ -677,9 +677,9 @@ export default function Navigation() {
 
   // Handler for setting destination marker on long press
   const handleDestinationLongPress = useCallback((latlng: L.LatLng) => {
-    console.log('🗺️ LONG PRESS DEBUG: Destination long press detected at', latlng);
+    if (isDev) console.log('🗺️ LONG PRESS DEBUG: Destination long press detected at', latlng);
     const newDestination = { lat: latlng.lat, lng: latlng.lng };
-    console.log('🗺️ LONG PRESS DEBUG: Setting destination marker', newDestination);
+    if (isDev) console.log('🗺️ LONG PRESS DEBUG: Setting destination marker', newDestination);
 
     setDestinationMarker(newDestination);
     setMapCenter(newDestination); // Center map on the new destination
@@ -688,7 +688,7 @@ export default function Navigation() {
     setCurrentRoute(null); // Clear existing route
     setIsNavigating(false); // Ensure we are not in navigating mode
 
-    console.log('🗺️ LONG PRESS DEBUG: Destination marker state updated');
+    if (isDev) console.log('🗺️ LONG PRESS DEBUG: Destination marker state updated');
 
     toast({
       title: t('alerts.destinationSet'),
@@ -701,7 +701,7 @@ export default function Navigation() {
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2"
           onClick={async () => {
             try {
-              console.log('🗺️ LONG PRESS DEBUG: Starting route calculation');
+              if (isDev) console.log('🗺️ LONG PRESS DEBUG: Starting route calculation');
               const profile = travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking';
               const route = await getRoute.mutateAsync({
                 from: currentPosition,
@@ -714,7 +714,7 @@ export default function Navigation() {
               if (voiceEnabled && secureTTSRef.current && route?.instructions?.length > 0) {
                 const firstInstruction = route.instructions[0];
                 const initialText = `Navigation gestartet. ${firstInstruction.instruction || 'Geradeaus weiterfahren'}`;
-                console.log('🎤 Initial navigation announcement:', initialText);
+                if (isDev) console.log('🎤 Initial navigation announcement:', initialText);
                 secureTTSRef.current.speak(initialText, 'start');
               }
 
@@ -755,7 +755,7 @@ export default function Navigation() {
 
   // Handler for single tap - just close overlays if needed
   const handleMapSingleTap = useCallback(() => {
-    console.log('🗺️ SINGLE TAP DEBUG: Single tap detected - handling map interaction');
+    if (isDev) console.log('🗺️ SINGLE TAP DEBUG: Single tap detected - handling map interaction');
     if (selectedPOI) {
       setSelectedPOI(null);
       setUIMode('start');
@@ -765,7 +765,7 @@ export default function Navigation() {
 
 
   const handleNavigateToPOI = useCallback(async (poi: POI) => {
-    console.log('🧭 Navigation to POI requested:', normalizePoiString(poi.name));
+    if (isDev) console.log('🧭 Navigation to POI requested:', normalizePoiString(poi.name));
 
     if (!currentPosition) { // Changed from 'position' to 'currentPosition' for clarity
       console.error('❌ No position available for navigation');
@@ -787,7 +787,7 @@ export default function Navigation() {
       // 1. IMMEDIATELY hide POI info box - FIRST ACTION
       setSelectedPOI(null);
 
-      console.log('🚗 TRAVEL MODE DEBUG:', { selectedMode: travelMode, profileMapping: travelMode === 'pedestrian' ? 'walking' : travelMode === 'car' ? 'driving' : 'cycling' });
+      if (isDev) console.log('🚗 TRAVEL MODE DEBUG:', { selectedMode: travelMode, profileMapping: travelMode === 'pedestrian' ? 'walking' : travelMode === 'car' ? 'driving' : 'cycling' });
       setOverlayStates({ search: false, poiInfo: false, routePlanning: false, navigation: false });
 
       // Clear any existing route to force fresh calculation
@@ -798,7 +798,7 @@ export default function Navigation() {
 
       // 3. Calculate route with selected travel mode
       const profile = travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking';
-      console.log('🚗 ROUTING WITH PROFILE:', profile, 'from travel mode:', travelMode);
+      if (isDev) console.log('🚗 ROUTING WITH PROFILE:', profile, 'from travel mode:', travelMode);
 
       const route = await getRoute.mutateAsync({
         from: currentPosition, // Use currentPosition here
@@ -808,7 +808,7 @@ export default function Navigation() {
 
       // Handle the case where no route is returned
       if (!route) {
-        console.warn('No route received from server');
+        if (isDev) console.warn('No route received from server');
         // Track failed route for network debugging
         const failedCoords = {
           start: { lat: currentPosition.lat, lng: currentPosition.lng },
@@ -818,7 +818,7 @@ export default function Navigation() {
         setFailedRoutingCoords(failedCoords);
         // Auto-enable network debug visualization on routing failure
         setShowNetworkDebug(true);
-        console.log('🔍 FAILED ROUTE DEBUG: Setting failed coordinates:', failedCoords);
+        if (isDev) console.log('🔍 FAILED ROUTE DEBUG: Setting failed coordinates:', failedCoords);
         toast({
           title: "Routing fehlgeschlagen",
           description: "Keine Route gefunden - Netzwerk-Disconnect sichtbar auf Karte",
@@ -835,7 +835,7 @@ export default function Navigation() {
       if (voiceEnabled && secureTTSRef.current && route?.instructions?.length > 0) {
         const firstInstruction = route.instructions[0];
         const initialText = `Navigation gestartet. ${firstInstruction.instruction || 'Geradeaus weiterfahren'}`;
-        console.log('🎤 Initial POI navigation announcement:', initialText);
+        if (isDev) console.log('🎤 Initial POI navigation announcement:', initialText);
         secureTTSRef.current.speak(initialText, 'start');
       }
 
@@ -850,7 +850,7 @@ export default function Navigation() {
       setOverlayStates(prev => ({ ...prev, navigation: true }));
 
       // Navigation started - no confirmation dialog needed
-      console.log('✅ POI Navigation successfully started with voice:', voiceEnabled);
+      if (isDev) console.log('✅ POI Navigation successfully started with voice:', voiceEnabled);
     } catch (error) {
       console.error('🗺️ ROUTING ERROR:', error);
       // Track failed route for network debugging
@@ -862,7 +862,7 @@ export default function Navigation() {
       setFailedRoutingCoords(failedCoords);
       // Auto-enable network debug visualization on routing failure
       setShowNetworkDebug(true);
-      console.log('🔍 FAILED ROUTE DEBUG: Setting failed coordinates from catch:', failedCoords);
+      if (isDev) console.log('🔍 FAILED ROUTE DEBUG: Setting failed coordinates from catch:', failedCoords);
       toast({
         title: "Routing fehlgeschlagen",
         description: "Keine Route gefunden - Netzwerk-Disconnect sichtbar auf Karte",
@@ -882,39 +882,39 @@ export default function Navigation() {
     // CRITICAL: TTS Cache komplett leeren bei Navigation-Ende
     if (secureTTSRef.current) {
       secureTTSRef.current.clearCache();
-      console.log('🧹NAVIGATION END: TTS Cache komplett geleert');
+      if (isDev) console.log('🧹NAVIGATION END: TTS Cache komplett geleert');
     }
 
     // Reset map orientation
     setMapOrientation('north');
 
     mobileLogger.log('NAVIGATION', 'Navigation ended by user');
-    console.log('Navigation ended successfully');
+    if (isDev) console.log('Navigation ended successfully');
   }, []);
 
   // This handler is likely intended to close the POI overlay/dialog.
   // Updated to also close the new dialog state.
   const handleClosePOI = useCallback(() => {
-    console.log(`🔍 NAVIGATION: Closing POI overlay/dialog`);
+    if (isDev) console.log(`🔍 NAVIGATION: Closing POI overlay/dialog`);
     setSelectedPOI(null);
     setShowPOIOverlay(false);
     setShowPOIDialog(false);
   }, []);
 
   const handleCategoryFilter = useCallback((category: string) => {
-    console.log('🔍 CATEGORY FILTER DEBUG: ==========================================');
-    console.log('🔍 CATEGORY FILTER DEBUG: handleCategoryFilter called with:', category);
-    console.log('🔍 CATEGORY FILTER DEBUG: Current filteredCategories before:', filteredCategories);
+    if (isDev) console.log('🔍 CATEGORY FILTER DEBUG: ==========================================');
+    if (isDev) console.log('🔍 CATEGORY FILTER DEBUG: handleCategoryFilter called with:', category);
+    if (isDev) console.log('🔍 CATEGORY FILTER DEBUG: Current filteredCategories before:', filteredCategories);
 
     // Debug available POI categories from actual data
     if (allPOIs && allPOIs.length > 0) {
       const actualCategories = Array.from(new Set(allPOIs.map(poi => poi.category))).sort();
-      console.log('🔍 CATEGORY FILTER DEBUG: Available POI categories in data:', actualCategories);
-      console.log('🔍 CATEGORY FILTER DEBUG: Does clicked category exist in data?', actualCategories.includes(category));
+      if (isDev) console.log('🔍 CATEGORY FILTER DEBUG: Available POI categories in data:', actualCategories);
+      if (isDev) console.log('🔍 CATEGORY FILTER DEBUG: Does clicked category exist in data?', actualCategories.includes(category));
 
       // Show sample POIs for this category
       const samplePOIs = allPOIs.filter(poi => poi.category === category).slice(0, 3);
-      console.log(`🔍 CATEGORY FILTER DEBUG: Sample POIs for "${category}":`, samplePOIs.map(poi => normalizePoiString(poi.name)));
+      if (isDev) console.log(`🔍 CATEGORY FILTER DEBUG: Sample POIs for "${category}":`, samplePOIs.map(poi => normalizePoiString(poi.name)));
     }
 
     setFilteredCategories(prev => {
@@ -923,7 +923,7 @@ export default function Navigation() {
         ? prev.filter(c => c !== category)
         : [...prev, category];
 
-      console.log('🔍 CATEGORY FILTER DEBUG: State change:', {
+      if (isDev) console.log('🔍 CATEGORY FILTER DEBUG: State change:', {
         action: isCurrentlySelected ? 'REMOVE' : 'ADD',
         category: category,
         previousState: prev,
@@ -937,7 +937,7 @@ export default function Navigation() {
 
   // Update map center when current position changes
   useEffect(() => {
-    console.log('🗺️ MAP CENTER UPDATE: currentPosition changed to:', currentPosition);
+    if (isDev) console.log('🗺️ MAP CENTER UPDATE: currentPosition changed to:', currentPosition);
     setMapCenter(currentPosition);
   }, [currentPosition]);
 
@@ -946,7 +946,7 @@ export default function Navigation() {
     const handleStorageChange = () => {
       const newSite = localStorage.getItem('selected-site') as TestSite;
       if (newSite && newSite !== currentSite) {
-        console.log('📍 NAVIGATION: Site change detected:', currentSite, '->', newSite);
+        if (isDev) console.log('📍 NAVIGATION: Site change detected:', currentSite, '->', newSite);
         // Instead of setting currentSite directly, use the setSite function from SiteManager
         // This ensures that any side effects of site changes are handled correctly.
         setSite(newSite);
@@ -963,11 +963,11 @@ export default function Navigation() {
   }, [currentSite, setSite]); // Added setSite to dependencies
 
   const handleSiteChange = useCallback((site: Site) => {
-    console.log(`🔄 Navigation: Site change requested - ${config.site} -> ${site}`);
+    if (isDev) console.log(`🔄 Navigation: Site change requested - ${config.site} -> ${site}`);
 
     // Use SiteManager setSite function (already extracted at component top-level)
     setSite(site);
-    console.log(`🔄 Navigation: setSite called with ${site}`);
+    if (isDev) console.log(`🔄 Navigation: setSite called with ${site}`);
 
     // Clear navigation state when changing sites
     setSelectedPOI(null);
@@ -985,7 +985,7 @@ export default function Navigation() {
     setShowPOIDialog(false);
 
 
-    console.log(`🔄 Navigation: Site change completed - localStorage updated to: ${site}`);
+    if (isDev) console.log(`🔄 Navigation: Site change completed - localStorage updated to: ${site}`);
 
     toast({
       title: t('alerts.siteChanged'),
@@ -1007,7 +1007,7 @@ export default function Navigation() {
     // CRITICAL: TTS Cache leeren bei POI Clear - jeder neue POI = neuer Start
     if (secureTTSRef.current) {
       secureTTSRef.current.clearCache();
-      console.log('🧹 POI CLEAR: TTS Cache komplett geleert für neuen Start');
+      if (isDev) console.log('🧹 POI CLEAR: TTS Cache komplett geleert für neuen Start');
     }
 
     toast({
@@ -1018,14 +1018,14 @@ export default function Navigation() {
 
   // Handle travel mode changes and automatically recalculate route if we have one
   const handleTravelModeChange = async (newMode: 'car' | 'bike' | 'pedestrian') => {
-    console.log(`🚗 TRAVEL MODE CHANGE: ${travelMode} → ${newMode}`);
+    if (isDev) console.log(`🚗 TRAVEL MODE CHANGE: ${travelMode} → ${newMode}`);
     setTravelMode(newMode);
 
     // CRITICAL: Force immediate ETA recalculation with new travel mode
     if (isNavigating && routeTrackerRef.current && trackingPosition) {
       const updatedProgress = routeTrackerRef.current.updatePosition(trackingPosition, newMode);
       setRouteProgress(updatedProgress);
-      console.log(`🎯 INSTANT ETA UPDATE: ${newMode} = ${Math.ceil(updatedProgress.dynamicETA?.estimatedTimeRemaining / 60)} min`);
+      if (isDev) console.log(`🎯 INSTANT ETA UPDATE: ${newMode} = ${Math.ceil(updatedProgress.dynamicETA?.estimatedTimeRemaining / 60)} min`);
     }
 
     // Immediately update ETA for current route with new travel mode
@@ -1034,7 +1034,7 @@ export default function Navigation() {
       const remainingDistance = routeProgress.distanceRemaining / 1000; // Convert to km
       const newETA = speedTracker.getETAForMode(remainingDistance, newMode);
 
-      console.log(`🔄 DYNAMIC ETA UPDATE: ${newMode} mode - ${Math.ceil(newETA.estimatedTimeRemaining / 60)} min`);
+      if (isDev) console.log(`🔄 DYNAMIC ETA UPDATE: ${newMode} mode - ${Math.ceil(newETA.estimatedTimeRemaining / 60)} min`);
 
       // Update route with new ETA information
       setCurrentRoute(prevRoute => ({
@@ -1057,8 +1057,8 @@ export default function Navigation() {
 
     if (currentRoute && destination) {
       const profile = newMode === 'car' ? 'driving' : newMode === 'bike' ? 'cycling' : 'walking';
-      console.log('🔄 AUTO-RECALCULATING route with PROFILE:', profile, 'from mode:', newMode);
-      console.log('🔍 Route request details:', {
+      if (isDev) console.log('🔄 AUTO-RECALCULATING route with PROFILE:', profile, 'from mode:', newMode);
+      if (isDev) console.log('🔍 Route request details:', {
         from: currentPosition,
         to: { lat: destination.lat, lng: destination.lng },
         profile,
@@ -1073,12 +1073,12 @@ export default function Navigation() {
           mode: profile
         });
         setCurrentRoute(newRoute);
-        console.log('✅ Route recalculated successfully with new mode:', newMode, 'profile:', profile);
+        if (isDev) console.log('✅ Route recalculated successfully with new mode:', newMode, 'profile:', profile);
       } catch (error) {
         console.error('❌ Failed to recalculate route with new travel mode:', error);
       }
     } else {
-      console.log('🚫 NOT recalculating - missing requirements:', {
+      if (isDev) console.log('🚫 NOT recalculating - missing requirements:', {
         hasRoute: !!currentRoute,
         hasPOI: !!selectedPOI,
         hasDestinationMarker: !!destinationMarker,
@@ -1129,12 +1129,12 @@ export default function Navigation() {
     const newVoiceState = !voiceEnabled;
     setVoiceEnabled(newVoiceState);
 
-    console.log(`🎤 ElevenLabs TTS ${newVoiceState ? 'aktiviert' : 'deaktiviert'}`);
+    if (isDev) console.log(`🎤 ElevenLabs TTS ${newVoiceState ? 'aktiviert' : 'deaktiviert'}`);
   }, [voiceEnabled]);
 
   // Enhanced map style change handler with Railway debugging
   const handleMapStyleChange = useCallback((style: 'outdoors' | 'satellite' | 'streets' | 'navigation') => {
-    console.log('🗺️ DEBUG - Navigation.tsx handleMapStyleChange:', {
+    if (isDev) console.log('🗺️ DEBUG - Navigation.tsx handleMapStyleChange:', {
       newStyle: style,
       currentStyle: mapStyle,
       isNavigating,
@@ -1145,17 +1145,17 @@ export default function Navigation() {
 
     try {
       setMapStyle(style);
-      console.log('🗺️ DEBUG - setMapStyle completed successfully');
+      if (isDev) console.log('🗺️ DEBUG - setMapStyle completed successfully');
 
       // Auto-switch to driving orientation for navigation style when active navigation
       if (style === 'navigation' && isNavigating) {
-        console.log('🗺️ DEBUG - Auto-switching to driving orientation for navigation style');
+        if (isDev) console.log('🗺️ DEBUG - Auto-switching to driving orientation for navigation style');
         setMapOrientation('driving');
       }
 
       // Force re-render of map component
       setTimeout(() => {
-        console.log('🗺️ DEBUG - Map style change should be visible now');
+        if (isDev) console.log('🗺️ DEBUG - Map style change should be visible now');
       }, 100);
 
     } catch (error) {
@@ -1173,7 +1173,7 @@ export default function Navigation() {
     try {
       if (!secureTTSRef.current) {
         secureTTSRef.current = new SecureTTSClient();
-        console.log('🎤 ElevenLabs TTS Client initialisiert');
+        if (isDev) console.log('🎤 ElevenLabs TTS Client initialisiert');
       }
     } catch (error) {
       console.error('ElevenLabs TTS initialization failed:', error);
@@ -1183,12 +1183,12 @@ export default function Navigation() {
 
   // Language handled automatically by ElevenLabs German TTS
   useEffect(() => {
-    console.log(`🎙️ Voice guidance language: ${currentLanguage} (ElevenLabs auto-deutsch)`);
+    if (isDev) console.log(`🎙️ Voice guidance language: ${currentLanguage} (ElevenLabs auto-deutsch)`);
   }, [currentLanguage]);
 
   // Voice enabled state managed by VoiceControlPanel
   useEffect(() => {
-    console.log(`🎤 ElevenLabs TTS ${voiceEnabled ? 'aktiviert' : 'deaktiviert'}`);
+    if (isDev) console.log(`🎤 ElevenLabs TTS ${voiceEnabled ? 'aktiviert' : 'deaktiviert'}`);
   }, [voiceEnabled]);
 
   // Navigation Tracking Effect
@@ -1214,11 +1214,11 @@ export default function Navigation() {
             handleEndNavigation();
           },
           (distance) => { // onOffRoute
-             console.log(`User is ${distance}m off route.`);
+             if (isDev) console.log(`User is ${distance}m off route.`);
              // Rerouting logic will be handled in a separate effect
           }
         );
-        console.log('✅ RouteTracker initialized for new route.');
+        if (isDev) console.log('✅ RouteTracker initialized for new route.');
       }
 
       // Update position and handle progress
@@ -1244,7 +1244,7 @@ export default function Navigation() {
       const shouldReroute = rerouteServiceRef.current.shouldReroute(routeProgress.offRouteDistance, 3);
       if (shouldReroute) {
         setIsRerouting(true);
-        console.log('🔄 Triggering re-route...');
+        if (isDev) console.log('🔄 Triggering re-route...');
         if (voiceEnabled && secureTTSRef.current) {
           secureTTSRef.current.speak('Route wird neu berechnet.', 'warning');
         }
@@ -1257,7 +1257,7 @@ export default function Navigation() {
 
         rerouteServiceRef.current.calculateNewRoute(rerouteRequest).then(newRoute => {
           setCurrentRoute(newRoute);
-          console.log('✅ Re-route successful.');
+          if (isDev) console.log('✅ Re-route successful.');
         }).catch(error => {
           console.error('❌ Re-route failed:', error);
           toast({ title: "Re-routing failed", variant: "destructive" });
@@ -1268,7 +1268,7 @@ export default function Navigation() {
     }
   }, [isNavigating, routeProgress, isRerouting, trackingPosition, destinationMarker, travelMode, voiceEnabled, toast]);
 
-  console.log('🔍 Navigation: Starting render...', {
+  if (isDev) console.log('🔍 Navigation: Starting render...', {
     position: !!trackingPosition,
     isNavigating,
     selectedPOI: !!selectedPOI
@@ -1277,7 +1277,7 @@ export default function Navigation() {
   try {
     // Remove this duplicate calculation - using the displayPOIs calculated above
 
-    console.log('🔍 POIRENDERING DEBUG:', {
+    if (isDev) console.log('🔍 POIRENDERING DEBUG:', {
       totalPOIs: displayPOIs.length,
       filteredCategories,
       firstFewPOIs: displayPOIs.slice(0, 3).map(poi => normalizePoiString(poi.name)),
@@ -1356,8 +1356,8 @@ export default function Navigation() {
 
                   // SMART POI FILTERING: During navigation, hide ALL POIs for clean map view
                   if (isNavigating) {
-                    console.log('🎯 SMART FILTERING: Navigation active - hiding ALL POIs for clean navigation view');
-                    console.log('🎯 Navigation state:', { isNavigating, selectedPOI: selectedPOI?.name, currentRoute: !!currentRoute });
+                    if (isDev) console.log('🎯 SMART FILTERING: Navigation active - hiding ALL POIs for clean navigation view');
+                    if (isDev) console.log('🎯 Navigation state:', { isNavigating, selectedPOI: selectedPOI?.name, currentRoute: !!currentRoute });
 
                     // Hide ALL POIs during navigation for minimal distraction
                     poisToShow = [];
@@ -1368,9 +1368,9 @@ export default function Navigation() {
                       const destinationPOI = displayPOIs.find(poi => poi.id === selectedPOI.id);
                       if (destinationPOI) {
                         poisToShow = [destinationPOI];
-                        console.log('🎯 SMART FILTERING: Showing only destination POI:', normalizePoiString(destinationPOI.name));
+                        if (isDev) console.log('🎯 SMART FILTERING: Showing only destination POI:', normalizePoiString(destinationPOI.name));
                       } else {
-                        console.log('🎯 SMART FILTERING: Selected POI not found in displayPOIs, showing empty array');
+                        if (isDev) console.log('🎯 SMART FILTERING: Selected POI not found in displayPOIs, showing empty array');
                       }
                     }
                   }
@@ -1380,9 +1380,9 @@ export default function Navigation() {
                     distance: formatDistance(calculateDistance(trackingPosition || currentPosition, poi.coordinates))
                   }));
 
-                  console.log(`🗺️ MAP CONTAINER DEBUG: Passing ${poisWithDistance.length} POIs to map (Navigation: ${isNavigating})`);
+                  if (isDev) console.log(`🗺️ MAP CONTAINER DEBUG: Passing ${poisWithDistance.length} POIs to map (Navigation: ${isNavigating})`);
                   if (poisWithDistance.length > 0) {
-                    console.log(`🗺️ MAP CONTAINER DEBUG: First POI:`, normalizePoiString(poisWithDistance[0].name));
+                    if (isDev) console.log(`🗺️ MAP CONTAINER DEBUG: First POI:`, normalizePoiString(poisWithDistance[0].name));
                   }
                   return poisWithDistance;
                 })()}
