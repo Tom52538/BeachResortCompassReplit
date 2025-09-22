@@ -222,7 +222,7 @@ export default function Navigation() {
     }
   } else if (filteredCategories.length > 0 && allPOIs) {
     // Debug: Show actual categories in the POI data
-    if (isDev && allPOIs.length > 0) {
+    if (allPOIs.length > 0) {
       const actualCategories = Array.from(new Set(allPOIs.map(poi => poi.category))).sort();
       console.log(`🔍 FILTERING DEBUG: Available categories in POI data:`, actualCategories);
       console.log(`🔍 FILTERING DEBUG: Selected categories:`, filteredCategories);
@@ -246,9 +246,7 @@ export default function Navigation() {
       const matchesCategory = filteredCategories.some(selectedCat => {
         const selectedCategory = selectedCat.toLowerCase();
 
-        if (isDev) {
-          console.log(`🔍 FILTER MATCH DEBUG: Checking POI "${normalizePoiString(poi.name)}" (category: "${normalizePoiString(poi.category)}") against filter "${selectedCategory}"`);
-        }
+        console.log(`🔍 FILTER MATCH DEBUG: Checking POI "${normalizePoiString(poi.name)}" (category: "${normalizePoiString(poi.category)}") against filter "${selectedCategory}"`);
 
         // Direct match
         if (poiCategory === selectedCategory) return true;
@@ -329,7 +327,7 @@ export default function Navigation() {
                                  poiName.includes('sushi') ||
                                  poiName.includes('grill');
 
-            if (isDev && isGastronomie) {
+            if (isGastronomie) {
               console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
             }
             return isGastronomie;
@@ -390,7 +388,7 @@ export default function Navigation() {
           const hasBeachHouseInCategory = roompotCat.includes('beach house');
 
           const isActualBeachHouse = hasBeachHouseBuildingType || hasBeachHouseInName || hasBeachHouseInCategory;
-          if (isDev) console.log(`🏖️ Beach house check for "${normalizePoiString(poi.name)}": ${isActualBeachHouse}`);
+          console.log(`🏖️ Beach house check for "${normalizePoiString(poi.name)}": ${isActualBeachHouse}`);
           return isActualBeachHouse;
         }
 
@@ -436,13 +434,11 @@ export default function Navigation() {
                          safeName.includes('lodge') ||
                          safeRoompotCategory.includes('lodge');
 
-          if (isDev) {
-            console.log(`🏠 Lodge check: "${poi.name}" = ${isLodge}`, {
-              building_type: poi.building_type,
-              roompot_category: poi.roompot_category,
-              match: isLodge
-            });
-          }
+          console.log(`🏠 Lodge check: "${poi.name}" = ${isLodge}`, {
+            building_type: poi.building_type,
+            roompot_category: poi.roompot_category,
+            match: isLodge
+          });
 
           return isLodge;
         }
@@ -469,7 +465,7 @@ export default function Navigation() {
         if (selectedCategory.includes(':')) {
           const [osmKey, osmValue] = selectedCategory.split(':');
           if (poi[osmKey] === osmValue) {
-            if (isDev) console.log(`✅ DIRECT OSM MATCH: ${normalizePoiString(poi.name)} matches ${selectedCategory}`);
+            console.log(`✅ DIRECT OSM MATCH: ${normalizePoiString(poi.name)} matches ${selectedCategory}`);
             return true;
           }
         }
@@ -484,10 +480,10 @@ export default function Navigation() {
                                  poi.amenity === 'fast_food' ||
                                  poi.amenity === 'biergarten';
 
-            if (isDev && isGastronomie) {
+            if (isGastronomie) {
               console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
+              return true;
             }
-            return isGastronomie;
           }
 
           // For Zuhause, check raw OSM properties
@@ -521,14 +517,12 @@ export default function Navigation() {
       return matchesCategory;
     });
 
-    if (isDev) {
-      console.log(`🔍 DISPLAY POIs: Showing ${displayPOIs.length} POIs for categories:`, filteredCategories);
-    }
+    console.log(`🔍 DISPLAY POIs: Showing ${displayPOIs.length} POIs for categories:`, filteredCategories);
 
     // Debug: Show which POIs matched
-    if (isDev && displayPOIs.length > 0) {
+    if (displayPOIs.length > 0) {
       console.log(`🔍 FILTERING DEBUG: Matched POIs:`, displayPOIs.slice(0, 5).map(poi => ({ name: normalizePoiString(poi.name), category: normalizePoiString(poi.category) })));
-    } else if (isDev) {
+    } else {
       console.log(`🔍 FILTERING DEBUG: No POIs matched filters. Analyzing...`);
       console.log(`🔍 FILTERING DEBUG: Filter categories:`, filteredCategories);
       console.log(`🔍 FILTERING DEBUG: Sample POI data:`, allPOIs.slice(0, 10).map(poi => ({
@@ -882,7 +876,7 @@ export default function Navigation() {
     setCurrentRoute(null);
     setDestinationMarker(null);
     setCurrentInstruction('');
-    // setTrackingPosition(null); // This is a derived variable now, no need to set it.
+    setTrackingPosition(null);
     setUIMode('start'); // Changed from 'normal' to 'start' for consistency with initial UI state
     setOverlayStates(prev => ({ ...prev, navigation: false }));
 
@@ -897,7 +891,7 @@ export default function Navigation() {
 
     mobileLogger.log('NAVIGATION', 'Navigation ended by user');
     console.log('Navigation ended successfully');
-  }, []);
+  }, [setTrackingPosition]); // Added setTrackingPosition to dependencies
 
   // This handler is likely intended to close the POI overlay/dialog.
   // Updated to also close the new dialog state.
