@@ -33,6 +33,7 @@ import { POILocalizationDebugger } from '@/components/Navigation/POILocalization
 import { POILocalizationTestPanel } from '@/components/Navigation/POILocalizationTestPanel';
 import { VoiceControlPanel } from '@/components/Navigation/VoiceControlPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { coerceMeters, formatDistance } from '@/utils/format';
 // Removed SmartBottomDrawer - POIs show directly on map
 import { TopBar } from '@/components/Navigation/TopBar'; // Assuming TopBar is imported for the new structure
 import MobileMemoryMonitor from '@/components/UI/MobileMemoryMonitor'; // Assuming MobileMemoryMonitor is available
@@ -51,46 +52,8 @@ const isDev =
   (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.DEV === true) ||
   ((import.meta as any)?.env?.MODE && (import.meta as any).env.MODE !== 'production');
 
-/**
- * Unified distance helpers (meter-based):
- * - Always format from meters
- * - Normalize from various sources (km → m)
- */
-function kmToMeters(km: number): number {
-  if (!isFinite(km)) return NaN;
-  return Math.max(0, Math.round(km * 1000));
-}
-
-function metersToKm(m: number): number {
-  if (!isFinite(m)) return NaN;
-  return m / 1000;
-}
-
-/**
- * Format a distance in meters to a human-friendly string (m or km) with locale-aware decimals.
- */
-function formatDistanceMeters(m: number, locale = 'de-DE'): string {
-  if (!isFinite(m) || m < 0) return '—';
-  if (m < 1000) return `${Math.round(m)} m`;
-  const km = m / 1000;
-  const kmStr = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(km);
-  return `${kmStr} km`;
-}
-
-/**
- * Parse strings like "3.2 km" or "396 m" into meters.
- * Returns null if parsing fails.
- */
-function parseDistanceStringToMeters(value: string): number | null {
-  if (!value) return null;
-  const s = value.trim().toLowerCase().replace(',', '.');
-  const match = s.match(/^\s*([0-9]+(?:\.[0-9]+)?)\s*(km|m)\s*$/i);
-  if (!match) return null;
-  const num = parseFloat(match[1]);
-  const unit = match[2];
-  if (!isFinite(num)) return null;
-  return unit === 'km' ? kmToMeters(num) : Math.round(num);
-}
+// Distance helper functions (kmToMeters, formatDistanceMeters, etc.) removed
+// and replaced by centralized utilities in /utils/format.ts
 
 export default function Navigation() {
   // Use SiteManager as single source of truth for site management
@@ -164,7 +127,7 @@ export default function Navigation() {
   const routeTrackerRef = useRef<RouteTracker | null>(null);
   const rerouteServiceRef = useRef(new CampgroundRerouteDetector());
   const [currentInstruction, setCurrentInstruction] = useState<string | null>(null);
-  const [nextDistance, setNextDistance] = useState<string>('');
+  const [nextDistance, setNextDistance] = useState<number | null>(null);
   const [routeProgress, setRouteProgress] = useState<any>(null);
   const [isRerouting, setIsRerouting] = useState(false);
 
@@ -1079,10 +1042,10 @@ export default function Navigation() {
       const distanceRemainingMeters =
         (routeProgress as any).distanceRemainingMeters ??
         (typeof (routeProgress as any).distanceRemaining === 'number'
-          ? kmToMeters((routeProgress as any).distanceRemaining)
+          ? (routeProgress as any).distanceRemaining * 1000 // km -> m
           : undefined);
 
-      const remainingKm = distanceRemainingMeters ? metersToKm(distanceRemainingMeters) : undefined;
+      const remainingKm = distanceRemainingMeters ? distanceRemainingMeters / 1000 : undefined;
       const newETA = speedTracker.getETAForMode(remainingKm ?? 0, newMode);
 
       if (isDev) console.log(`🔄 DYNAMIC ETA UPDATE: ${newMode} mode - ${Math.ceil(newETA.estimatedTimeRemaining / 60)} min`);
@@ -1284,7 +1247,7 @@ export default function Navigation() {
             (progress as any).distanceToNextMeters ??
             (typeof (progress as any).distanceToNext === 'number' ? (progress as any).distanceToNext : undefined);
 
-          setNextDistance(formatDistanceMeters(distanceToNextM ?? NaN));
+          setNextDistance(distanceToNextM ?? null);
 
           const currentStepInstruction = currentRoute.instructions[(progress as any).currentStep]?.instruction;
           if (currentInstruction !== currentStepInstruction) {
@@ -1437,10 +1400,10 @@ export default function Navigation() {
                   const poisWithDistance = poisToShow.map(poi => {
                     // Assumption: calculateDistance returns kilometers → convert to meters
                     const km = calculateDistance(trackingPosition || currentPosition, poi.coordinates);
-                    const meters = kmToMeters(km);
+                    const meters = km * 1000;
                     return {
                       ...poi,
-                      distance: formatDistanceMeters(meters)
+                      distance: formatDistance(meters)
                     };
                   });
 
@@ -1555,48 +1518,43 @@ export default function Navigation() {
           {isNavigating && currentRoute && currentRoute.instructions && currentRoute.instructions.length > 0 && (
             <>
               {/* Top: Current Maneuver */}
+              {/* Top: Current Maneuver */}
               <TopManeuverPanel
                 instruction={typeof currentRoute.instructions[0]?.instruction === 'string' ? currentRoute.instructions[0].instruction : 'Weiter geradeaus'}
-                distance={nextDistance}
+                distance={nextDistance} // darf string/number sein, Panel koerziert
+                distanceToNext={(routeProgress as any)?.distanceToNextMeters ?? (routeProgress as any)?.distanceToNext}
                 maneuverType={currentRoute.instructions[0]?.maneuverType}
               />
 
               {/* Bottom: Navigation Summary with End Button */}
               <BottomSummaryPanel
-                timeRemaining={routeProgress?.dynamicETA?.estimatedTimeRemaining
-                  ? `${Math.ceil(routeProgress.dynamicETA.estimatedTimeRemaining / 60)} min`
-                  : (typeof currentRoute.estimatedTime === 'string' ? currentRoute.estimatedTime : "4 min")}
+                // Sekunden (rohe ETA). Falls dynamicETA fehlt, versuch durationSeconds, sonst kann ein String bleiben – wird koerziert/angezeigt.
+                timeRemaining={
+                  routeProgress?.dynamicETA?.estimatedTimeRemaining ??
+                  (currentRoute as any)?.durationSeconds ??
+                  (typeof currentRoute.estimatedTime === 'string' ? currentRoute.estimatedTime : null)
+                }
+                // Meter (roh). Falls fehlend: parse evtl. String-Fallback aus currentRoute.totalDistance.
                 distanceRemaining={(() => {
-                  // Prefer normalized routeProgress (meters)
                   const metersFromProgress =
-                    routeProgress
-                      ? ((routeProgress as any).distanceRemainingMeters ??
-                        (typeof (routeProgress as any).distanceRemaining === 'number'
-                          ? kmToMeters((routeProgress as any).distanceRemaining) // original comment: value in km
-                          : undefined))
-                      : undefined;
+                    (routeProgress as any)?.distanceRemainingMeters ??
+                    (typeof (routeProgress as any)?.distanceRemaining === 'number'
+                      ? ((routeProgress as any).distanceRemaining * 1000) // km -> m
+                      : null);
 
-                  if (typeof metersFromProgress === 'number') {
-                    return formatDistanceMeters(metersFromProgress);
-                  }
+                  if (typeof metersFromProgress === 'number') return metersFromProgress;
 
-                  // Fallback: try to parse currentRoute.totalDistance if it's a string like "396 m" or "3.1 km"
-                  const fallbackMeters =
-                    typeof (currentRoute as any).totalDistance === 'string'
-                      ? parseDistanceStringToMeters((currentRoute as any).totalDistance)
-                      : null;
-
-                  if (fallbackMeters != null) {
-                    return formatDistanceMeters(fallbackMeters);
-                  }
-
-                  // Last resort
-                  return '—';
+                  // Fallback: parse aus String wie "396 m" oder "3.1 km"
+                  const fallbackStr = (currentRoute as any)?.totalDistance;
+                  const parsed = typeof fallbackStr === 'string' ? coerceMeters(fallbackStr) : null;
+                  return parsed ?? null;
                 })()}
-                eta={routeProgress?.dynamicETA?.estimatedArrival
-                  ? routeProgress.dynamicETA.estimatedArrival.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-                  : (typeof currentRoute.eta === 'string' ? currentRoute.eta : new Date(Date.now() + 240000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }))}
+                // Date bevorzugt, aber String wird akzeptiert
+                eta={routeProgress?.dynamicETA?.estimatedArrival ??
+                    (currentRoute as any)?.arrivalTime ?? // kann String sein, wird als Label genommen
+                    (typeof currentRoute.eta === 'string' ? currentRoute.eta : null)}
                 onEndNavigation={handleEndNavigation}
+                debug={isDev}
               />
 
               {/* Filter Modal - Preserved */}
