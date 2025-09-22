@@ -51,7 +51,7 @@ export const BottomSummaryPanel: React.FC<BottomSummaryPanelProps> = ({
   }
 
   return (
-    <div className="bg-card p-4 rounded-t-lg shadow-lg flex items-center justify-between">
+    <div className="absolute bottom-0 left-0 right-0 z-10 bg-card p-4 rounded-t-lg shadow-lg flex items-center justify-between">
       <div className="flex flex-col text-left">
         <span className="text-2xl font-bold">{formattedTime}</span>
         <span className="text-muted-foreground">
