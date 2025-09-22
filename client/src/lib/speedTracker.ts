@@ -139,7 +139,7 @@ export class SpeedTracker {
     // Create estimated arrival time
     const estimatedArrival = new Date(Date.now() + timeSeconds * 1000);
 
-    console.log(`⏱️ ETA UPDATE: ${remainingDistance.toFixed(0)}m at ${estimatedSpeed} km/h = ${Math.ceil(timeSeconds/60)} min`);
+    console.log(`⏱️ ETA UPDATE: ${Math.round(remainingDistance * 1000)}m at ${estimatedSpeed} km/h = ${Math.ceil(timeSeconds/60)} min`);
 
     return {
       estimatedTimeRemaining: timeSeconds,
