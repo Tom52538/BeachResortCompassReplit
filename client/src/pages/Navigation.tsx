@@ -855,7 +855,7 @@ export default function Navigation() {
       console.error('🗺️ ROUTING ERROR:', error);
       // Track failed route for network debugging
       const failedCoords = {
-        start: { lat: currentPosition.lat, lng: currentPosition.lat },
+        start: { lat: currentPosition.lat, lng: currentPosition.lng },
         end: { lat: destination.lat, lng: destination.lng }
       };
       setLastFailedRoute(failedCoords);
@@ -876,7 +876,6 @@ export default function Navigation() {
     setCurrentRoute(null);
     setDestinationMarker(null);
     setCurrentInstruction('');
-    setTrackingPosition(null);
     setUIMode('start'); // Changed from 'normal' to 'start' for consistency with initial UI state
     setOverlayStates(prev => ({ ...prev, navigation: false }));
 
@@ -891,7 +890,7 @@ export default function Navigation() {
 
     mobileLogger.log('NAVIGATION', 'Navigation ended by user');
     console.log('Navigation ended successfully');
-  }, [setTrackingPosition]); // Added setTrackingPosition to dependencies
+  }, []);
 
   // This handler is likely intended to close the POI overlay/dialog.
   // Updated to also close the new dialog state.
