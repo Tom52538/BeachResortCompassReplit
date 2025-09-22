@@ -546,6 +546,8 @@ export const translations = {
       offRoute: 'Abseits der Route',
       complete: 'abgeschlossen',
       eta: 'Ankunft',
+      endNavigation: 'Navigation beenden',
+      approaching: 'Abbiegen in',
       next: 'Nächste',
       speed: 'Geschwindigkeit',
       avg: 'Durchschn.',

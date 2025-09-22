@@ -23,7 +23,6 @@ export function coerceMeters(input: DistanceInput): number | null {
     if (unit === 'km') {
       return value * 1000;
     }
-    // Defaults to meters if the unit is 'm' or absent
     return value;
   }
 
@@ -61,7 +60,6 @@ export function coerceSeconds(input: DurationInput): number | null {
     totalSeconds += parseFloat(secMatches[1]);
   }
 
-  // If no units were found, and it's just a number, assume it's seconds.
   if (!hourMatches && !minMatches && !secMatches && /^\d+(\.\d+)?$/.test(cleanedInput)) {
     return parseFloat(cleanedInput);
   }
@@ -71,11 +69,10 @@ export function coerceSeconds(input: DurationInput): number | null {
 
 /**
  * Formats a distance in meters into a human-readable string ("x m" or "y.z km").
- * Per feedback, rounds distances < 1m down to 0m.
  * @param meters The distance in meters.
  * @returns A formatted string, or '—' if the input is invalid.
  */
-export function formatDistance(meters: number | null | undefined): string {
+export function formatDistance(meters: number | null | undefined, locale = 'de-DE'): string {
   if (meters === null || meters === undefined || !isFinite(meters)) {
     return '—';
   }
@@ -87,7 +84,6 @@ export function formatDistance(meters: number | null | undefined): string {
     return `${formatted.replace('.', ',')} km`;
   }
 
-  // For distances under 10m, floor to avoid rounding up (e.g. 0.6m -> 1m)
   if (meters < 10) {
     return `${Math.floor(meters)} m`;
   }
@@ -123,4 +119,44 @@ export function formatDuration(seconds: number | null | undefined): string {
   }
 
   return `${hours} h ${minutes} min`;
+}
+
+/**
+ * Formats a duration in seconds into a short, locale-aware string ("11 Min" or "1 Std 5 Min").
+ * @param seconds The duration in seconds.
+ * @param locale The locale to use for formatting (currently only 'de' is customized).
+ * @returns A formatted duration string.
+ */
+export function formatDurationShort(seconds: number | null | undefined, locale = 'de'): string {
+  if (seconds === null || seconds === undefined || !isFinite(seconds) || seconds < 0) {
+    return '–';
+  }
+
+  const totalMin = Math.round(seconds / 60);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+
+  if (locale === 'de') {
+    if (h > 0) return `${h} Std${m > 0 ? ` ${m} Min` : ''}`;
+    return `${m} Min`;
+  }
+
+  // Default/English formatting
+  if (h > 0) return `${h}h${m > 0 ? ` ${m}m` : ''}`;
+  return `${m}m`;
+}
+
+/**
+ * Formats a Date object into a localized time string (e.g., "16:56").
+ * @param date The date to format.
+ * @returns A formatted time string or '—' if invalid.
+ */
+export function formatETA(date: Date | null | undefined): string {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    return '—';
+  }
+  return date.toLocaleTimeString('de-DE', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
