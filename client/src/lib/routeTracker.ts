@@ -278,32 +278,38 @@ export class RouteTracker {
     return progress;
   }
 
-  private calculateDistanceTraveled(currentPosition: Coordinates): number {
+  private calculateRemainingDistance(currentPosition: Coordinates): number {
     if (!this.route.geometry || this.route.geometry.length === 0) return 0;
-    
-    const routeInfo = this.findClosestPointOnRoute(currentPosition);
-    let traveled = 0;
 
-    // Add lengths of all segments before the current one
-    for (let i = 0; i < routeInfo.segmentIndex; i++) {
-        const segStart = { lat: this.route.geometry[i][1], lng: this.route.geometry[i][0] };
-        const segEnd = { lat: this.route.geometry[i+1][1], lng: this.route.geometry[i+1][0] };
-        traveled += calculateDistance(segStart, segEnd);
+    // Find closest point on route
+    const routeInfo = this.findClosestPointOnRoute(currentPosition);
+    
+    // Calculate distance from closest point to destination
+    let remaining = 0;
+    
+    // Add distance from closest point to end of current segment
+    if (routeInfo.segmentIndex < this.route.geometry.length - 1) {
+      const segmentEnd = {
+        lat: this.route.geometry[routeInfo.segmentIndex + 1][1],
+        lng: this.route.geometry[routeInfo.segmentIndex + 1][0]
+      };
+      remaining += calculateDistance(routeInfo.point, segmentEnd);
     }
 
-    // Add distance from start of current segment to the user's projected point
-    const currentSegmentStart = { lat: this.route.geometry[routeInfo.segmentIndex][1], lng: this.route.geometry[routeInfo.segmentIndex][0] };
-    traveled += calculateDistance(currentSegmentStart, routeInfo.point);
+    // Add distance for all remaining segments
+    for (let i = routeInfo.segmentIndex + 1; i < this.route.geometry.length - 1; i++) {
+      const segmentStart = {
+        lat: this.route.geometry[i][1],
+        lng: this.route.geometry[i][0]
+      };
+      const segmentEnd = {
+        lat: this.route.geometry[i + 1][1],
+        lng: this.route.geometry[i + 1][0]
+      };
+      remaining += calculateDistance(segmentStart, segmentEnd);
+    }
 
-    return traveled;
-  }
-
-  private calculateRemainingDistance(currentPosition: Coordinates): number {
-    if (this.totalDistance === 0) return 0;
-    const distanceTraveled = this.calculateDistanceTraveled(currentPosition);
-    const remaining = this.totalDistance - distanceTraveled;
-    // Ensure remaining distance is not negative
-    return Math.max(0, remaining);
+    return remaining;
   }
 
   private createDefaultProgress(): RouteProgress {
