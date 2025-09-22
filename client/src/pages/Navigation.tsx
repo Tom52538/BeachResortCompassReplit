@@ -46,8 +46,16 @@ const normalizePoiString = (value: any): string => {
   return String(value);
 };
 
-// Assume isDev is available globally or imported
-const isDev = process.env.NODE_ENV === 'development';
+// Detect development mode for conditional logging
+const isDev =
+  (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.DEV === true) ||
+  ((import.meta as any)?.env?.MODE && (import.meta as any).env.MODE !== 'production');
+
+function formatDistanceFromKm(km: number): string {
+  if (!isFinite(km) || km < 0) return '—';
+  const m = Math.round(km * 1000);
+  return m >= 1000 ? `${km.toFixed(1)} km` : `${m} m`;
+}
 
 export default function Navigation() {
   // Use SiteManager as single source of truth for site management
@@ -1031,7 +1039,7 @@ export default function Navigation() {
     // Immediately update ETA for current route with new travel mode
     if (currentRoute && routeProgress) {
       const speedTracker = new (await import('../lib/speedTracker')).SpeedTracker();
-      const remainingDistance = routeProgress.distanceRemaining / 1000; // Convert to km
+      const remainingDistance = routeProgress.distanceRemaining; // Already in km
       const newETA = speedTracker.getETAForMode(remainingDistance, newMode);
 
       if (isDev) console.log(`🔄 DYNAMIC ETA UPDATE: ${newMode} mode - ${Math.ceil(newETA.estimatedTimeRemaining / 60)} min`);
@@ -1502,8 +1510,8 @@ export default function Navigation() {
                 timeRemaining={routeProgress?.dynamicETA?.estimatedTimeRemaining
                   ? `${Math.ceil(routeProgress.dynamicETA.estimatedTimeRemaining / 60)} min`
                   : (typeof currentRoute.estimatedTime === 'string' ? currentRoute.estimatedTime : "4 min")}
-                distanceRemaining={routeProgress?.distanceRemaining
-                  ? formatDistance(routeProgress.distanceRemaining)
+                distanceRemaining={routeProgress
+                  ? formatDistanceFromKm(routeProgress.distanceRemaining)
                   : (typeof currentRoute.totalDistance === 'string' ? currentRoute.totalDistance : "396 m")}
                 eta={routeProgress?.dynamicETA?.estimatedArrival
                   ? routeProgress.dynamicETA.estimatedArrival.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
