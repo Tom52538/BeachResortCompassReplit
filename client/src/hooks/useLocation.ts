@@ -13,14 +13,9 @@ export const useLocation = (props?: UseLocationProps) => {
     default: { lat: 51.5896335, lng: 3.7216451 } // Exactly at Starting Point POI on road network
   };
 
-  const [currentSite, setCurrentSite] = useState<string>(() => {
-    try {
-      return localStorage.getItem('selected-site') || 'kamperland';
-    } catch (error) {
-      console.warn('Failed to access localStorage. Defaulting to kamperland.', error);
-      return 'kamperland';
-    }
-  });
+  const [currentSite, setCurrentSite] = useState<string>(
+    localStorage.getItem('selected-site') || 'kamperland'
+  );
   const [currentPosition, setCurrentPosition] = useState<Coordinates>(
     mockCoordinates[currentSite] || mockCoordinates.default
   );

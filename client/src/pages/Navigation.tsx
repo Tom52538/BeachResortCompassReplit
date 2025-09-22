@@ -876,7 +876,7 @@ export default function Navigation() {
     setCurrentRoute(null);
     setDestinationMarker(null);
     setCurrentInstruction('');
-    setTrackingPosition(null);
+    // setTrackingPosition(null); // This is a derived variable now, no need to set it.
     setUIMode('start'); // Changed from 'normal' to 'start' for consistency with initial UI state
     setOverlayStates(prev => ({ ...prev, navigation: false }));
 
@@ -891,7 +891,7 @@ export default function Navigation() {
 
     mobileLogger.log('NAVIGATION', 'Navigation ended by user');
     console.log('Navigation ended successfully');
-  }, [setTrackingPosition]); // Added setTrackingPosition to dependencies
+  }, []);
 
   // This handler is likely intended to close the POI overlay/dialog.
   // Updated to also close the new dialog state.
