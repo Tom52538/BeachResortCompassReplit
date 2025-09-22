@@ -21,7 +21,7 @@ import { useNetworkOverlay } from '@/hooks/useNetworkOverlay';
 import { useSiteManager } from '@/lib/siteManager';
 import { mobileLogger } from '@/utils/mobileLogger';
 import { POI, RouteResponse, TestSite, TEST_SITES, Coordinates, Site } from '@/types/navigation';
-import { calculateDistance, formatDistance, calculateBearing } from '@/lib/mapUtils';
+import { calculateDistance, calculateBearing } from '@/lib/mapUtils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX, Settings } from 'lucide-react';
@@ -51,10 +51,45 @@ const isDev =
   (typeof import.meta !== 'undefined' && (import.meta as any)?.env?.DEV === true) ||
   ((import.meta as any)?.env?.MODE && (import.meta as any).env.MODE !== 'production');
 
-function formatDistanceFromKm(km: number): string {
-  if (!isFinite(km) || km < 0) return '—';
-  const m = Math.round(km * 1000);
-  return m >= 1000 ? `${km.toFixed(1)} km` : `${m} m`;
+/**
+ * Unified distance helpers (meter-based):
+ * - Always format from meters
+ * - Normalize from various sources (km → m)
+ */
+function kmToMeters(km: number): number {
+  if (!isFinite(km)) return NaN;
+  return Math.max(0, Math.round(km * 1000));
+}
+
+function metersToKm(m: number): number {
+  if (!isFinite(m)) return NaN;
+  return m / 1000;
+}
+
+/**
+ * Format a distance in meters to a human-friendly string (m or km) with locale-aware decimals.
+ */
+function formatDistanceMeters(m: number, locale = 'de-DE'): string {
+  if (!isFinite(m) || m < 0) return '—';
+  if (m < 1000) return `${Math.round(m)} m`;
+  const km = m / 1000;
+  const kmStr = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(km);
+  return `${kmStr} km`;
+}
+
+/**
+ * Parse strings like "3.2 km" or "396 m" into meters.
+ * Returns null if parsing fails.
+ */
+function parseDistanceStringToMeters(value: string): number | null {
+  if (!value) return null;
+  const s = value.trim().toLowerCase().replace(',', '.');
+  const match = s.match(/^\s*([0-9]+(?:\.[0-9]+)?)\s*(km|m)\s*$/i);
+  if (!match) return null;
+  const num = parseFloat(match[1]);
+  const unit = match[2];
+  if (!isFinite(num)) return null;
+  return unit === 'km' ? kmToMeters(num) : Math.round(num);
 }
 
 export default function Navigation() {
@@ -472,7 +507,7 @@ export default function Navigation() {
         // Handle OSM category:value format (e.g., "amenity:parking")
         if (selectedCategory.includes(':')) {
           const [osmKey, osmValue] = selectedCategory.split(':');
-          if (poi[osmKey] === osmValue) {
+          if ((poi as any)[osmKey] === osmValue) {
             if (isDev) console.log(`✅ DIRECT OSM MATCH: ${normalizePoiString(poi.name)} matches ${selectedCategory}`);
             return true;
           }
@@ -482,39 +517,39 @@ export default function Navigation() {
         if (currentSite === 'zuhause') {
           // Check for gastronomie category - match all restaurant-related amenities
           if (selectedCategory === 'amenity:restaurant') {
-            const isGastronomie = poi.amenity === 'restaurant' ||
-                                 poi.amenity === 'cafe' ||
-                                 poi.amenity === 'pub' ||
-                                 poi.amenity === 'fast_food' ||
-                                 poi.amenity === 'biergarten';
+            const isGastronomie = (poi as any).amenity === 'restaurant' ||
+                                 (poi as any).amenity === 'cafe' ||
+                                 (poi as any).amenity === 'pub' ||
+                                 (poi as any).amenity === 'fast_food' ||
+                                 (poi as any).amenity === 'biergarten';
 
             if (isGastronomie) {
-              if (isDev) console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
+              if (isDev) console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${(poi as any).amenity})`);
               return true;
             }
           }
 
           // For Zuhause, check raw OSM properties
-          if (poi.amenity && selectedCategory === 'amenity') return true;
-          if (poi.leisure && selectedCategory === 'leisure') return true;
-          if (poi.shop && selectedCategory === 'services') return true;
-          if (poi.tourism && selectedCategory === 'accommodation') return true;
-          if (poi.amenity === 'parking' && selectedCategory === 'parking') return true;
+          if ((poi as any).amenity && selectedCategory === 'amenity') return true;
+          if ((poi as any).leisure && selectedCategory === 'leisure') return true;
+          if ((poi as any).shop && selectedCategory === 'services') return true;
+          if ((poi as any).tourism && selectedCategory === 'accommodation') return true;
+          if ((poi as any).amenity === 'parking' && selectedCategory === 'parking') return true;
 
           // Additional checks for common OSM tags
-          if (poi.amenity === 'place_of_worship' && selectedCategory === 'amenity') return true;
-          if (poi.amenity === 'fire_station' && selectedCategory === 'amenity') return true;
-          if (poi.amenity === 'school' && selectedCategory === 'amenity') return true;
-          if (poi.leisure === 'playground' && selectedCategory === 'leisure') return true;
+          if ((poi as any).amenity === 'place_of_worship' && selectedCategory === 'amenity') return true;
+          if ((poi as any).amenity === 'fire_station' && selectedCategory === 'amenity') return true;
+          if ((poi as any).amenity === 'school' && selectedCategory === 'amenity') return true;
+          if ((poi as any).leisure === 'playground' && selectedCategory === 'leisure') return true;
         } else {
           // Original Kamperland logic
-          if (poi.amenity === selectedCategory ||
-              poi.leisure === selectedCategory ||
-              poi.shop === selectedCategory ||
-              poi.tourism === selectedCategory ||
-              poi.building === selectedCategory ||
-              poi.sport === selectedCategory ||
-              poi.healthcare === selectedCategory) {
+          if ((poi as any).amenity === selectedCategory ||
+              (poi as any).leisure === selectedCategory ||
+              (poi as any).shop === selectedCategory ||
+              (poi as any).tourism === selectedCategory ||
+              (poi as any).building === selectedCategory ||
+              (poi as any).sport === selectedCategory ||
+              (poi as any).healthcare === selectedCategory) {
             return true;
           }
         }
@@ -1033,14 +1068,22 @@ export default function Navigation() {
     if (isNavigating && routeTrackerRef.current && trackingPosition) {
       const updatedProgress = routeTrackerRef.current.updatePosition(trackingPosition, newMode);
       setRouteProgress(updatedProgress);
-      if (isDev) console.log(`🎯 INSTANT ETA UPDATE: ${newMode} = ${Math.ceil(updatedProgress.dynamicETA?.estimatedTimeRemaining / 60)} min`);
+      if (isDev) console.log(`🎯 INSTANT ETA UPDATE: ${newMode} = ${Math.ceil((updatedProgress as any).dynamicETA?.estimatedTimeRemaining / 60)} min`);
     }
 
     // Immediately update ETA for current route with new travel mode
     if (currentRoute && routeProgress) {
       const speedTracker = new (await import('../lib/speedTracker')).SpeedTracker();
-      const remainingDistance = routeProgress.distanceRemaining; // Already in km
-      const newETA = speedTracker.getETAForMode(remainingDistance, newMode);
+
+      // distanceRemaining in meters (normalize from km if necessary)
+      const distanceRemainingMeters =
+        (routeProgress as any).distanceRemainingMeters ??
+        (typeof (routeProgress as any).distanceRemaining === 'number'
+          ? kmToMeters((routeProgress as any).distanceRemaining)
+          : undefined);
+
+      const remainingKm = distanceRemainingMeters ? metersToKm(distanceRemainingMeters) : undefined;
+      const newETA = speedTracker.getETAForMode(remainingKm ?? 0, newMode);
 
       if (isDev) console.log(`🔄 DYNAMIC ETA UPDATE: ${newMode} mode - ${Math.ceil(newETA.estimatedTimeRemaining / 60)} min`);
 
@@ -1233,9 +1276,17 @@ export default function Navigation() {
       if (routeTrackerRef.current) {
           const progress = routeTrackerRef.current.updatePosition(trackingPosition, travelMode);
           setRouteProgress(progress);
-          setNextDistance(formatDistance(progress.distanceToNext));
 
-          const currentStepInstruction = currentRoute.instructions[progress.currentStep]?.instruction;
+          // Normalize distances to meters:
+          // - distanceToNext assumed meters (RouteTracker typical)
+          // - distanceRemaining documented as km in original code → convert to meters
+          const distanceToNextM =
+            (progress as any).distanceToNextMeters ??
+            (typeof (progress as any).distanceToNext === 'number' ? (progress as any).distanceToNext : undefined);
+
+          setNextDistance(formatDistanceMeters(distanceToNextM ?? NaN));
+
+          const currentStepInstruction = currentRoute.instructions[(progress as any).currentStep]?.instruction;
           if (currentInstruction !== currentStepInstruction) {
               setCurrentInstruction(currentStepInstruction);
           }
@@ -1383,10 +1434,15 @@ export default function Navigation() {
                     }
                   }
 
-                  const poisWithDistance = poisToShow.map(poi => ({
-                    ...poi,
-                    distance: formatDistance(calculateDistance(trackingPosition || currentPosition, poi.coordinates))
-                  }));
+                  const poisWithDistance = poisToShow.map(poi => {
+                    // Assumption: calculateDistance returns kilometers → convert to meters
+                    const km = calculateDistance(trackingPosition || currentPosition, poi.coordinates);
+                    const meters = kmToMeters(km);
+                    return {
+                      ...poi,
+                      distance: formatDistanceMeters(meters)
+                    };
+                  });
 
                   if (isDev) console.log(`🗺️ MAP CONTAINER DEBUG: Passing ${poisWithDistance.length} POIs to map (Navigation: ${isNavigating})`);
                   if (poisWithDistance.length > 0) {
@@ -1510,9 +1566,33 @@ export default function Navigation() {
                 timeRemaining={routeProgress?.dynamicETA?.estimatedTimeRemaining
                   ? `${Math.ceil(routeProgress.dynamicETA.estimatedTimeRemaining / 60)} min`
                   : (typeof currentRoute.estimatedTime === 'string' ? currentRoute.estimatedTime : "4 min")}
-                distanceRemaining={routeProgress
-                  ? formatDistanceFromKm(routeProgress.distanceRemaining)
-                  : (typeof currentRoute.totalDistance === 'string' ? currentRoute.totalDistance : "396 m")}
+                distanceRemaining={(() => {
+                  // Prefer normalized routeProgress (meters)
+                  const metersFromProgress =
+                    routeProgress
+                      ? ((routeProgress as any).distanceRemainingMeters ??
+                        (typeof (routeProgress as any).distanceRemaining === 'number'
+                          ? kmToMeters((routeProgress as any).distanceRemaining) // original comment: value in km
+                          : undefined))
+                      : undefined;
+
+                  if (typeof metersFromProgress === 'number') {
+                    return formatDistanceMeters(metersFromProgress);
+                  }
+
+                  // Fallback: try to parse currentRoute.totalDistance if it's a string like "396 m" or "3.1 km"
+                  const fallbackMeters =
+                    typeof (currentRoute as any).totalDistance === 'string'
+                      ? parseDistanceStringToMeters((currentRoute as any).totalDistance)
+                      : null;
+
+                  if (fallbackMeters != null) {
+                    return formatDistanceMeters(fallbackMeters);
+                  }
+
+                  // Last resort
+                  return '—';
+                })()}
                 eta={routeProgress?.dynamicETA?.estimatedArrival
                   ? routeProgress.dynamicETA.estimatedArrival.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
                   : (typeof currentRoute.eta === 'string' ? currentRoute.eta : new Date(Date.now() + 240000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }))}
@@ -1570,7 +1650,7 @@ export default function Navigation() {
             <details className="mt-4 text-xs">
               <summary className="cursor-pointer text-gray-500">Error Details</summary>
               <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">
-                {error?.toString()}
+                {String(error)}
               </pre>
             </details>
           )}
