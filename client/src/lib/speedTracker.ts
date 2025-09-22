@@ -1,6 +1,8 @@
 import { Coordinates } from '../types/navigation';
 import { calculateDistance } from './mapUtils';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 export interface SpeedData {
   currentSpeed: number; // km/h
   averageSpeed: number; // km/h
@@ -120,7 +122,7 @@ export class SpeedTracker {
       };
       estimatedSpeed = modeToSpeed[travelMode];
       
-      console.log(`🚗 ETA CALCULATION: Using ${travelMode} mode at ${estimatedSpeed} km/h for ${remainingDistance.toFixed(0)}m`);
+      if (isDev) console.log(`🚗 ETA CALCULATION: Using ${travelMode} mode at ${estimatedSpeed} km/h for ${Math.round(remainingDistance * 1000)}m`);
     } else if (speedData.isMoving && speedData.currentSpeed > 1) {
       // Use current speed if actively moving
       estimatedSpeed = speedData.currentSpeed;
@@ -139,7 +141,7 @@ export class SpeedTracker {
     // Create estimated arrival time
     const estimatedArrival = new Date(Date.now() + timeSeconds * 1000);
 
-    console.log(`⏱️ ETA UPDATE: ${Math.round(remainingDistance * 1000)}m at ${estimatedSpeed} km/h = ${Math.ceil(timeSeconds/60)} min`);
+    if (isDev) console.log(`⏱️ ETA UPDATE: ${Math.round(remainingDistance * 1000)}m at ${estimatedSpeed} km/h = ${Math.ceil(timeSeconds/60)} min`);
 
     return {
       estimatedTimeRemaining: timeSeconds,
