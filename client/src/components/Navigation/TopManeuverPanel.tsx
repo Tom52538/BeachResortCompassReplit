@@ -45,7 +45,7 @@ export const TopManeuverPanel: React.FC<TopManeuverPanelProps> = ({
   const distanceText = `${t('navigation.approaching')} ${formattedDistance}`;
 
   return (
-    <div className="bg-card p-4 rounded-b-lg shadow-lg flex items-center space-x-4">
+    <div className="absolute top-0 left-0 right-0 z-10 bg-card p-4 rounded-b-lg shadow-lg flex items-center space-x-4">
       <div className="flex-shrink-0 text-primary">
         <ManeuverIcon type={maneuverType} />
       </div>
