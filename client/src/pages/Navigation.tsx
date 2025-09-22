@@ -34,6 +34,7 @@ import { POILocalizationTestPanel } from '@/components/Navigation/POILocalizatio
 import { VoiceControlPanel } from '@/components/Navigation/VoiceControlPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { coerceMeters, formatDistance } from '@/utils/format';
+import '@/components/Navigation/navigation-panels.css';
 // Removed SmartBottomDrawer - POIs show directly on map
 import { TopBar } from '@/components/Navigation/TopBar'; // Assuming TopBar is imported for the new structure
 import MobileMemoryMonitor from '@/components/UI/MobileMemoryMonitor'; // Assuming MobileMemoryMonitor is available
@@ -1350,20 +1351,17 @@ export default function Navigation() {
         <div className="navigation-page h-screen w-screen overflow-hidden bg-gray-50">
           {isDev && <MobileMemoryMonitor />}
 
-          {!isNavigating && (
-            <TopBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              showNetworkDebug={showNetworkDebug}
-              onToggleNetworkDebug={() => setShowNetworkDebug(!showNetworkDebug)}
-              showGridVisualization={showGridVisualization}
-              onToggleGridVisualization={() => setShowGridVisualization(!showGridVisualization)}
-              isNavigating={isNavigating}
-              routeTracker={routeTrackerRef.current}
-            />
-          )}
+          <PermanentHeader
+            searchQuery={searchQuery}
+            onSearch={handleSearch}
+            currentSite={currentSite}
+            onSiteChange={handleSiteChange}
+            showClearButton={displayPOIs.length > 0 || searchQuery.length > 0 || filteredCategories.length > 0}
+            onClear={handleClearPOIs}
+            showSiteIndicator={!isNavigating}
+          />
 
-          <div className="flex h-[calc(100vh-4rem)]">
+          <div className="flex h-full">
             <div className="flex-1 relative">
               <MapContainer
                 center={mapCenter}
@@ -1405,16 +1403,6 @@ export default function Navigation() {
 
           {!isNavigating && (
             <>
-              <div className="z-[1000]">
-                <PermanentHeader
-                  searchQuery={searchQuery}
-                  onSearch={handleSearch}
-                  currentSite={currentSite}
-                  onSiteChange={handleSiteChange}
-                  showClearButton={displayPOIs.length > 0 || searchQuery.length > 0 || filteredCategories.length > 0}
-                  onClear={handleClearPOIs}
-                />
-              </div>
               <LightweightPOIButtons
                 onCategorySelect={handleCategoryFilter}
                 activeCategories={filteredCategories}
