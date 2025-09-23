@@ -1,6 +1,23 @@
 import { useMutation } from '@tanstack/react-query';
 import { NavigationRoute } from '@/types/navigation';
 
+// Local helpers for formatting and safety without adding new files.
+function formatDistance(meters: number): string {
+  if (!Number.isFinite(meters) || meters <= 0) return '0 m';
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
+}
+
+function formatDurationShort(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '0 min';
+  if (seconds < 60) return '1 min';
+  const mins = Math.round(seconds / 60);
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return `${hours}h ${rem} min`;
+}
+
 interface RouteRequest {
   from: { lat: number; lng: number };
   to: { lat: number; lng: number };
@@ -77,20 +94,48 @@ async function getRouteService(request: RouteRequest): Promise<NavigationRoute> 
     throw new Error(data.error || 'Routing failed');
   }
 
+  // Prefer numeric fields if present; keep BC fallbacks.
+  const durationSeconds: number =
+    typeof data.durationSeconds === 'number'
+      ? data.durationSeconds
+      : Number(data.durationSeconds) || 0;
+
+  const distanceMeters: number =
+    typeof data.distanceMeters === 'number'
+      ? data.distanceMeters
+      : (typeof data.totalDistance === 'number' ? data.totalDistance : 0);
+
+  const estimatedTimeStr =
+    durationSeconds > 0
+      ? formatDurationShort(durationSeconds)
+      : (typeof data.estimatedTime === 'string' ? data.estimatedTime : '0 min');
+
+  const totalDistanceNumeric =
+    Number.isFinite(distanceMeters) && distanceMeters >= 0
+      ? distanceMeters
+      : (typeof data.totalDistance === 'number' ? data.totalDistance : 0);
+
   const route: NavigationRoute = {
-    totalDistance: data.totalDistance || 0,
-    estimatedTime: data.estimatedTime || '0 min',
-    durationSeconds: data.durationSeconds || 0,
+    totalDistance: totalDistanceNumeric,
+    estimatedTime: estimatedTimeStr,
+    durationSeconds: durationSeconds || 0,
     instructions: data.instructions?.map((instruction: any) => ({
       instruction: instruction.instruction || instruction,
-      distance: instruction.distance || '0m',
-      duration: instruction.duration || '0s',
+      distance: instruction.distance || '0 m',
+      duration: instruction.duration || '0 s',
       type: instruction.maneuverType === 'arrive' ? 1 : 0
     })) || [],
     geometry: data.geometry || [],
     nextInstruction: null,
-    arrivalTime: calculateArrivalTime(data.durationSeconds || 0)
+    arrivalTime: calculateArrivalTime(durationSeconds || 0)
   };
+
+  console.log('🗺️ ROUTING NORMALIZED:', {
+    totalDistance: route.totalDistance,
+    totalDistanceFormatted: formatDistance(route.totalDistance as number),
+    estimatedTime: route.estimatedTime,
+    durationSeconds: route.durationSeconds
+  });
 
   return route;
 }
