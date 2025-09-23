@@ -4,8 +4,8 @@ import { point } from '@turf/helpers';
 import bearing from '@turf/bearing';
 
 export const calculateDistance = (point1: Coordinates, point2: Coordinates): number => {
-  // Convert from meters to kilometers for backward compatibility
-  return calcDistanceMeters(point1.lat, point1.lng, point2.lat, point2.lng) / 1000;
+  // Returns distance in meters
+  return calcDistanceMeters(point1.lat, point1.lng, point2.lat, point2.lng);
 };
 
 /**

@@ -44,10 +44,28 @@ export const POIMarker = ({ poi, isSelected, onClick, onNavigate, showHoverToolt
   const [showTooltip, setShowTooltip] = useState(false);
   const { language } = useLanguage();
 
+  // Enhanced debug logging
+  console.log(`🔍 POIMarker RENDER START:`, {
+    name: poi.name,
+    id: poi.id,
+    coordinates: poi.coordinates,
+    category: poi.category,
+    isSelected,
+    hasOnClick: !!onClick
+  });
+
   const category = POI_CATEGORIES[poi.category as keyof typeof POI_CATEGORIES];
   const iconName = category?.icon || 'MapPin';
   const colorClass = category?.color || 'bg-gray-500';
   const emoji = getEmojiForCategory(poi.category, poi.subCategory);
+
+  console.log(`🔍 POIMarker ICON DATA:`, {
+    category: poi.category,
+    iconName,
+    colorClass,
+    emoji,
+    categoryExists: !!category
+  });
 
   const markerIcon = useMemo(() => {
     const isBeachHouse6b = poi.category === 'beach_houses' && poi.subCategory === 'beach_house_6b';
@@ -125,18 +143,34 @@ export const POIMarker = ({ poi, isSelected, onClick, onNavigate, showHoverToolt
       iconAnchor: [markerSize/2, markerSize/2],
     });
 
+    console.log(`🔍 POIMarker ICON CREATED for ${poi.name}`, {
+      isBeachHouse6b,
+      isBeachHouse6a,
+      isBeachHouse4,
+      subCategory: poi.subCategory,
+      category: poi.category,
+      backgroundClass
+    });
     return icon;
   }, [poi.category, poi.subCategory, colorClass, emoji, isSelected, poi.name]);
 
   const eventHandlers = useMemo(() => ({
     click: (e: any) => {
       e.originalEvent?.stopPropagation();
+      console.log(`🔍 POIMarker CLICKED: ${poi.name}`, { poi });
+      console.log('🔍 POIMarker: About to call onClick for', poi.name);
+
       if (onClick) {
+        console.log('🔍 POIMarker: Calling onClick with POI data:', poi);
         onClick(poi);
+        console.log('🔍 POIMarker: onClick called successfully for', poi.name);
+      } else {
+        console.log('🔍 POIMarker: No onClick handler provided!');
       }
     },
     ...(showHoverTooltip && {
       mouseover: (e: any) => {
+        console.log(`🔍 POIMarker HOVER: ${poi.name}`);
         const marker = e.target;
         const translatedName = translateText(poi.name, language);
         const translatedDescription = poi.description ? translateText(poi.description, language) : '';
@@ -165,6 +199,8 @@ export const POIMarker = ({ poi, isSelected, onClick, onNavigate, showHoverToolt
       }
     })
   }), [poi.name, poi.category, poi.description, poi.distance, onClick, onNavigate, showHoverTooltip, language]);
+
+  console.log(`🔍 POIMarker RENDER COMPLETE: ${poi.name}`);
 
   return (
     <Marker
