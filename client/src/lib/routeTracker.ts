@@ -2,6 +2,8 @@ import { Coordinates, RouteResponse, RouteInstruction } from '../types/navigatio
 import { calculateDistance } from './mapUtils';
 import { SpeedTracker, ETAUpdate } from './speedTracker';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 export interface RouteProgress {
   currentStep: number;
   distanceToNext: number;
@@ -27,10 +29,10 @@ export class RouteTracker {
   private timeBasedUpdateTimer: NodeJS.Timeout | null = null;
   private navigationStartTime: number = 0;
 
-  // Thresholds for navigation decisions - Made more conservative for accuracy
-  private readonly STEP_ADVANCE_THRESHOLD = 0.015; // 15 meters - more precise
-  private readonly OFF_ROUTE_THRESHOLD = 0.030; // 30 meters - more responsive
-  private readonly ROUTE_COMPLETE_THRESHOLD = 0.008; // 8 meters - prevent premature completion
+  // Thresholds for navigation decisions in meters
+  private readonly STEP_ADVANCE_THRESHOLD = 15; // meters
+  private readonly OFF_ROUTE_THRESHOLD = 30; // meters
+  private readonly ROUTE_COMPLETE_THRESHOLD = 8; // meters
 
   constructor(
     route: RouteResponse,
@@ -248,10 +250,25 @@ export class RouteTracker {
 
     // Get speed data and dynamic ETA
     const speedData = this.speedTracker.getSpeedData();
-    const dynamicETA = this.speedTracker.calculateUpdatedETA(distanceRemaining, travelMode);
+    // Convert distanceRemaining from meters to kilometers for speedTracker
+    const dynamicETA = this.speedTracker.calculateUpdatedETA(distanceRemaining / 1000, travelMode);
 
-    // Estimate remaining time based on speed tracking
-    const estimatedTimeRemaining = dynamicETA.estimatedTimeRemaining;
+    // Gating for Dynamic ETA: Only use it if we have reliable speed data.
+    // Otherwise, fall back to the server's initial ETA and just count down.
+    let estimatedTimeRemaining: number;
+    const hasValidGeometry = this.route.geometry && this.route.geometry.length > 1;
+    const hasEnoughSpeedData = this.speedTracker.getMovementStats().totalPositions > 5;
+
+    if (hasValidGeometry && speedData.isMoving && hasEnoughSpeedData) {
+      // Use the dynamic, speed-based ETA
+      estimatedTimeRemaining = dynamicETA.estimatedTimeRemaining;
+      if (isDev) console.log('✅ DYNAMIC ETA ACTIVE', { etr: estimatedTimeRemaining });
+    } else {
+      // Fallback to server-provided ETA and count down
+      const elapsedTime = (Date.now() - this.navigationStartTime) / 1000;
+      estimatedTimeRemaining = Math.max(0, this.route.durationSeconds - elapsedTime);
+      if (isDev) console.log('⏳ DYNAMIC ETA GATED: Using server ETA countdown.', { serverDuration: this.route.durationSeconds, elapsedTime, etr: estimatedTimeRemaining });
+    }
 
     const progress = {
       currentStep: this.currentStepIndex,
@@ -268,8 +285,8 @@ export class RouteTracker {
     
     console.log('🗺️ ROUTE TRACKER: Progress calculated:', {
       currentStep: progress.currentStep,
-      distanceToNext: Math.round(progress.distanceToNext * 1000) + 'm',
-      distanceRemaining: Math.round(progress.distanceRemaining * 1000) + 'm',
+      distanceToNext: Math.round(progress.distanceToNext) + 'm',
+      distanceRemaining: Math.round(progress.distanceRemaining) + 'm',
       percentComplete: Math.round(progress.percentComplete) + '%',
       estimatedTimeRemaining: Math.round(progress.estimatedTimeRemaining / 60) + 'min',
       currentSpeed: Math.round(progress.currentSpeed) + 'km/h'

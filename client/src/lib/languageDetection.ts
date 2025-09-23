@@ -13,8 +13,20 @@ export const detectUserLanguage = (): SupportedLanguage => {
   const browserLanguage = navigator.language || 'en-US';
   const detectedCode = getLanguageCode(navigator.language);
 
+  console.log('🌐 Language Detection:', {
+    browserLanguage,
+    detectedCode,
+    displayName: SUPPORTED_LANGUAGES[detectedCode as SupportedLanguage] || 'Unknown',
+    allBrowserLanguages: navigator.languages
+  });
+
   // CRITICAL: Only log when language changes or first time
   if (!window.lastDetectedLang || window.lastDetectedLang !== detectedCode) {
+    console.log('🚨 LANGUAGE CHANGE DETECTED:', {
+      previous: window.lastDetectedLang,
+      current: detectedCode,
+      willAffectEnrichment: true
+    });
     window.lastDetectedLang = detectedCode;
   }
 
@@ -28,6 +40,7 @@ export const detectUserLanguage = (): SupportedLanguage => {
   }
 
   // Default to English
+  console.log('Defaulting to English');
   return 'en';
 };
 
@@ -50,4 +63,5 @@ const getLanguageCode = (lang: string): string => {
 
 export const logLanguageDetection = () => {
   const detected = detectUserLanguage();
+  console.log(`🌐 Final language detection: ${detected} (${SUPPORTED_LANGUAGES[detected]})`);
 };

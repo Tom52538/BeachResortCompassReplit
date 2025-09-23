@@ -160,6 +160,28 @@ class ModernRoutingEngine {
           message: 'No suitable network nodes found near start or end coordinates'
         };
       }
+
+      // Sanity check: If the "best" node is still very far from the actual destination,
+      // it means the destination is outside our local network. Fail gracefully.
+      const maxSnapDistance = parseInt(process.env.MODERN_ENGINE_MAX_SNAP_DISTANCE || '200', 10);
+
+      const startNodeDistance = this.calculateDistance(startLat, startLng, startNode.lat, startNode.lng);
+      if (startNodeDistance > maxSnapDistance) {
+        return {
+          success: false,
+          error: 'START_OUT_OF_COVERAGE',
+          message: `Best start node found is ${Math.round(startNodeDistance)}m away from start point.`
+        };
+      }
+
+      const endNodeDistance = this.calculateDistance(endLat, endLng, endNode.lat, endNode.lng);
+      if (endNodeDistance > maxSnapDistance) {
+        return {
+          success: false,
+          error: 'DESTINATION_OUT_OF_COVERAGE',
+          message: `Best end node found is ${Math.round(endNodeDistance)}m away from destination.`
+        };
+      }
       
       // Calculate shortest path using Dijkstra for better route optimization
       const path = dijkstra.bidirectional(this.graph, startNode.id, endNode.id);
