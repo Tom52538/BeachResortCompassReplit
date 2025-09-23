@@ -649,7 +649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           modeVerb = 'Cycle';
           modeEmoji = '🚴';
         } else {
-          speedMps = 3.6 * 1000 / 3600; // 3.6 km/h walking = 1.0 m/s
+          speedMps = 6 * 1000 / 3600; // 6 km/h walking = 1.67 m/s
           modeVerb = 'Walk';
           modeEmoji = '🚶';
         }
