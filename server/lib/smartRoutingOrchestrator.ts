@@ -152,6 +152,7 @@ export class SmartRoutingOrchestrator {
     end: Point,
     mode: 'walking' | 'cycling' | 'driving' = 'walking'
   ): Promise<Route> {
+    console.log('🚀 ASYNC ROUTING: Starting asynchronous route calculation...');
     const startTime = Date.now();
     const distance = this.calculateDistance(start, end);
     console.log(`🎯 ENHANCED ROUTING: ${start.lat.toFixed(6)},${start.lng.toFixed(6)} → ${end.lat.toFixed(6)},${end.lng.toFixed(6)} (${distance.toFixed(0)}m)`);
@@ -196,7 +197,7 @@ export class SmartRoutingOrchestrator {
       }
       console.log(`🚗 VEHICLE FILTERING: Mode "${mode}" mapped to vehicle type "${vehicleType}"`);
 
-      this.osmRouter.loadGeoJSON(geojsonData, vehicleType);
+      await this.osmRouter.loadGeoJSON(geojsonData, vehicleType);
 
       const osmResult = this.osmRouter.findRoute(start.lat, start.lng, end.lat, end.lng, vehicleType);
 

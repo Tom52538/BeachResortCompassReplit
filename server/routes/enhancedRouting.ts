@@ -84,12 +84,19 @@ router.post('/enhanced', async (req, res) => {
     
     console.log(`🔥 RESULT BACK: method="${result.method}", instructions count=${result.instructions?.length || 0}`);
 
+    // Convert coordinates from [lng, lat] to [lat, lng] for client compatibility
+    const geometryLatLng = result.path ? result.path.map(([lng, lat]) => [lat, lng]) : [];
+
     const response = {
       success: result.success,
-      totalDistance: result.distance >= 1000
+      // Keep backwards compatibility: numeric values for calculations
+      distance: result.distance,                  // Numeric meters for off-route calculations
+      estimatedTime: result.estimatedTime,       // Numeric seconds for off-route calculations  
+      // Add human-readable versions for display
+      totalDistanceText: result.distance >= 1000
         ? `${(result.distance / 1000).toFixed(1)} km`
         : `${Math.round(result.distance)} m`,
-      estimatedTime: result.estimatedTime >= 3600
+      estimatedTimeText: result.estimatedTime >= 3600
         ? `${Math.floor(result.estimatedTime / 3600)}h ${Math.floor((result.estimatedTime % 3600) / 60)}min`
         : `${Math.ceil(result.estimatedTime / 60)} min`,
       durationSeconds: result.estimatedTime,
@@ -100,14 +107,13 @@ router.post('/enhanced', async (req, res) => {
         maneuverType: extractManeuverType(instruction, index, result.instructions.length),
         stepIndex: index
       })),
-      geometry: result.path,
+      geometry: geometryLatLng,                   // [lat, lng] format for client compatibility
       routingService: `Enhanced Routing (${result.method})`,
       method: result.method,
-      confidence: result.confidence,
-      distance: result.distance
+      confidence: result.confidence
     };
 
-    console.log(`✅ ENHANCED ROUTE SUCCESS: ${response.method} - ${response.totalDistance}, ${response.estimatedTime}, ${result.instructions?.length || 0} instructions`);
+    console.log(`✅ ENHANCED ROUTE SUCCESS: ${response.method} - ${response.totalDistanceText}, ${response.estimatedTimeText}, ${result.instructions?.length || 0} instructions`);
     console.log(`🗺️ INSTRUCTIONS:`, result.instructions);
 
     res.json(response);
