@@ -32,9 +32,10 @@ export class CampgroundRerouteDetector {
   private rerouteAttempts: number = 0;
   private lastRerouteTime: number = 0;
 
-  // Using config values directly instead of hardcoded constants
-  // OFF_ROUTE_THRESHOLD = config.offRouteThreshold (35m)
-  // IMMEDIATE_REROUTE_DISTANCE = config.autoRerouteThreshold (60m)
+  // These constants are from the changes snippet and are assumed to be part of the RerouteDecision interface
+  // and used within the shouldReroute method as per the provided snippet.
+  private readonly OFF_ROUTE_THRESHOLD = 0.015; // Corresponds to 15m, using the original autoRerouteThreshold as a baseline for "off-route"
+  private readonly IMMEDIATE_REROUTE_DISTANCE = 0.050; // Corresponds to 50m, a more significant deviation
   private offRouteCount: number = 0; // Counter for consecutive off-route detections
 
   constructor(config: CampgroundReroutingConfig = CAMPGROUND_REROUTING_CONFIG) {
@@ -109,7 +110,7 @@ export class CampgroundRerouteDetector {
     const distanceFromRoute = this.calculateDistanceFromRoute(currentPosition, route);
 
     // Count consecutive off-route detections
-    if (distanceFromRoute > this.config.offRouteThreshold) {
+    if (distanceFromRoute > this.OFF_ROUTE_THRESHOLD) {
       this.offRouteCount++;
     } else {
       this.offRouteCount = 0;
@@ -122,33 +123,33 @@ export class CampgroundRerouteDetector {
 
     // ENHANCED: More aggressive rerouting conditions for campground navigation
     const shouldReroute = 
-      distanceFromRoute > this.config.autoRerouteThreshold || // Very far off route (60m)
-      (distanceFromRoute > this.config.offRouteThreshold && this.offRouteCount >= 2) || // 2 consecutive detections instead of 3
-      (distanceFromRoute > 25 && this.offRouteCount >= 3); // Even 25m if consistently detected
+      distanceFromRoute > this.IMMEDIATE_REROUTE_DISTANCE || // Very far off route (50m)
+      (distanceFromRoute > this.OFF_ROUTE_THRESHOLD && this.offRouteCount >= 2) || // 2 consecutive detections instead of 3
+      (distanceFromRoute > 0.025 && this.offRouteCount >= 3); // Even 25m if consistently detected
 
     if (shouldReroute) {
       this.lastRerouteTime = now;
       console.log('🏕️ CAMPGROUND REROUTING TRIGGERED:', {
-        distance: Math.round(distanceFromRoute) + 'm',
+        distance: Math.round(distanceFromRoute * 1000) + 'm',
         offRouteCount: this.offRouteCount,
         thresholds: {
-          immediate: this.config.autoRerouteThreshold + 'm',
-          normal: this.config.offRouteThreshold + 'm'
+          immediate: Math.round(this.IMMEDIATE_REROUTE_DISTANCE * 1000) + 'm',
+          normal: Math.round(this.OFF_ROUTE_THRESHOLD * 1000) + 'm'
         }
       });
 
       return {
         shouldReroute: true,
-        reason: distanceFromRoute > this.config.autoRerouteThreshold 
-          ? `Far off route (${Math.round(distanceFromRoute)}m)`
-          : `Consistently off route (${this.offRouteCount} times, ${Math.round(distanceFromRoute)}m)`,
+        reason: distanceFromRoute > this.IMMEDIATE_REROUTE_DISTANCE 
+          ? `Far off route (${Math.round(distanceFromRoute * 1000)}m)`
+          : `Consistently off route (${this.offRouteCount} times, ${Math.round(distanceFromRoute * 1000)}m)`,
         distance: distanceFromRoute
       };
     }
 
     return {
       shouldReroute: false,
-      reason: `Off route but within tolerance (${Math.round(distanceFromRoute)}m, count: ${this.offRouteCount})`,
+      reason: `Off route but within tolerance (${Math.round(distanceFromRoute * 1000)}m, count: ${this.offRouteCount})`,
       distance: distanceFromRoute
     };
   }

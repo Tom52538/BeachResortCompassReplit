@@ -77,11 +77,8 @@ export class SpeedTracker {
 
     if (totalTime === 0) return 0;
     
-    // Speed in m/s (totalDistance is meters from calculateDistance)
-    const speedMs = totalDistance / totalTime;
-    
-    // Convert to km/h for display
-    const speedKmh = speedMs * 3.6;
+    // Convert to km/h
+    const speedKmh = (totalDistance / totalTime) * 3600;
     
     // Cap unrealistic speeds (max 50 km/h for safety)
     return Math.min(speedKmh, 50);
@@ -90,12 +87,10 @@ export class SpeedTracker {
   getAverageSpeed(): number {
     if (this.positions.length < 2) return 0;
     
-    const elapsedTime = (Date.now() - this.startTime) / 1000; // seconds
+    const elapsedTime = (Date.now() - this.startTime) / 1000 / 3600; // hours
     if (elapsedTime === 0) return 0;
     
-    // totalDistance is in meters, convert to km/h
-    const speedMs = this.totalDistance / elapsedTime;
-    return speedMs * 3.6; // km/h
+    return this.totalDistance / elapsedTime; // km/h
   }
 
   getSpeedData(): SpeedData {
@@ -125,7 +120,7 @@ export class SpeedTracker {
       };
       estimatedSpeed = modeToSpeed[travelMode];
       
-      console.log(`🚗 ETA CALCULATION: Using ${travelMode} mode at ${estimatedSpeed} km/h for ${(remainingDistance/1000).toFixed(2)}km`);
+      console.log(`🚗 ETA CALCULATION: Using ${travelMode} mode at ${estimatedSpeed} km/h for ${remainingDistance.toFixed(0)}m`);
     } else if (speedData.isMoving && speedData.currentSpeed > 1) {
       // Use current speed if actively moving
       estimatedSpeed = speedData.currentSpeed;
@@ -138,8 +133,7 @@ export class SpeedTracker {
     }
 
     // Calculate time remaining in seconds
-    // remainingDistance is in meters, estimatedSpeed is in km/h
-    const timeHours = (remainingDistance / 1000) / estimatedSpeed;
+    const timeHours = remainingDistance / estimatedSpeed;
     const timeSeconds = timeHours * 3600;
     
     // Create estimated arrival time

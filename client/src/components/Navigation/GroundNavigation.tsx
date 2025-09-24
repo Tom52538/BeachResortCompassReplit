@@ -12,7 +12,6 @@ import { offlineStorage } from '@/lib/offlineStorage';
 import { useLanguage } from '@/hooks/useLanguage';
 import { getTranslation, translateInstruction } from '@/lib/i18n';
 import { SecureTTSClient } from '@/services/secureTTSClient';
-import { formatDistance as formatDistanceUtil } from '@/lib/mapUtils';
 
 interface GroundNavigationProps {
   route: RouteResponse;
@@ -421,24 +420,24 @@ export const GroundNavigation = ({
 
       // ElevenLabs TTS Voice guidance with loop prevention
       const currentInstruction = routeTracker.getCurrentInstruction();
-      if (currentInstruction && ttsClientRef.current && progress.distanceToNext > 10) { // Minimum 10m for announcements (distanceToNext in meters)
+      if (currentInstruction && ttsClientRef.current && progress.distanceToNext > 0.01) { // Minimum 10m for announcements
         const lastAnnouncement = lastAnnouncementRef.current;
         const currentTime = Date.now();
         const timeSinceLastAnnouncement = currentTime - lastAnnouncement.time;
         const distanceChange = Math.abs(progress.distanceToNext - lastAnnouncement.distance);
 
-        // FIXED: Prevent voice loops with better conditions (distances in meters)
+        // FIXED: Prevent voice loops with better conditions
         // Only announce if:
         // 1. Step changed (most important) OR
         // 2. More than 30 seconds passed AND significant distance change OR
         // 3. Very significant distance change (>100m) - user made real progress
         const shouldAnnounce =
           progress.currentStep !== lastAnnouncement.step ||
-          (timeSinceLastAnnouncement > 30000 && distanceChange > 20) ||
-          distanceChange > 100; // 100m significant change to prevent loops
+          (timeSinceLastAnnouncement > 30000 && distanceChange > 0.02) ||
+          distanceChange > 0.1; // 100m significant change to prevent loops
 
         if (shouldAnnounce) {
-          const distanceInMeters = progress.distanceToNext; // Already in meters
+          const distanceInMeters = progress.distanceToNext * 1000;
 
           // Format German navigation announcement
           let announcement = '';
@@ -478,7 +477,7 @@ export const GroundNavigation = ({
       // Debug log for route progress updates
       if (gpsUpdateCount % 10 === 0) { // Log every 10th update to prevent spam
         console.log('🗺️ Route Progress Update:', {
-          distanceRemaining: `${Math.round(progress.distanceRemaining)}m`, // Distance is in meters
+          distanceRemaining: `${progress.distanceRemaining.toFixed(2)}km`,
           timeRemaining: `${Math.round(progress.estimatedTimeRemaining / 60)}min`,
           percentComplete: `${progress.percentComplete.toFixed(1)}%`,
           currentSpeed: `${progress.currentSpeed}km/h`
@@ -502,7 +501,7 @@ export const GroundNavigation = ({
       // FIXED: Enhanced automatic rerouting with immediate trigger
       if (progress.isOffRoute) {
         console.log('🚨 OFF-ROUTE DETECTED:', {
-          offRouteDistance: Math.round((progress.distanceToNext || 0)) + 'm', // Already in meters
+          offRouteDistance: Math.round((progress.distanceToNext || 0) * 1000) + 'm',
           offRouteCount: offRouteCount,
           isRerouting: isRerouting
         });
@@ -695,7 +694,7 @@ export const GroundNavigation = ({
         currentLat, currentLng, targetLat, targetLng
       );
 
-      return formatDistanceUtil(realDistance); // Use mapUtils formatDistance for meters
+      return formatDistance(realDistance / 1000); // Convert to km for formatDistance
     } catch (error) {
       console.error('❌ Real distance calculation error:', error);
       return currentInstruction?.distance || '0m';

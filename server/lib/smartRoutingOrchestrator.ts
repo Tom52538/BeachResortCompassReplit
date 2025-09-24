@@ -16,17 +16,16 @@ interface Point {
 
 interface Route {
   success: boolean;
-  path?: number[][]; // Typically [lng, lat]
-  distance?: number;
-  estimatedTime?: number;
-  instructions?: string[];
+  path: number[][]; // Typically [lng, lat]
+  distance: number;
+  estimatedTime: number;
+  instructions: string[];
   method: string;
-  confidence?: number;
+  confidence: number;
   error?: string;
   message?: string;
   degradationStage?: number;
   userInstructions?: string[];
-  fallbackReason?: string;
 }
 
 export class SmartRoutingOrchestrator {
@@ -152,7 +151,6 @@ export class SmartRoutingOrchestrator {
     end: Point,
     mode: 'walking' | 'cycling' | 'driving' = 'walking'
   ): Promise<Route> {
-    console.log('🚀 ASYNC ROUTING: Starting asynchronous route calculation...');
     const startTime = Date.now();
     const distance = this.calculateDistance(start, end);
     console.log(`🎯 ENHANCED ROUTING: ${start.lat.toFixed(6)},${start.lng.toFixed(6)} → ${end.lat.toFixed(6)},${end.lng.toFixed(6)} (${distance.toFixed(0)}m)`);
@@ -197,7 +195,7 @@ export class SmartRoutingOrchestrator {
       }
       console.log(`🚗 VEHICLE FILTERING: Mode "${mode}" mapped to vehicle type "${vehicleType}"`);
 
-      await this.osmRouter.loadGeoJSON(geojsonData, vehicleType);
+      this.osmRouter.loadGeoJSON(geojsonData, vehicleType);
 
       const osmResult = this.osmRouter.findRoute(start.lat, start.lng, end.lat, end.lng, vehicleType);
 
@@ -210,7 +208,7 @@ export class SmartRoutingOrchestrator {
           : [this.createGermanInstruction(osmResult.route.distance, mode)];
 
         // Apply German localization to all instructions
-        instructions = instructions.map((instruction: string) => this.localizeToGerman(instruction, mode));
+        instructions = instructions.map(instruction => this.localizeToGerman(instruction, mode));
 
         const hasGenericInstructions = this.hasLowQualityInstructions(instructions);
 
@@ -300,7 +298,7 @@ export class SmartRoutingOrchestrator {
 
           this.cacheRoute(cacheKey, route);
           const processingTime = Date.now() - startTime;
-          console.log(`✅ MODERN ENGINE SUCCESS: ${osmResult.route.distance.toFixed(0)}m route in ${processingTime}ms with ${route.instructions?.length || 0} instructions`);
+          console.log(`✅ MODERN ENGINE SUCCESS: ${osmResult.route.distance.toFixed(0)}m route in ${processingTime}ms with ${route.instructions.length} instructions`);
           return route;
         }
       }

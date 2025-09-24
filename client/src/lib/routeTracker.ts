@@ -28,9 +28,9 @@ export class RouteTracker {
   private navigationStartTime: number = 0;
 
   // Thresholds for navigation decisions - Optimized for campground/village navigation
-  private readonly STEP_ADVANCE_THRESHOLD = 15; // 15 meters - more precise
-  private readonly OFF_ROUTE_THRESHOLD = 5; // 5 meters - perfect for campground/village short-distance navigation
-  private readonly ROUTE_COMPLETE_THRESHOLD = 8; // 8 meters - prevent premature completion
+  private readonly STEP_ADVANCE_THRESHOLD = 0.015; // 15 meters - more precise
+  private readonly OFF_ROUTE_THRESHOLD = 0.005; // 5 meters - perfect for campground/village short-distance navigation
+  private readonly ROUTE_COMPLETE_THRESHOLD = 0.008; // 8 meters - prevent premature completion
 
   constructor(
     route: RouteResponse,
@@ -268,8 +268,8 @@ export class RouteTracker {
     
     console.log('🗺️ ROUTE TRACKER: Progress calculated:', {
       currentStep: progress.currentStep,
-      distanceToNext: Math.round(progress.distanceToNext) + 'm', // distanceToNext is already in meters
-      distanceRemaining: Math.round(progress.distanceRemaining) + 'm', // distanceRemaining is already in meters
+      distanceToNext: Math.round(progress.distanceToNext * 1000) + 'm',
+      distanceRemaining: Math.round(progress.distanceRemaining * 1000) + 'm',
       percentComplete: Math.round(progress.percentComplete) + '%',
       estimatedTimeRemaining: Math.round(progress.estimatedTimeRemaining / 60) + 'min',
       currentSpeed: Math.round(progress.currentSpeed) + 'km/h'
