@@ -1256,8 +1256,8 @@ export default function Navigation() {
             return;
           }
 
-          // Only announce re-routing if we're actually doing it (REAL GPS only)
-          if (secureTTSRef.current && voiceEnabled && useRealGPS) {
+          // Only announce re-routing if we're actually doing it
+          if (secureTTSRef.current && voiceEnabled) {
             console.log('🔄 ElevenLabs Route neu berechnen');
             secureTTSRef.current.speak('Route wird neu berechnet', 'warning').catch(err =>
               console.error('TTS Error:', err)
