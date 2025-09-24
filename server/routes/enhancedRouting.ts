@@ -3,7 +3,23 @@ import { Router } from 'express';
 import { SmartRoutingOrchestrator } from '../lib/smartRoutingOrchestrator.js';
 
 const router = Router();
-const routingOrchestrator = new SmartRoutingOrchestrator();
+
+// Lazy-load routing orchestrator to avoid slow startup during deployment
+let routingOrchestrator: SmartRoutingOrchestrator | null = null;
+
+function getRoutingOrchestrator(): SmartRoutingOrchestrator {
+  if (!routingOrchestrator) {
+    console.log('🔄 DEPLOYMENT OPTIMIZATION: Lazy-loading SmartRoutingOrchestrator...');
+    try {
+      routingOrchestrator = new SmartRoutingOrchestrator();
+      console.log('✅ DEPLOYMENT OPTIMIZATION: SmartRoutingOrchestrator loaded successfully');
+    } catch (error) {
+      console.error('💥 DEPLOYMENT ERROR: Failed to initialize SmartRoutingOrchestrator:', error);
+      throw new Error('Routing service initialization failed - check GeoJSON data files');
+    }
+  }
+  return routingOrchestrator;
+}
 
 // Enhanced routing endpoint using OSM network + Google fallback
 router.post('/enhanced', async (req, res) => {
@@ -57,7 +73,10 @@ router.post('/enhanced', async (req, res) => {
     console.log(`🎯 ENHANCED ROUTE REQUEST: ${from.lat},${from.lng} → ${to.lat},${to.lng} (${profile})`);
     console.log(`🔥 DIRECT TEST: About to call SmartRoutingOrchestrator.calculateRoute with profile="${profile}"`);
 
-    const result = await routingOrchestrator.calculateRoute(
+    // Get the routing orchestrator (lazy-loaded)
+    const orchestrator = getRoutingOrchestrator();
+    
+    const result = await orchestrator.calculateRoute(
       { lat: from.lat, lng: from.lng },
       { lat: to.lat, lng: to.lng },
       profile
@@ -115,8 +134,9 @@ router.post('/directions', async (req, res) => {
       });
     }
 
-    // Use OSM-only routing through the orchestrator
-    const route = await routingOrchestrator.calculateRoute(from, to, mode);
+    // Use OSM-only routing through the orchestrator (lazy-loaded)
+    const orchestrator = getRoutingOrchestrator();
+    const route = await orchestrator.calculateRoute(from, to, mode);
 
     const response = {
       success: route.success,
@@ -150,7 +170,8 @@ router.post('/directions', async (req, res) => {
 // Network statistics endpoint
 router.get('/stats', async (req, res) => {
   try {
-    const stats = routingOrchestrator.getStats();
+    const orchestrator = getRoutingOrchestrator();
+    const stats = orchestrator.getStats();
     res.json({
       success: true,
       stats,
@@ -177,14 +198,15 @@ router.post('/test', async (req, res) => {
     
     console.log('🧪 TESTING ROUTE:', { from: testFrom, to: testTo, vehicleType });
 
-    // Test both walking and driving routes
-    const walkingResult = await routingOrchestrator.calculateRoute(
+    // Test both walking and driving routes (lazy-loaded)
+    const orchestrator = getRoutingOrchestrator();
+    const walkingResult = await orchestrator.calculateRoute(
       testFrom,
       testTo,
       'walking'
     );
     
-    const drivingResult = await routingOrchestrator.calculateRoute(
+    const drivingResult = await orchestrator.calculateRoute(
       testFrom,
       testTo,
       'driving'
@@ -228,7 +250,8 @@ router.post('/test', async (req, res) => {
 // Network health check endpoint
 router.get('/network-status', async (req, res) => {
   try {
-    const stats = routingOrchestrator.getStats();
+    const orchestrator = getRoutingOrchestrator();
+    const stats = orchestrator.getStats();
     
     res.json({
       success: true,

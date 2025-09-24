@@ -112,14 +112,25 @@ app.use((req, res, next) => {
   console.log('🔄 Starting async server setup...');
   
   try {
-    // Add timeout protection for route registration with proper typing
+    // Add timeout protection for route registration with deployment-friendly timeout
+    const isProduction = process.env.NODE_ENV === 'production';
+    const timeoutDuration = isProduction ? 120000 : 30000; // 2 minutes for production, 30s for dev
+    
+    console.log(`🔧 Setting route registration timeout to ${timeoutDuration/1000}s (${isProduction ? 'production' : 'development'} mode)`);
+    
     const routeRegistrationPromise = registerRoutes(app);
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Route registration timeout after 30 seconds')), 30000);
+      setTimeout(() => {
+        console.error(`💥 DEPLOYMENT ERROR: Route registration timeout after ${timeoutDuration/1000} seconds`);
+        console.error('🔍 This could indicate slow file system operations, network issues, or heavy service initialization');
+        console.error('🔧 Check: POI data loading, API key validation, service initialization');
+        reject(new Error(`Route registration timeout after ${timeoutDuration/1000} seconds`));
+      }, timeoutDuration);
     });
     
     const server = await Promise.race([routeRegistrationPromise, timeoutPromise]);
-    console.log('✅ Routes registered successfully');
+    console.log(`✅ Routes registered successfully in ${isProduction ? 'production' : 'development'} mode`);
+    console.log('🚀 Server startup successful - all services initialized');
     
     // Routes are already registered via registerRoutes above
 
@@ -187,19 +198,29 @@ app.use((req, res, next) => {
     // Use environment PORT variable or fallback to 5000
     const port = parseInt(process.env.PORT || '5000', 10);
     
-    console.log(`🌐 Starting server on port ${port}...`);
+    console.log(`🌐 Starting server on port ${port} (binding to 0.0.0.0 for deployment compatibility)...`);
+    console.log(`📊 Server startup summary: ENV=${process.env.NODE_ENV}, PORT=${port}, HOST=0.0.0.0`);
     
     // Simplified server listen for GCE compatibility
     const serverInstance = server.listen(port, "0.0.0.0", () => {
-      console.log(`✅ Server ready at http://0.0.0.0:${port}`);
+      console.log(`✅ DEPLOYMENT SUCCESS: Server ready at http://0.0.0.0:${port}`);
       console.log(`📦 Environment: ${process.env.NODE_ENV}`);
+      console.log(`🎯 Deployment status: Server accessible on all interfaces (0.0.0.0:${port})`);
+      console.log(`🔗 External access: Ready for deployment proxy mapping`);
       log(`serving on port ${port}`);
     }).on('error', (err: NodeJS.ErrnoException) => {
+      console.error('💥 DEPLOYMENT ERROR: Server failed to start');
       if (err.code === 'EADDRINUSE') {
-        console.error(`❌ Port ${port} is already in use. Exiting...`);
+        console.error(`❌ DEPLOYMENT ERROR: Port ${port} is already in use`);
+        console.error('🔧 Fix: Check if another process is using this port');
         process.exit(1);
       } else {
-        console.error('🔥 Server startup error:', err.message);
+        console.error('🔥 DEPLOYMENT ERROR: Server startup failed:', {
+          error: err.message,
+          code: err.code,
+          port: port,
+          host: '0.0.0.0'
+        });
         process.exit(1);
       }
     });
@@ -220,7 +241,19 @@ app.use((req, res, next) => {
     });
 
   } catch (error) {
-    console.error('💥 Failed to start server:', error);
+    console.error('💥 DEPLOYMENT FAILURE: Server startup failed completely');
+    console.error('🔍 Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+      nodeEnv: process.env.NODE_ENV,
+      port: process.env.PORT || '5000'
+    });
+    console.error('🔧 Deployment troubleshooting:');
+    console.error('   - Check if all required secrets are set');
+    console.error('   - Verify build directory exists (npm run build)');
+    console.error('   - Check file permissions and data file access');
+    console.error('   - Review route registration timeout logs above');
     process.exit(1);
   }
 })();
