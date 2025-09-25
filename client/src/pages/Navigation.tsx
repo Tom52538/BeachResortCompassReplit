@@ -32,6 +32,8 @@ import { POILocalizationDebugger } from '@/components/Navigation/POILocalization
 import { POILocalizationTestPanel } from '@/components/Navigation/POILocalizationTestPanel';
 import { VoiceControlPanel } from '@/components/Navigation/VoiceControlPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { DebugOverlay } from '@/components/Navigation/DebugOverlay';
+import { DebugInfoPanel } from '@/components/Navigation/DebugInfoPanel';
 // Removed SmartBottomDrawer - POIs show directly on map
 import { TopBar } from '@/components/Navigation/TopBar'; // Assuming TopBar is imported for the new structure
 import MobileMemoryMonitor from '@/components/UI/MobileMemoryMonitor'; // Assuming MobileMemoryMonitor is available
@@ -109,6 +111,26 @@ export default function Navigation() {
   const [mapOrientation, setMapOrientation] = useState<'north' | 'driving'>('north');
   const [mapStyle, setMapStyle] = useState<'outdoors' | 'satellite' | 'streets' | 'navigation'>('outdoors');
   const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [isDebugMode, setIsDebugMode] = useState(false);
+
+  const toggleDebugMode = useCallback(() => {
+    setIsDebugMode(prev => !prev);
+  }, []);
+
+  useEffect(() => {
+    if (isDebugMode) {
+      const networkFile = currentSite === 'zuhause'
+        ? '/zuhause_routing_network.geojson'
+        : '/roompot_routing_network.geojson';
+
+      fetch(networkFile)
+        .then(res => res.json())
+        .then(data => setNetworkGeoJson(data))
+        .catch(err => console.error("Failed to load network GeoJSON:", err));
+    } else {
+      setNetworkGeoJson(null); // Clear data when debug mode is off
+    }
+  }, [isDebugMode, currentSite]);
 
   // Travel mode state for routing
   const [travelMode, setTravelMode] = useState<'car' | 'bike' | 'pedestrian'>('pedestrian');
@@ -122,6 +144,8 @@ export default function Navigation() {
   const [currentInstruction, setCurrentInstruction] = useState<string>('');
   const [nextDistance, setNextDistance] = useState<string>('');
   const [routeProgress, setRouteProgress] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [networkGeoJson, setNetworkGeoJson] = useState<any>(null);
 
 
   // Network Debugging State
@@ -278,7 +302,7 @@ export default function Navigation() {
             case 'parking':
               return poi.amenity === 'parking' || poi.amenity === 'parking_space' ||
                      poiName.includes('parking') || poiName.includes('parkplatz');
-            
+
             case 'gastronomie':
               const isGastronomie = poi.amenity === 'restaurant' ||
                                    poi.amenity === 'cafe' ||
@@ -297,40 +321,40 @@ export default function Navigation() {
                 console.log(`✅ GASTRONOMIE MATCH: ${normalizePoiString(poi.name)} (${poi.amenity})`);
               }
               return isGastronomie;
-            
+
             case 'accommodation':
               return poi.tourism === 'camp_pitch' || poi.tourism === 'apartment' ||
                      poi.tourism === 'guest_house' || poi.tourism === 'chalet' ||
                      poiName.includes('camping') || poiName.includes('ferienwohnung');
-            
+
             case 'services':
               return poi.tourism === 'information' || poi.amenity === 'post_box' ||
                      poi.amenity === 'atm' || poi.amenity === 'post_office' ||
                      poi.amenity === 'townhall' || poi.amenity === 'police' ||
                      poiName.includes('info') || poiName.includes('rathaus');
-            
+
             case 'kultur':
               return poi.amenity === 'place_of_worship' || poi.building === 'church' ||
                      poiName.includes('kirche') || poiName.includes('kapelle');
-            
+
             case 'sport':
               return poi.leisure === 'pitch' || poi.leisure === 'playground' ||
                      poi.leisure === 'stadium' || poi.leisure === 'swimming_pool' ||
                      poi.sport || poiName.includes('sportplatz') || poiName.includes('spielplatz');
-            
+
             case 'shopping':
               const isShop = poiCategory === 'shop' || !!poi.shop;
               if (isShop) {
                 console.log(`✅ SHOP MATCH: ${normalizePoiString(poi.name)} (category: ${poi.category}, shop: ${poi.shop})`);
               }
               return isShop;
-            
+
             case 'gesundheit':
               return poi.amenity === 'doctors' || poi.amenity === 'pharmacy' ||
                      poi.amenity === 'dentist' || poi.amenity === 'school' ||
                      poi.amenity === 'kindergarten' || poi.healthcare ||
                      poiName.includes('arzt') || poiName.includes('apotheke') || poiName.includes('schule');
-            
+
             default:
               return false;
           }
@@ -741,14 +765,6 @@ export default function Navigation() {
               });
               setCurrentRoute(route);
 
-              // Initial voice announcement when navigation starts
-              if (voiceEnabled && secureTTSRef.current && route?.instructions?.length > 0) {
-                const firstInstruction = route.instructions[0];
-                const initialText = `Navigation gestartet. ${firstInstruction.instruction || 'Geradeaus weiterfahren'}`;
-                console.log('🎤 Initial navigation announcement:', initialText);
-                secureTTSRef.current.speak(initialText, 'start');
-              }
-
               setIsNavigating(true);
               setUIMode('navigation');
               setOverlayStates(prev => ({ ...prev, navigation: true, routePlanning: false }));
@@ -810,7 +826,7 @@ export default function Navigation() {
     }
 
     const destination = { lat: poi.coordinates.lat, lng: poi.coordinates.lng };
-    
+
     // CRITICAL: Set destination for re-routing capability
     destinationRef.current = destination;
 
@@ -865,18 +881,7 @@ export default function Navigation() {
       setCurrentRoute(route);
       setDestinationMarker(destination); // Store destination for travel mode changes
 
-      // Initial voice announcement when navigation starts
-      if (voiceEnabled && secureTTSRef.current && route?.instructions?.length > 0) {
-        const firstInstruction = route.instructions[0];
-        const initialText = `Navigation gestartet. ${firstInstruction.instruction || 'Geradeaus weiterfahren'}`;
-        console.log('🎤 Initial POI navigation announcement:', initialText);
-        secureTTSRef.current.speak(initialText, 'start');
-      }
-
       setIsNavigating(true);
-
-      // Auto-switch to driving orientation during navigation
-      setMapOrientation('driving');
 
       mobileLogger.logPerformance('Navigation setup', startTime);
       mobileLogger.log('NAVIGATION', `Navigation started successfully to ${normalizePoiString(poi.name)}`);
@@ -1263,7 +1268,7 @@ export default function Navigation() {
               console.error('TTS Error:', err)
             );
           }
-          
+
           // Hysterese: 5m für Campingplatz/Dorf Navigation - schnelle Reaktion bei kurzen Wegen
           if (!reroutingRef.current && offRouteDistance > 5 && destinationRef.current) {
             reroutingRef.current = true;
@@ -1296,10 +1301,19 @@ export default function Navigation() {
         }
       );
 
-      // Set initial instruction
+      // Set initial instruction and announce it
       if (currentRoute.instructions.length > 0) {
-        setCurrentInstruction(currentRoute.instructions[0].instruction);
+        const firstInstructionText = currentRoute.instructions[0].instruction;
+        setCurrentInstruction(firstInstructionText);
         setNextDistance(currentRoute.instructions[0].distance);
+
+        // CRITICAL FIX: Announce the first instruction immediately
+        if (secureTTSRef.current && voiceEnabled) {
+          console.log('🎤 ElevenLabs Initial Route TTS:', firstInstructionText);
+          secureTTSRef.current.speak(firstInstructionText, 'start').catch(err =>
+            console.error('Initial TTS Error:', err)
+          );
+        }
       }
     }
 
@@ -1317,6 +1331,10 @@ export default function Navigation() {
       const progress = routeTrackerRef.current.updatePosition(trackingPosition, travelMode);
 
       setRouteProgress(progress);
+      // Also set the full debug info object if debug mode is active
+      if (isDebugMode) {
+        setDebugInfo(progress);
+      }
       setNextDistance(formatDistance(progress.distanceToNext));
 
       // KRITISCHER FIX: Aktualisiere currentInstruction bei jedem Step-Change
@@ -1332,7 +1350,7 @@ export default function Navigation() {
       // Update map center to follow user during navigation
       setMapCenter(trackingPosition);
     }
-  }, [isNavigating, trackingPosition, useRealGPS, currentRoute, travelMode]);
+  }, [isNavigating, trackingPosition, useRealGPS, currentRoute, travelMode, isDebugMode]);
 
   console.log('🔍 Navigation: Starting render...', {
     position: !!trackingPosition,
@@ -1398,7 +1416,7 @@ export default function Navigation() {
             <MobileMemoryMonitor />
           )}
 
-          
+
 
           <div className="flex h-[calc(100vh-4rem)]">
             {/* Main Map Area */}
@@ -1455,6 +1473,14 @@ export default function Navigation() {
                 destinationMarker={destinationMarker}
                 showNetworkOverlay={showNetworkOverlay}
               >
+                {isDebugMode && isNavigating && (
+                  <DebugOverlay
+                    rawGpsPosition={debugInfo?.rawGpsPosition}
+                    snappedGpsPosition={debugInfo?.snappedGpsPosition}
+                    rerouteThreshold={5}
+                    networkGeoJson={networkGeoJson}
+                  />
+                )}
               </MapContainer>
             </div>
           </div>
@@ -1512,6 +1538,8 @@ export default function Navigation() {
             onToggleCompass={() => setMapOrientation(prev => prev === 'north' ? 'driving' : 'north')}
             showNetworkOverlay={showNetworkOverlay}
             onToggleNetworkOverlay={() => setShowNetworkOverlay(!showNetworkOverlay)}
+            isDebugMode={isDebugMode}
+            onToggleDebugMode={toggleDebugMode}
           />
 
 
@@ -1581,6 +1609,9 @@ export default function Navigation() {
             </>
           )}
 
+          {isDebugMode && isNavigating && (
+            <DebugInfoPanel debugInfo={debugInfo} reroutingCooldown={reroutingRef.current} />
+          )}
         </div>
       </ErrorBoundary>
     );

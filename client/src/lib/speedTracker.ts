@@ -20,28 +20,28 @@ export class SpeedTracker {
   private readonly maxHistorySize = 20; // Keep last 20 positions
   private readonly minMovementThreshold = 0.001; // 1 meter minimum movement
   private readonly speedSmoothingWindow = 5; // Use last 5 readings for current speed
-  
+
   private totalDistance = 0;
   private startTime = Date.now();
   private maxRecordedSpeed = 0;
 
   addPosition(position: Coordinates) {
     const timestamp = Date.now();
-    
+
     // Only add if position has changed significantly
     if (this.positions.length > 0) {
       const lastPosition = this.positions[this.positions.length - 1];
       const distance = calculateDistance(lastPosition.position, position);
-      
+
       if (distance < this.minMovementThreshold) {
         return; // Skip insignificant movements
       }
-      
+
       this.totalDistance += distance;
     }
 
     this.positions.push({ position, timestamp });
-    
+
     // Maintain history size
     if (this.positions.length > this.maxHistorySize) {
       this.positions.shift();
@@ -70,33 +70,33 @@ export class SpeedTracker {
         recentPositions[i].position
       );
       const time = (recentPositions[i].timestamp - recentPositions[i-1].timestamp) / 1000; // seconds
-      
+
       totalDistance += distance;
       totalTime += time;
     }
 
     if (totalTime === 0) return 0;
-    
+
     // Convert to km/h
     const speedKmh = (totalDistance / totalTime) * 3600;
-    
+
     // Cap unrealistic speeds (max 50 km/h for safety)
     return Math.min(speedKmh, 50);
   }
 
   getAverageSpeed(): number {
     if (this.positions.length < 2) return 0;
-    
+
     const elapsedTime = (Date.now() - this.startTime) / 1000 / 3600; // hours
     if (elapsedTime === 0) return 0;
-    
+
     return this.totalDistance / elapsedTime; // km/h
   }
 
   getSpeedData(): SpeedData {
     const currentSpeed = this.getCurrentSpeed();
     const averageSpeed = this.getAverageSpeed();
-    
+
     return {
       currentSpeed,
       averageSpeed,
@@ -107,10 +107,10 @@ export class SpeedTracker {
 
   calculateUpdatedETA(remainingDistance: number, travelMode?: 'car' | 'bike' | 'pedestrian'): ETAUpdate {
     const speedData = this.getSpeedData();
-    
+
     // Choose appropriate speed for ETA calculation based on travel mode
     let estimatedSpeed: number;
-    
+
     if (travelMode) {
       // Use travel mode specific speeds matching server-side campground calculations
       const modeToSpeed = {
@@ -119,7 +119,7 @@ export class SpeedTracker {
         'pedestrian': 3.6 // 3.6 km/h for campground walking (1.0 m/s)
       };
       estimatedSpeed = modeToSpeed[travelMode];
-      
+
       console.log(`🚗 ETA CALCULATION: Using ${travelMode} mode at ${estimatedSpeed} km/h for ${remainingDistance.toFixed(0)}m`);
     } else if (speedData.isMoving && speedData.currentSpeed > 1) {
       // Use current speed if actively moving
@@ -133,9 +133,10 @@ export class SpeedTracker {
     }
 
     // Calculate time remaining in seconds
-    const timeHours = remainingDistance / estimatedSpeed;
+    const distanceKm = remainingDistance / 1000; // Convert meters to km
+    const timeHours = distanceKm / estimatedSpeed;
     const timeSeconds = timeHours * 3600;
-    
+
     // Create estimated arrival time
     const estimatedArrival = new Date(Date.now() + timeSeconds * 1000);
 
@@ -173,10 +174,10 @@ export class SpeedTracker {
   // Check if user has been stationary for too long
   isStationary(thresholdSeconds: number = 300): boolean {
     if (this.positions.length < 2) return false;
-    
+
     const lastPosition = this.positions[this.positions.length - 1];
     const timeSinceLastMovement = (Date.now() - lastPosition.timestamp) / 1000;
-    
+
     return timeSinceLastMovement > thresholdSeconds && !this.getSpeedData().isMoving;
   }
 
@@ -199,10 +200,10 @@ export class SpeedTracker {
   // Quick method to get ETA for a specific travel mode with German verb
   getETAForMode(remainingDistance: number, travelMode: 'car' | 'bike' | 'pedestrian'): ETAUpdate {
     const eta = this.calculateUpdatedETA(remainingDistance, travelMode);
-    
+
     // Add German travel context
     const verb = this.getGermanTravelVerb(travelMode);
-    
+
     return {
       ...eta,
       travelContext: {

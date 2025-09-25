@@ -13,6 +13,10 @@ export interface RouteProgress {
   currentSpeed: number;
   averageSpeed: number;
   dynamicETA: ETAUpdate;
+  // Debugging fields
+  rawGpsPosition?: Coordinates;
+  snappedGpsPosition?: Coordinates;
+  offRouteDistance?: number;
 }
 
 export class RouteTracker {
@@ -27,10 +31,10 @@ export class RouteTracker {
   private timeBasedUpdateTimer: NodeJS.Timeout | null = null;
   private navigationStartTime: number = 0;
 
-  // Thresholds for navigation decisions - Optimized for campground/village navigation
-  private readonly STEP_ADVANCE_THRESHOLD = 0.015; // 15 meters - more precise
-  private readonly OFF_ROUTE_THRESHOLD = 0.005; // 5 meters - perfect for campground/village short-distance navigation
-  private readonly ROUTE_COMPLETE_THRESHOLD = 0.008; // 8 meters - prevent premature completion
+  // Thresholds for navigation decisions in METERS - Optimized for campground/village navigation
+  private readonly STEP_ADVANCE_THRESHOLD = 15; // meters
+  private readonly OFF_ROUTE_THRESHOLD = 5; // meters
+  private readonly ROUTE_COMPLETE_THRESHOLD = 8; // meters
 
   constructor(
     route: RouteResponse,
@@ -62,7 +66,7 @@ export class RouteTracker {
 
   private calculateTotalDistance(): number {
     if (!this.route.geometry || this.route.geometry.length < 2) return 0;
-    
+
     let total = 0;
     for (let i = 1; i < this.route.geometry.length; i++) {
       const prev = { lat: this.route.geometry[i-1][1], lng: this.route.geometry[i-1][0] };
@@ -106,7 +110,7 @@ export class RouteTracker {
       );
 
       const distance = calculateDistance(position, closestOnSegment);
-      
+
       if (distance < minDistance) {
         minDistance = distance;
         closestPoint = closestOnSegment;
@@ -158,7 +162,7 @@ export class RouteTracker {
       totalSteps: this.route.instructions?.length || 0,
       timestamp: new Date().toISOString()
     });
-    
+
     if (!this.route.geometry || this.route.geometry.length === 0) {
       console.log('🗺️ ROUTE TRACKER: No route geometry, returning default progress');
       return this.createDefaultProgress();
@@ -170,7 +174,7 @@ export class RouteTracker {
     // Find closest point on route
     const routeInfo = this.findClosestPointOnRoute(position);
     const isOffRoute = routeInfo.distance > this.OFF_ROUTE_THRESHOLD;
-    
+
     console.log('🗺️ ROUTE TRACKER: Position analysis:', {
       distanceFromRoute: routeInfo.distance,
       threshold: this.OFF_ROUTE_THRESHOLD,
@@ -183,7 +187,7 @@ export class RouteTracker {
       this.currentStepIndex + 1, 
       this.route.geometry.length - 1
     );
-    
+
     const nextWaypoint = {
       lat: this.route.geometry[nextWaypointIndex][1],
       lng: this.route.geometry[nextWaypointIndex][0]
@@ -198,7 +202,7 @@ export class RouteTracker {
       lng: this.route.geometry[this.route.geometry.length - 1][0]
     };
     const distanceToDestination = calculateDistance(position, destination);
-    
+
     // Only complete if we're at the final step AND very close to destination
     const isAtFinalStep = this.currentStepIndex >= this.route.instructions.length - 1;
     const isComplete = isAtFinalStep && distanceToDestination < this.ROUTE_COMPLETE_THRESHOLD;
@@ -253,7 +257,7 @@ export class RouteTracker {
     // Estimate remaining time based on speed tracking
     const estimatedTimeRemaining = dynamicETA.estimatedTimeRemaining;
 
-    const progress = {
+    const progress: RouteProgress = {
       currentStep: this.currentStepIndex,
       distanceToNext,
       distanceRemaining,
@@ -263,9 +267,13 @@ export class RouteTracker {
       estimatedTimeRemaining,
       currentSpeed: speedData.currentSpeed,
       averageSpeed: speedData.averageSpeed,
-      dynamicETA
+      dynamicETA,
+      // Add debug info
+      rawGpsPosition: position,
+      snappedGpsPosition: routeInfo.point,
+      offRouteDistance: routeInfo.distance,
     };
-    
+
     console.log('🗺️ ROUTE TRACKER: Progress calculated:', {
       currentStep: progress.currentStep,
       distanceToNext: Math.round(progress.distanceToNext * 1000) + 'm',
@@ -274,7 +282,7 @@ export class RouteTracker {
       estimatedTimeRemaining: Math.round(progress.estimatedTimeRemaining / 60) + 'min',
       currentSpeed: Math.round(progress.currentSpeed) + 'km/h'
     });
-    
+
     return progress;
   }
 
@@ -283,10 +291,10 @@ export class RouteTracker {
 
     // Find closest point on route
     const routeInfo = this.findClosestPointOnRoute(currentPosition);
-    
+
     // Calculate distance from closest point to destination
     let remaining = 0;
-    
+
     // Add distance from closest point to end of current segment
     if (routeInfo.segmentIndex < this.route.geometry.length - 1) {
       const segmentEnd = {
