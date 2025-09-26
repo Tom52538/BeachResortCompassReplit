@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Navigation as NavigationIcon, X, MapPin, Phone, Globe, Clock, Star, Euro, Users, Wifi, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { buildImageUrl } from '@/lib/utils';
+import { formatDistance } from '@/lib/mapUtils';
 
 
 
@@ -631,7 +632,7 @@ export const EnhancedPOIDialog = ({ poi, isOpen, onClose, onNavigate }: Enhanced
                 {poi.distance && (
                   <div className="flex items-center text-sm text-gray-500">
                     <MapPin className="w-4 h-4 mr-1" />
-                    {poi.distance} {t('poi.away')}
+                    {formatDistance(poi.distance)} {t('poi.away')}
                   </div>
                 )}
               </div>
