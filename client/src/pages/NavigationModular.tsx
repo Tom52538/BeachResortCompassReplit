@@ -366,7 +366,7 @@ export default function Navigation() {
 
   const handleSiteChange = useCallback((site: string) => {
     console.log('🌍 Site change requested:', site);
-    setSite(site as any); // Type assertion for string to Site compatibility
+    setSite(site);
   }, [setSite]);
 
   const handleClearPOIs = useCallback(() => {
@@ -500,6 +500,7 @@ export default function Navigation() {
           onZoomIn={() => {}}
           onZoomOut={() => {}}
           onCenterOnLocation={() => {}}
+          mapOrientation="north"
           onOrientationChange={() => {}}
         />
 
@@ -509,18 +510,18 @@ export default function Navigation() {
             {/* Top Maneuver Panel */}
             <TopManeuverPanel
               instruction={currentInstruction}
-              distance={formatDistance(nextDistance)}
+              distance={nextDistance}
               isVisible={isNavigating}
             />
 
             {/* Bottom Summary Panel */}
             <BottomSummaryPanel
-              totalDistance={routeProgress?.distanceRemaining
+              distance={routeProgress?.distanceRemaining
                 ? formatDistance(routeProgress.distanceRemaining)
                 : (typeof currentRoute.totalDistance === 'string' 
                    ? currentRoute.totalDistance 
                    : "396 m")}
-              estimatedTime={routeProgress?.dynamicETA?.estimatedArrival
+              eta={routeProgress?.dynamicETA?.estimatedArrival
                 ? routeProgress.dynamicETA.estimatedArrival.toLocaleTimeString('de-DE', { 
                     hour: '2-digit', 
                     minute: '2-digit' 
@@ -531,7 +532,6 @@ export default function Navigation() {
                        hour: '2-digit', 
                        minute: '2-digit' 
                      }))}
-              arrivalTime=""
               onEndNavigation={handleEndNavigation}
             />
           </>
