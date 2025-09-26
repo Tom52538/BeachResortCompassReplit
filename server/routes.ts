@@ -312,7 +312,18 @@ apiRouter.get("/pois", async (req: Request, res: Response) => {
     const site = req.query.site as string || 'kamperland';
     console.log(`Loading POI data for site: ${site}`);
 
-    const dataPath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
+    // Site-specific data path selection
+    let filename: string;
+    if (site === 'zuhause') {
+      filename = 'zuhause_pois.geojson';
+    } else if (site === 'sittard') {
+      filename = 'sittard_poi.geojson';
+    } else {
+      filename = 'combined_pois_roompot.geojson'; // kamperland default
+    }
+
+    const dataPath = join(process.cwd(), 'server/data', filename);
+    console.log(`📂 Loading POIs from: ${dataPath}`);
     const rawData = readFileSync(dataPath, 'utf-8');
     const geoData = JSON.parse(rawData);
 
@@ -364,7 +375,18 @@ apiRouter.get("/pois/search", async (req: Request, res: Response) => {
     console.log(`POI Search request:`, { query, site, category });
 
     const searchSite = (site as string) || 'kamperland';
-    const dataPath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
+    
+    // Site-specific data path selection for search
+    let searchFilename: string;
+    if (searchSite === 'zuhause') {
+      searchFilename = 'zuhause_pois.geojson';
+    } else if (searchSite === 'sittard') {
+      searchFilename = 'sittard_poi.geojson';
+    } else {
+      searchFilename = 'combined_pois_roompot.geojson'; // kamperland default
+    }
+    
+    const dataPath = join(process.cwd(), 'server/data', searchFilename);
     const rawData = readFileSync(dataPath, 'utf-8');
     const geoData = JSON.parse(rawData);
 
@@ -495,7 +517,16 @@ apiRouter.get("/pois/:id", async (req: Request, res: Response) => {
     const site = req.query.site as string || 'kamperland';
     console.log(`🏠 INDIVIDUAL POI REQUEST: "${id}" for site: ${site}`);
 
-    const dataPath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
+    // Site-specific POI path for individual POI request
+    let poiFilename: string;
+    if (site === 'zuhause') {
+      poiFilename = 'zuhause_pois.geojson';
+    } else if (site === 'sittard') {
+      poiFilename = 'sittard_poi.geojson';
+    } else {
+      poiFilename = 'combined_pois_roompot.geojson'; // kamperland default
+    }
+    const dataPath = join(process.cwd(), 'server/data', poiFilename);
     const rawData = readFileSync(dataPath, 'utf-8');
     const geoData = JSON.parse(rawData);
 
@@ -560,7 +591,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`Loading POI data for site: ${site}`);
 
-      const poiPath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
+      // Site-specific POI path selection
+      let poiFilename: string;
+      if (site === 'zuhause') {
+        poiFilename = 'zuhause_pois.geojson';
+      } else if (site === 'sittard') {
+        poiFilename = 'sittard_poi.geojson';
+      } else {
+        poiFilename = 'combined_pois_roompot.geojson'; // kamperland default
+      }
+
+      const poiPath = join(process.cwd(), 'server/data', poiFilename);
 
       if (!fs.existsSync(poiPath)) {
         console.error(`POI file not found: ${poiPath}`);
@@ -783,6 +824,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (site === 'zuhause') {
         poiFilePath = join(process.cwd(), 'server/data/zuhause_pois.geojson');
         console.log(`🏠 Loading zuhause-specific POIs from: ${poiFilePath}`);
+      } else if (site === 'sittard') {
+        poiFilePath = join(process.cwd(), 'server/data/sittard_poi.geojson');
+        console.log(`🏛️ Loading sittard-specific POIs from: ${poiFilePath}`);
       } else {
         // Default to combined roompot POIs for kamperland and other sites
         poiFilePath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
@@ -822,6 +866,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (site === 'zuhause') {
         poiFilePath = join(process.cwd(), 'server/data/zuhause_pois.geojson');
         console.log(`🔍 Searching zuhause POIs from: ${poiFilePath}`);
+      } else if (site === 'sittard') {
+        poiFilePath = join(process.cwd(), 'server/data/sittard_poi.geojson');
+        console.log(`🔍 Searching sittard POIs from: ${poiFilePath}`);
       } else {
         poiFilePath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
         console.log(`🔍 Searching roompot POIs from: ${poiFilePath}`);

@@ -157,7 +157,7 @@ function categorizeFeatureOptimized(properties: GeoJSONFeature['properties']): P
 function generateOptimizedName(properties: GeoJSONFeature['properties']): string | null {
   // Priorisiere echte Namen
   const realName = properties['name:de'] || properties.name || properties['name:en'] || properties['name:nl'];
-  if (realName && realName.trim()) return realName.trim();
+  if (realName && typeof realName === 'string' && realName.trim()) return realName.trim();
 
   // Generiere Namen basierend auf Properties
   if (properties.amenity) {
