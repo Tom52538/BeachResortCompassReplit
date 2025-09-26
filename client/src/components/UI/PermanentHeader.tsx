@@ -17,6 +17,8 @@ interface PermanentHeaderProps {
   onSiteChange: (site: Site) => void;
   showClearButton?: boolean;
   onClear?: () => void;
+  showClearRouteButton?: boolean;
+  onClearRoute?: () => void;
 }
 
 export const PermanentHeader = ({
@@ -25,7 +27,9 @@ export const PermanentHeader = ({
   currentSite,
   onSiteChange,
   showClearButton = false,
-  onClear
+  onClear,
+  showClearRouteButton = false,
+  onClearRoute
 }: PermanentHeaderProps) => {
   const { t } = useLanguage();
 
@@ -78,7 +82,7 @@ export const PermanentHeader = ({
 
         {/* Right Side Controls */}
         <div className="flex items-center space-x-2 flex-shrink-0">
-          {/* Clear Button */}
+          {/* Clear POI Button */}
           {showClearButton && onClear && (
             <Button
               variant="ghost"
@@ -91,7 +95,24 @@ export const PermanentHeader = ({
                 border: '1px solid rgba(255, 255, 255, 0.3)'
               }}
             >
-              Clear
+              Clear POIs
+            </Button>
+          )}
+
+          {/* Clear Route Button */}
+          {showClearRouteButton && onClearRoute && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearRoute}
+              className="text-xs px-3 h-8 text-orange-600 rounded-full"
+              style={{
+                background: 'rgba(255, 248, 235, 0.7)',
+                backdropFilter: 'blur(6px)',
+                border: '1px solid rgba(255, 165, 0, 0.3)'
+              }}
+            >
+              Clear Route
             </Button>
           )}
 

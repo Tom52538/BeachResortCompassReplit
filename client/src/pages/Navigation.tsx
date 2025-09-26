@@ -1064,6 +1064,31 @@ export default function Navigation() {
     });
   }, [toast, t]);
 
+  const handleClearRoute = useCallback(() => {
+    setCurrentRoute(null);
+    setIsNavigating(false);
+    setDestinationMarker(null);
+    setCurrentInstruction('');
+    setUIMode('start');
+    setOverlayStates(prev => ({ ...prev, routePlanning: false, navigation: false }));
+    
+    // Clear TTS cache for routes
+    if (secureTTSRef.current) {
+      secureTTSRef.current.clearCache();
+      console.log('🧹 ROUTE CLEAR: TTS Cache geleert für neue Route');
+    }
+
+    // Reset route tracking
+    if (routeTrackerRef.current) {
+      routeTrackerRef.current.reset();
+    }
+
+    toast({
+      title: 'Route gelöscht',
+      description: 'Die aktuelle Route wurde entfernt',
+    });
+  }, [toast]);
+
   // Handle travel mode changes and automatically recalculate route if we have one
   const handleTravelModeChange = async (newMode: 'car' | 'bike' | 'pedestrian') => {
     console.log(`🚗 TRAVEL MODE CHANGE: ${travelMode} → ${newMode}`);
@@ -1489,6 +1514,8 @@ export default function Navigation() {
                   onSiteChange={handleSiteChange}
                   showClearButton={displayPOIs.length > 0 || searchQuery.length > 0 || filteredCategories.length > 0}
                   onClear={handleClearPOIs}
+                  showClearRouteButton={!!currentRoute || isNavigating}
+                  onClearRoute={handleClearRoute}
                 />
               </div>
 
