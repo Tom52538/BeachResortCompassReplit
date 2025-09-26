@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Coordinates, TestSite, TEST_SITES } from '@/types/navigation';
+import { Coordinates, Site, TEST_SITES } from '@/types/navigation';
 
 interface UseLocationProps {
-  currentSite: TestSite;
+  currentSite: Site;
 }
 
 export const useLocation = (props?: UseLocationProps) => {

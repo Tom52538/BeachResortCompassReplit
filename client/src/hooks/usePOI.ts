@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { POI, TestSite } from '@/types/navigation';
+import { POI, Site } from '@/types/navigation';
 
-export const usePOI = (site: TestSite = 'kamperland') => {
+export const usePOI = (site: Site = 'kamperland') => {
   return useQuery({
     queryKey: ['/api/pois', site],
     enabled: !!site, // Ensure query is enabled when site is provided
@@ -17,7 +17,7 @@ export const usePOI = (site: TestSite = 'kamperland') => {
       console.log(`🔍 POI FETCH DEBUG: Received ${data.length} POIs`);
 
       if (data.length > 0) {
-        const categories = [...new Set(data.map((poi: POI) => poi.category))];
+        const categories = Array.from(new Set(data.map((poi: POI) => poi.category)));
         console.log(`🔍 POI FETCH DEBUG: Available categories:`, categories);
         console.log(`🔍 POI FETCH DEBUG: Sample POIs:`, data.slice(0, 3));
       }
@@ -41,7 +41,7 @@ export const usePOI = (site: TestSite = 'kamperland') => {
   });
 };
 
-export const useSearchPOI = (query: string, site: TestSite = 'kamperland', category?: string) => {
+export const useSearchPOI = (query: string, site: Site = 'kamperland', category?: string) => {
   return useQuery({
     queryKey: ['/api/pois/search', query, site, category],
     queryFn: async () => {

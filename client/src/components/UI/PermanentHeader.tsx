@@ -1,14 +1,14 @@
 import { Search, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { TestSite, TEST_SITES } from '@/types/navigation';
+import { Site, TEST_SITES } from '@/types/navigation';
 import { useLanguage } from '@/hooks/useLanguage';
 
 interface PermanentHeaderProps {
   searchQuery: string;
   onSearch: (query: string) => void;
-  currentSite: TestSite;
-  onSiteChange: (site: TestSite) => void;
+  currentSite: Site;
+  onSiteChange: (site: Site) => void;
   showClearButton?: boolean;
   onClear?: () => void;
 }
