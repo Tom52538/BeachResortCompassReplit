@@ -37,6 +37,18 @@ const ZUHAUSE_POI_BUTTONS = [
   { category: 'gesundheit', icon: '🏥', label: 'Gesundheit & Bildung', color: 'bg-teal-600' } // 28 POIs - 2%
 ];
 
+// POI categories for Sittard location - Dutch city focused
+const SITTARD_POI_BUTTONS = [
+  { category: 'parking', icon: '🚗', label: 'Parkeren', color: 'bg-blue-500' },
+  { category: 'restaurant', icon: '🍽️', label: 'Restaurants', color: 'bg-orange-500' },
+  { category: 'accommodation', icon: '🏨', label: 'Hotels', color: 'bg-green-600' },
+  { category: 'services', icon: 'ℹ️', label: 'Diensten', color: 'bg-purple-500' },
+  { category: 'tourism', icon: '🏛️', label: 'Bezienswaardigheden', color: 'bg-amber-800' },
+  { category: 'leisure', icon: '🏃', label: 'Recreatie', color: 'bg-red-500' },
+  { category: 'shop', icon: '🛒', label: 'Winkelen', color: 'bg-yellow-500' },
+  { category: 'healthcare', icon: '🏥', label: 'Gezondheid', color: 'bg-teal-600' }
+];
+
 export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [], selectedPOI }: LightweightPOIButtonsProps) => {
   const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null);
   const tooltipTimeoutRef = useRef<number | null>(null);
@@ -53,7 +65,11 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
   // SiteManager handles all site changes automatically - no polling needed!
 
   // Always use hardcoded buttons - dynamic categories are disabled
-  const POI_BUTTONS = currentSite === 'zuhause' ? ZUHAUSE_POI_BUTTONS : KAMPERLAND_POI_BUTTONS;
+  const POI_BUTTONS = currentSite === 'zuhause' 
+    ? ZUHAUSE_POI_BUTTONS 
+    : currentSite === 'sittard' 
+    ? SITTARD_POI_BUTTONS 
+    : KAMPERLAND_POI_BUTTONS;
 
   console.log(`🔍 POI BUTTON DEBUG: Erkannte Site: "${currentSite}", verwende ${POI_BUTTONS.length} Buttons für ${currentSite}`);
 

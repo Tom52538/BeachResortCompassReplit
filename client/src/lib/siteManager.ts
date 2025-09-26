@@ -21,7 +21,8 @@ class SiteManagerClass {
   // Site-specific mock coordinates
   private readonly mockCoordinates = {
     kamperland: { lat: 51.5896335, lng: 3.7216451 }, // Starting Point POI on road network
-    zuhause: { lat: 51.00169448656764, lng: 6.051019009670205 }
+    zuhause: { lat: 51.00169448656764, lng: 6.051019009670205 },
+    sittard: { lat: 50.998, lng: 5.869 } // Sittard city center
   } as const;
 
   constructor() {
@@ -34,7 +35,7 @@ class SiteManagerClass {
 
   private loadSiteFromStorage(): Site {
     const storedSite = localStorage.getItem('selected-site');
-    const validSite = storedSite === 'kamperland' || storedSite === 'zuhause';
+    const validSite = storedSite === 'kamperland' || storedSite === 'zuhause' || storedSite === 'sittard';
     
     if (!validSite) {
       console.log(`🎯 SITE MANAGER: Invalid stored site "${storedSite}", defaulting to "zuhause"`);
@@ -48,7 +49,7 @@ class SiteManagerClass {
   private handleStorageChange(event: StorageEvent) {
     if (event.key === 'selected-site' && event.newValue) {
       const newSite = event.newValue;
-      if (newSite !== this.currentSite && (newSite === 'kamperland' || newSite === 'zuhause')) {
+      if (newSite !== this.currentSite && (newSite === 'kamperland' || newSite === 'zuhause' || newSite === 'sittard')) {
         console.log(`🎯 SITE MANAGER: External storage change detected: ${this.currentSite} → ${newSite}`);
         this.currentSite = newSite as Site;
         this.notifyListeners();
@@ -63,6 +64,8 @@ class SiteManagerClass {
     const site = this.currentSite;
     const coordinates = site === 'kamperland' 
       ? this.mockCoordinates.kamperland 
+      : site === 'sittard'
+      ? this.mockCoordinates.sittard
       : this.mockCoordinates.zuhause;
     const useRealGPS = false; // For now, keeping mock GPS for testing
     
@@ -84,8 +87,8 @@ class SiteManagerClass {
       return;
     }
 
-    if (newSite !== 'kamperland' && newSite !== 'zuhause') {
-      console.error(`🎯 SITE MANAGER: Invalid site "${newSite}", must be "kamperland" or "zuhause"`);
+    if (newSite !== 'kamperland' && newSite !== 'zuhause' && newSite !== 'sittard') {
+      console.error(`🎯 SITE MANAGER: Invalid site "${newSite}", must be "kamperland", "zuhause", or "sittard"`);
       return;
     }
 
@@ -132,9 +135,13 @@ class SiteManagerClass {
     return {
       pois: site === 'kamperland' 
         ? 'combined_pois_roompot.geojson' 
+        : site === 'sittard'
+        ? 'sittard_poi.geojson'
         : 'zuhause_pois.geojson',
       network: site === 'kamperland' 
         ? 'roompot_routing_network.geojson' 
+        : site === 'sittard'
+        ? 'sittard_routing_network.geojson'
         : 'zuhause_routing_network.geojson'
     };
   }

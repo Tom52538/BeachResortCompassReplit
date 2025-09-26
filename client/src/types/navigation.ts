@@ -157,8 +157,8 @@ export interface NavigationState {
   selectedPOI: POI | null;
 }
 
-// Site ID type for string literals
-export type Site = 'kamperland' | 'zuhause';
+// Site ID type for string literals  
+export type Site = 'kamperland' | 'zuhause' | 'sittard';
 
 export interface TestSite {
   name: string;
