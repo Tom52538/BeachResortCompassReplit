@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePOICategories } from '@/hooks/usePOICategories';
@@ -49,7 +49,7 @@ const SITTARD_POI_BUTTONS = [
   { category: 'healthcare', icon: '🏥', label: 'Gezondheid', color: 'bg-teal-600' }
 ];
 
-export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [], selectedPOI }: LightweightPOIButtonsProps) => {
+const LightweightPOIButtonsComponent = ({ onCategorySelect, activeCategories = [], selectedPOI }: LightweightPOIButtonsProps) => {
   const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null);
   const tooltipTimeoutRef = useRef<number | null>(null);
   const { t, currentLanguage } = useLanguage(); // Assuming currentLanguage is available from useLanguage hook
@@ -58,12 +58,6 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
   const { config: siteConfig } = useSiteManager();
   const currentSite = siteConfig.site;
 
-  console.log('🎯 POI BUTTONS: Using SiteManager:', { currentSite, isValid: siteConfig.isValid });
-
-  // No POI fetching needed - buttons are hardcoded, dynamic categories disabled
-
-  // SiteManager handles all site changes automatically - no polling needed!
-
   // Always use hardcoded buttons - dynamic categories are disabled
   const POI_BUTTONS = currentSite === 'zuhause' 
     ? ZUHAUSE_POI_BUTTONS 
@@ -71,19 +65,7 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     ? SITTARD_POI_BUTTONS 
     : KAMPERLAND_POI_BUTTONS;
 
-  console.log(`🔍 POI BUTTON DEBUG: Erkannte Site: "${currentSite}", verwende ${POI_BUTTONS.length} Buttons für ${currentSite}`);
-
   const handleCategoryClick = useCallback((category: string) => {
-    console.log(`🔍 POI BUTTON DEBUG: ===========================================`);
-    console.log(`🔍 POI BUTTON DEBUG: Category button clicked: "${category}" for site: ${currentSite}`);
-    console.log(`🔍 POI BUTTON DEBUG: Previous active categories:`, activeCategories);
-    console.log(`🔍 POI BUTTON DEBUG: Button category type:`, typeof category, category);
-
-    // CRITICAL FIX: Always call onCategorySelect with the BUTTON category name
-    // The parent component will handle the mapping to OSM categories internally
-    console.log(`🔍 POI BUTTON DEBUG: Calling onCategorySelect with BUTTON category: "${category}"`);
-    console.log(`🔍 POI BUTTON DEBUG: Expected button to become active: "${category}"`);
-    
     onCategorySelect(category);
     setVisibleTooltip(category);
 
@@ -93,9 +75,8 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
 
     tooltipTimeoutRef.current = window.setTimeout(() => {
       setVisibleTooltip(null);
-      console.log(`🔍 POI BUTTON DEBUG: Cleared visible tooltip`);
     }, 2000);
-  }, [onCategorySelect, activeCategories, currentSite]);
+  }, [onCategorySelect]);
 
   useEffect(() => {
     return () => {
@@ -116,7 +97,6 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
 
   const renderVerticalButton = (poi: any, index: number) => {
     // Enhanced debugging for active state
-    console.log(`🔍 BUTTON RENDER DEBUG: Button ${index} - Category: "${poi.category}", Active categories:`, activeCategories);
     
     // CRITICAL FIX: Check if this button's category is in the activeCategories array
     // activeCategories now contains the button category names directly
@@ -232,10 +212,7 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     >
       <div className="flex flex-col">
         {/* Render all POI category buttons (including the rolling accommodation button) */}
-        {POI_BUTTONS.map((poi, index) => {
-          console.log(`🔍 MAPPING DEBUG: Rendering button ${index}: category="${poi.category}", active=${activeCategories.includes(poi.category)}`);
-          return renderVerticalButton(poi, index);
-        })}
+        {POI_BUTTONS.map((poi, index) => renderVerticalButton(poi, index))}
       </div>
       <style>{`
         .poi-left-panel {
@@ -258,3 +235,7 @@ export const LightweightPOIButtons = ({ onCategorySelect, activeCategories = [],
     </div>
   );
 };
+
+// Export with displayName for better debugging
+LightweightPOIButtonsComponent.displayName = 'LightweightPOIButtons';
+export const LightweightPOIButtons = memo(LightweightPOIButtonsComponent);

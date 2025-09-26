@@ -246,7 +246,7 @@ export class MobileLogger {
       document.addEventListener('scroll', updateActivity);
       
       // Prevent GPS logging spam - only log when location actually changes
-      const currentLocation = localStorage.getItem('currentCampground') || 'unknown';
+      const currentLocation = localStorage.getItem('selected-site') || 'unknown';
       if (currentLocation !== lastGPSCheck) {
         this.log('GPS_LOCATION_CHANGE', `Location changed: ${lastGPSCheck} -> ${currentLocation}`);
         lastGPSCheck = currentLocation;
@@ -319,7 +319,7 @@ export class MobileLogger {
     
     try {
       // Clear potential memory leaks more efficiently
-      const maxTimerId = setTimeout(() => {}, 0);
+      const maxTimerId = setTimeout(() => {}, 0) as unknown as number;
       for (let i = 1; i <= maxTimerId; i++) {
         clearTimeout(i);
         clearInterval(i);
