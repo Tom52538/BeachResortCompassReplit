@@ -6,7 +6,8 @@ import { useSiteManager } from '@/lib/siteManager';
 // Site configuration for display
 const SITE_DISPLAY = {
   kamperland: { name: 'Kamperland' },
-  zuhause: { name: 'Zuhause' }
+  zuhause: { name: 'Zuhause' },
+  sittard: { name: 'Sittard' }
 } as const;
 
 interface SiteSelectorProps {
