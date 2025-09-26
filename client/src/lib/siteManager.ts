@@ -22,7 +22,7 @@ class SiteManagerClass {
   private readonly mockCoordinates = {
     kamperland: { lat: 51.5896335, lng: 3.7216451 }, // Starting Point POI on road network
     zuhause: { lat: 51.00169448656764, lng: 6.051019009670205 },
-    sittard: { lat: 50.998, lng: 5.869 } // Sittard city center
+    sittard: { lat: 51.025167560144986, lng: 5.858832278144658 } // Sittard coordinates
   } as const;
 
   constructor() {

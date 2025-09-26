@@ -1,6 +1,12 @@
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Site, TEST_SITES } from '@/types/navigation';
 import { useLanguage } from '@/hooks/useLanguage';
 
@@ -27,17 +33,17 @@ export const PermanentHeader = ({
     onSearch(e.target.value);
   };
 
-  const handleSiteToggle = () => {
-    // Cycle through all three sites: kamperland → zuhause → sittard → kamperland
-    let nextSite: Site;
-    if (currentSite === 'kamperland') {
-      nextSite = 'zuhause';
-    } else if (currentSite === 'zuhause') {
-      nextSite = 'sittard';
-    } else {
-      nextSite = 'kamperland'; // sittard → kamperland
-    }
-    onSiteChange(nextSite);
+  // Site options for dropdown
+  const siteOptions = [
+    { key: 'kamperland' as Site, name: 'Kamperland', icon: '🏕️' },
+    { key: 'zuhause' as Site, name: 'Zuhause', icon: '🏠' },
+    { key: 'sittard' as Site, name: 'Sittard', icon: '🏛️' }
+  ];
+
+  const currentSiteInfo = siteOptions.find(option => option.key === currentSite);
+
+  const handleSiteSelect = (site: Site) => {
+    onSiteChange(site);
   };
 
   return (
@@ -89,24 +95,46 @@ export const PermanentHeader = ({
             </Button>
           )}
 
-          {/* Site Selector */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSiteToggle}
-            className="h-8 px-3 border border-white/20 rounded-full
-                       flex items-center space-x-1 min-w-[80px]"
-            style={{
-              background: 'rgba(255, 255, 255, 0.7)',
-              backdropFilter: 'blur(6px)'
-            }}
-          >
-            <MapPin className="w-3 h-3 text-blue-600" />
-            <span className="text-xs font-medium text-gray-800 capitalize">
-              📍 {currentSite === 'kamperland' ? 'Kamperland' : 
-                   currentSite === 'zuhause' ? 'Zuhause' : 'Sittard'}
-            </span>
-          </Button>
+          {/* Site Selector Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 border border-white/20 rounded-full
+                           flex items-center space-x-1 min-w-[100px]"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(6px)'
+                }}
+              >
+                <span className="text-xs">{currentSiteInfo?.icon}</span>
+                <span className="text-xs font-medium text-gray-800">
+                  {currentSiteInfo?.name}
+                </span>
+                <ChevronDown className="w-3 h-3 text-gray-600" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="min-w-[140px] bg-white/95 backdrop-blur-md border border-white/20"
+            >
+              {siteOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.key}
+                  onClick={() => handleSiteSelect(option.key)}
+                  className={`flex items-center space-x-2 cursor-pointer
+                             ${currentSite === option.key ? 'bg-blue-50' : ''}`}
+                >
+                  <span className="text-sm">{option.icon}</span>
+                  <span className="text-sm font-medium">{option.name}</span>
+                  {currentSite === option.key && (
+                    <MapPin className="w-3 h-3 text-blue-600 ml-auto" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
