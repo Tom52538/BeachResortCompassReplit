@@ -160,7 +160,7 @@ export const SmartBottomDrawer = ({
               {selectedPOI.distance && (
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">{t('poi.distance')}:</span>
-                  <span className="text-sm font-medium text-gray-900">{selectedPOI.distance}</span>
+                  <span className="text-sm font-medium text-gray-900">{formatDistance(selectedPOI.distance)}</span>
                 </div>
               )}
 
@@ -227,7 +227,7 @@ export const SmartBottomDrawer = ({
                       <p className="text-sm text-gray-600 capitalize">{poi.category}</p>
                     </div>
                     {poi.distance && (
-                      <span className="text-sm font-medium text-blue-600">{poi.distance}</span>
+                      <span className="text-sm font-medium text-blue-600">{formatDistance(poi.distance)}</span>
                     )}
                   </div>
                 </div>

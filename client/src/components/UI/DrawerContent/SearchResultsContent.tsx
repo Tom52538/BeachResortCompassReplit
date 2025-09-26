@@ -2,6 +2,7 @@ import { POI } from '@/types/navigation';
 import { POI_CATEGORIES } from '@/types/poi-categories';
 import { MapPin, Search } from 'lucide-react';
 import { getEmojiForCategory } from '../../../../../shared/emoji';
+import { formatDistance } from '@/lib/mapUtils';
 
 interface SearchResultsContentProps {
   results: POI[];
@@ -88,7 +89,7 @@ export const SearchResultsContent = ({ results, query, onPOISelect }: SearchResu
                       {poi.distance && (
                         <div className="flex items-center text-xs text-gray-500 mt-1">
                           <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
-                          <span>{poi.distance}</span>
+                          <span>{formatDistance(poi.distance)}</span>
                         </div>
                       )}
                       {poi.description && (

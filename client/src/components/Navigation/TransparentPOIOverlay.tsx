@@ -4,6 +4,7 @@ import { POI_CATEGORIES } from '@/types/poi-categories';
 import { Button } from '@/components/ui/button';
 import { X, Navigation, Clock, Phone, Globe, Mail, Building, MapPin } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
+import { formatDistance } from '@/lib/mapUtils';
 
 interface TransparentPOIOverlayProps {
   poi: POI;
@@ -101,7 +102,7 @@ export const TransparentPOIOverlay: React.FC<TransparentPOIOverlayProps> = ({
               {poi.distance && (
                 <div className="flex items-center text-sm text-gray-500">
                   <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                  <span>{poi.distance} {t('poi.away')}</span>
+                  <span>{formatDistance(poi.distance)} {t('poi.away')}</span>
                 </div>
               )}
             </div>

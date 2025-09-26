@@ -6,6 +6,7 @@ import { POI_CATEGORIES } from '@/types/poi-categories';
 import { POI } from '@/types/navigation';
 import { useLanguage } from '@/hooks/useLanguage';
 import { translateText } from '@/lib/i18n';
+import { formatDistance } from '@/lib/mapUtils';
 
 interface POIMarkerProps {
   poi: POI;
@@ -180,7 +181,7 @@ export const POIMarker = ({ poi, isSelected, onClick, onNavigate, showHoverToolt
           <div style="font-family: system-ui; font-size: 12px; line-height: 1.4; padding: 6px 8px;">
             ${poi.lodge_number ? `<div style="font-weight: 600; color: #1f2937; margin-bottom: 2px;">Lodge Nr. ${poi.lodge_number}</div>` : ''}
             <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">${translatedName}</div>
-            ${poi.distance ? `<div style="color: #059669; font-weight: 500; font-size: 11px;">📍 ${poi.distance}</div>` : ''}
+            ${poi.distance ? `<div style="color: #059669; font-weight: 500; font-size: 11px;">📍 ${formatDistance(poi.distance)}</div>` : ''}
             <div style="color: #3b82f6; font-size: 10px; margin-top: 4px; font-style: italic;">${translatedNavigateText}</div>
           </div>
         `;

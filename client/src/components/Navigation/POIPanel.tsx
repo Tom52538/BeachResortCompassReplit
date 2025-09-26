@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Navigation, X, MapPin } from 'lucide-react';
 import { getEmojiForCategory, getColorForCategory } from '../../../../shared/emoji';
+import { formatDistance } from '@/lib/mapUtils';
 
 interface POIPanelProps {
   poi: POI | null;
@@ -42,7 +43,7 @@ export const POIPanel = React.memo(({ poi, isVisible, onNavigate, onClose }: POI
             {poi.distance && (
               <div className="flex items-center text-sm text-gray-500">
                 <MapPin className="w-4 h-4 mr-1" />
-                <span>{poi.distance} away</span>
+                <span>{formatDistance(poi.distance)} away</span>
               </div>
             )}
           </div>
