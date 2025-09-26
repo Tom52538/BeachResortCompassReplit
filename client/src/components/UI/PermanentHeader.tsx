@@ -28,7 +28,15 @@ export const PermanentHeader = ({
   };
 
   const handleSiteToggle = () => {
-    const nextSite = currentSite === 'kamperland' ? 'zuhause' : 'kamperland';
+    // Cycle through all three sites: kamperland → zuhause → sittard → kamperland
+    let nextSite: Site;
+    if (currentSite === 'kamperland') {
+      nextSite = 'zuhause';
+    } else if (currentSite === 'zuhause') {
+      nextSite = 'sittard';
+    } else {
+      nextSite = 'kamperland'; // sittard → kamperland
+    }
     onSiteChange(nextSite);
   };
 
@@ -95,7 +103,8 @@ export const PermanentHeader = ({
           >
             <MapPin className="w-3 h-3 text-blue-600" />
             <span className="text-xs font-medium text-gray-800 capitalize">
-              📍 {currentSite}
+              📍 {currentSite === 'kamperland' ? 'Kamperland' : 
+                   currentSite === 'zuhause' ? 'Zuhause' : 'Sittard'}
             </span>
           </Button>
         </div>
