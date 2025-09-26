@@ -10,6 +10,7 @@ export const useLocation = (props?: UseLocationProps) => {
   const mockCoordinates: Record<string, Coordinates> = {
     kamperland: { lat: 51.5896335, lng: 3.7216451 }, // Exactly at Starting Point POI on road network
     zuhause: { lat: 51.00169448656764, lng: 6.051019009670205 },
+    sittard: { lat: 51.025167560144986, lng: 5.858832278144658 }, // Sittard coordinates
     default: { lat: 51.5896335, lng: 3.7216451 } // Exactly at Starting Point POI on road network
   };
 
