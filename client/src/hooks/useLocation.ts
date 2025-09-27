@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Coordinates, Site, TEST_SITES } from '@/types/navigation';
+import { liveGpsLogger } from '@/utils/liveGpsLogger';
 
 interface UseLocationProps {
   currentSite: Site;
@@ -105,6 +106,25 @@ export const useLocation = (props?: UseLocationProps) => {
             };
 
             console.log(`🛰️ REAL GPS UPDATE:`, coords);
+            
+            // LIVE GPS LOGGING: Log GPS position update
+            liveGpsLogger.log({
+              type: 'GPS_UPDATE',
+              gpsPosition: coords,
+              engineDecision: {
+                action: 'CONTINUE',
+                details: `Real GPS position updated - accuracy: ${position.coords.accuracy}m`,
+                conditions: {
+                  accuracy: position.coords.accuracy,
+                  speed: position.coords.speed,
+                  heading: position.coords.heading,
+                  timestamp: position.timestamp,
+                  site: currentSite,
+                  useRealGPS: true
+                }
+              }
+            });
+            
             setCurrentPosition(coords);
             setError(null);
           },

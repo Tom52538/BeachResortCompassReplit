@@ -1,6 +1,7 @@
 import { Coordinates, RouteResponse, RouteInstruction } from '../types/navigation';
 import { calculateDistance } from './mapUtils';
 import { SpeedTracker, ETAUpdate } from './speedTracker';
+import { liveGpsLogger } from '@/utils/liveGpsLogger';
 
 export interface RouteProgress {
   currentStep: number;
@@ -182,6 +183,29 @@ export class RouteTracker {
       segmentIndex: routeInfo.segmentIndex
     });
 
+    // LIVE GPS LOGGING: Log route analysis
+    liveGpsLogger.log({
+      type: 'ROUTE_ANALYSIS',
+      gpsPosition: position,
+      routeInfo: {
+        currentRoute: this.route,
+        currentStep: this.currentStepIndex,
+        totalSteps: this.route.instructions.length,
+        distanceToRoute: routeInfo.distance,
+        isOffRoute: isOffRoute,
+        offRouteThreshold: this.OFF_ROUTE_THRESHOLD
+      },
+      engineDecision: {
+        action: isOffRoute ? 'REROUTE' : 'CONTINUE',
+        details: `Position ${isOffRoute ? 'OFF' : 'ON'} route by ${routeInfo.distance.toFixed(1)}m`,
+        conditions: {
+          distanceFromRoute: routeInfo.distance,
+          threshold: this.OFF_ROUTE_THRESHOLD,
+          segmentIndex: routeInfo.segmentIndex
+        }
+      }
+    });
+
     // Check if we should advance to next step
     const nextWaypointIndex = Math.min(
       this.currentStepIndex + 1, 
@@ -240,6 +264,30 @@ export class RouteTracker {
         threshold: this.OFF_ROUTE_THRESHOLD,
         position: position
       });
+
+      // LIVE GPS LOGGING: Log off-route detection trigger
+      liveGpsLogger.log({
+        type: 'ROUTE_ENGINE',
+        gpsPosition: position,
+        routeInfo: {
+          currentRoute: this.route,
+          currentStep: this.currentStepIndex,
+          totalSteps: this.route.instructions.length,
+          distanceToRoute: routeInfo.distance,
+          isOffRoute: true,
+          offRouteThreshold: this.OFF_ROUTE_THRESHOLD
+        },
+        engineDecision: {
+          action: 'REROUTE',
+          details: `Triggering off-route callback - distance: ${routeInfo.distance.toFixed(1)}m exceeds threshold: ${this.OFF_ROUTE_THRESHOLD}m`,
+          conditions: {
+            callbackTriggered: true,
+            distance: routeInfo.distance,
+            threshold: this.OFF_ROUTE_THRESHOLD
+          }
+        }
+      });
+
       this.onOffRoute(routeInfo.distance);
     }
 

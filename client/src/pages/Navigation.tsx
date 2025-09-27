@@ -19,11 +19,13 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useNavigationTracking } from '@/hooks/useNavigationTracking';
 import { useSiteManager } from '@/lib/siteManager';
 import { mobileLogger } from '@/utils/mobileLogger';
+import { liveGpsLogger } from '@/utils/liveGpsLogger';
+import { LiveGpsDebugPanel } from '@/components/Debug/LiveGpsDebugPanel';
 import { POI, RouteResponse, TEST_SITES, Coordinates, Site } from '@/types/navigation';
 import { calculateDistance, formatDistance, calculateBearing } from '@/lib/mapUtils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX, Settings } from 'lucide-react';
+import { Volume2, VolumeX, Settings, Bug } from 'lucide-react';
 import { SecureTTSClient } from '@/services/secureTTSClient';
 import { RouteTracker } from '@/lib/routeTracker';
 import { GestureEnhancedMap } from '@/components/Map/GestureEnhancedMap';
@@ -97,6 +99,7 @@ export default function Navigation() {
   // Drawer and Weather Widget state (assuming these are used elsewhere and need to be managed)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showWeatherWidget, setShowWeatherWidget] = useState(false);
+  const [showGpsDebugPanel, setShowGpsDebugPanel] = useState(false);
 
 
   // New state for POI Dialog visibility
@@ -1296,6 +1299,35 @@ export default function Navigation() {
           // Off route detection with a more robust debouncing mechanism
           console.log(`Off-route detected by ${offRouteDistance.toFixed(1)}m. Debouncing reroute...`);
 
+          // LIVE GPS LOGGING: Log re-route trigger analysis
+          liveGpsLogger.log({
+            type: 'REROUTE_TRIGGER',
+            gpsPosition: trackingPosition || currentPosition,
+            rerouteInfo: {
+              triggered: true,
+              reason: `Off-route by ${offRouteDistance.toFixed(1)}m`,
+              shouldReroute: !!(useRealGPS && destinationRef.current),
+              blockingCondition: !useRealGPS ? 'useRealGPS=false' : 
+                                !destinationRef.current ? 'destinationRef.current=null' : undefined,
+              destination: destinationRef.current,
+              useRealGPS: useRealGPS,
+              reroutingFlag: reroutingRef.current,
+              debounceTimer: !!rerouteDebounceTimerRef.current
+            },
+            engineDecision: {
+              action: (!useRealGPS || !destinationRef.current) ? 'BLOCKED' : 'REROUTE',
+              details: (!useRealGPS || !destinationRef.current) ? 
+                'Re-routing blocked by conditions' : 
+                'Proceeding with re-route calculation',
+              conditions: {
+                useRealGPS,
+                hasDestination: !!destinationRef.current,
+                reroutingInProgress: reroutingRef.current,
+                hasDebounceTimer: !!rerouteDebounceTimerRef.current
+              }
+            }
+          });
+
           if (!useRealGPS || !destinationRef.current) {
             return;
           }
@@ -1320,18 +1352,94 @@ export default function Navigation() {
           rerouteDebounceTimerRef.current = setTimeout(async () => {
             try {
               console.log('▶️ Executing debounced reroute calculation...');
+              
+              // LIVE GPS LOGGING: Log re-route execution start
+              const fromPosition = trackingPosition || currentPosition;
+              liveGpsLogger.log({
+                type: 'REROUTE_EXECUTION',
+                gpsPosition: fromPosition,
+                rerouteInfo: {
+                  triggered: true,
+                  reason: 'Debounced re-route execution started',
+                  shouldReroute: true,
+                  destination: destinationRef.current,
+                  useRealGPS: useRealGPS,
+                  reroutingFlag: reroutingRef.current,
+                  debounceTimer: false
+                },
+                engineDecision: {
+                  action: 'REROUTE',
+                  details: 'Starting route calculation with getRoute.mutateAsync',
+                  conditions: {
+                    from: fromPosition,
+                    to: destinationRef.current,
+                    mode: travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking'
+                  }
+                }
+              });
+
               const profile = travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking';
               const newRoute = await getRoute.mutateAsync({
-                from: trackingPosition || currentPosition,
+                from: fromPosition,
                 to: destinationRef.current!,
                 mode: profile
+              });
+
+              // LIVE GPS LOGGING: Log successful re-route
+              liveGpsLogger.log({
+                type: 'REROUTE_EXECUTION',
+                gpsPosition: fromPosition,
+                rerouteInfo: {
+                  triggered: true,
+                  reason: 'Re-route calculation successful',
+                  shouldReroute: true,
+                  destination: destinationRef.current,
+                  useRealGPS: useRealGPS,
+                  reroutingFlag: reroutingRef.current,
+                  debounceTimer: false
+                },
+                engineDecision: {
+                  action: 'CONTINUE',
+                  details: `New route calculated - ${newRoute.totalDistance}m, ${newRoute.estimatedTime}min, ${newRoute.instructions?.length || 0} steps`,
+                  conditions: {
+                    success: true,
+                    newRouteSet: true
+                  }
+                }
               });
 
               setCurrentRoute(newRoute);
               // The main useEffect will handle re-initializing the tracker with the new route
 
             } catch (err) {
-              console.error('Debounced re-route failed:', err)
+              console.error('Debounced re-route failed:', err);
+              
+              // LIVE GPS LOGGING: Log re-route failure
+              liveGpsLogger.log({
+                type: 'REROUTE_EXECUTION',
+                gpsPosition: trackingPosition || currentPosition,
+                rerouteInfo: {
+                  triggered: true,
+                  reason: 'Re-route calculation failed',
+                  shouldReroute: false,
+                  destination: destinationRef.current,
+                  useRealGPS: useRealGPS,
+                  reroutingFlag: reroutingRef.current,
+                  debounceTimer: false
+                },
+                engineDecision: {
+                  action: 'ERROR',
+                  details: 'getRoute.mutateAsync failed',
+                  conditions: {
+                    success: false,
+                    error: err
+                  }
+                },
+                error: {
+                  message: err instanceof Error ? err.message : String(err),
+                  stack: err instanceof Error ? err.stack : undefined
+                }
+              });
             } finally {
               // Reset the flag after the operation is complete
               reroutingRef.current = false;
@@ -1669,6 +1777,12 @@ export default function Navigation() {
             </details>
           )}
         </div>
+
+        {/* Live GPS Debug Panel for Live Testing */}
+        <LiveGpsDebugPanel 
+          isVisible={showGpsDebugPanel}
+          onToggleVisibility={() => setShowGpsDebugPanel(!showGpsDebugPanel)}
+        />
       </div>
     );
   }

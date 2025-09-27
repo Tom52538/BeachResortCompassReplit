@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Coordinates } from '../types/navigation';
 import { SpeedTracker } from '../lib/speedTracker';
+import { liveGpsLogger } from '@/utils/liveGpsLogger';
 
 interface NavigationTrackingOptions {
   enableHighAccuracy?: boolean;
@@ -174,6 +175,25 @@ export const useNavigationTracking = (
               speed: navPosition.speed,
               heading: navPosition.heading,
               interval: adaptiveInterval
+            });
+
+            // LIVE GPS LOGGING: Log navigation GPS update
+            liveGpsLogger.log({
+              type: 'GPS_UPDATE',
+              gpsPosition: navPosition.position,
+              engineDecision: {
+                action: 'CONTINUE',
+                details: `Navigation GPS update - accuracy: ${navPosition.accuracy}m, speed: ${navPosition.speed || 0}km/h`,
+                conditions: {
+                  accuracy: navPosition.accuracy,
+                  speed: navPosition.speed,
+                  heading: navPosition.heading,
+                  timestamp: navPosition.timestamp,
+                  adaptiveInterval: adaptiveInterval,
+                  isNavigating: true,
+                  useRealGPS: true
+                }
+              }
             });
 
             // Update position
