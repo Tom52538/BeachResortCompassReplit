@@ -1293,7 +1293,15 @@ export default function Navigation() {
           // Off route detection with a more robust debouncing mechanism
           console.log(`Off-route detected by ${offRouteDistance.toFixed(1)}m. Debouncing reroute...`);
 
-          if (!useRealGPS || !destinationRef.current) {
+          // FIXED: Enable rerouting for both Real GPS AND Mock GPS modes
+          if (!destinationRef.current) {
+            console.warn('❌ REROUTING BLOCKED: No destination available');
+            return;
+          }
+
+          // Also ensure we have a valid tracking position for rerouting
+          if (!trackingPosition && !currentPosition) {
+            console.warn('❌ REROUTING BLOCKED: No current position available');
             return;
           }
 
@@ -1318,17 +1326,32 @@ export default function Navigation() {
             try {
               console.log('▶️ Executing debounced reroute calculation...');
               const profile = travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking';
+              
+              // Use the current position (trackingPosition has priority over currentPosition)
+              const fromPosition = trackingPosition || currentPosition;
+              console.log('🔄 REROUTING FROM:', fromPosition, 'TO:', destinationRef.current);
+              
               const newRoute = await getRoute.mutateAsync({
-                from: trackingPosition || currentPosition,
+                from: fromPosition,
                 to: destinationRef.current!,
                 mode: profile
+              });
+
+              console.log('✅ NEW ROUTE CALCULATED:', {
+                distance: newRoute.totalDistance,
+                time: newRoute.estimatedTime,
+                instructions: newRoute.instructions?.length || 0
               });
 
               setCurrentRoute(newRoute);
               // The main useEffect will handle re-initializing the tracker with the new route
 
             } catch (err) {
-              console.error('Debounced re-route failed:', err);
+              console.error('❌ Debounced re-route failed:', err);
+              // Announce rerouting failure
+              if (secureTTSRef.current && voiceEnabled) {
+                secureTTSRef.current.speak('Neue Route konnte nicht berechnet werden', 'warning').catch(console.error);
+              }
             } finally {
               // Reset the flag after the operation is complete
               reroutingRef.current = false;
