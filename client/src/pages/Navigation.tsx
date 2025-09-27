@@ -776,6 +776,7 @@ export default function Navigation() {
                 mode: profile
               });
               setCurrentRoute(route);
+              destinationRef.current = newDestination; // CRITICAL: Store destination for re-routing
 
               setIsNavigating(true);
               setUIMode('navigation');
@@ -892,6 +893,7 @@ export default function Navigation() {
       // 4. Start navigation with panel at bottom
       setCurrentRoute(route);
       setDestinationMarker(destination); // Store destination for travel mode changes
+      destinationRef.current = destination; // CRITICAL: Store destination for re-routing
 
       setIsNavigating(true);
 
@@ -926,6 +928,7 @@ export default function Navigation() {
     setIsNavigating(false);
     setCurrentRoute(null);
     setDestinationMarker(null);
+    destinationRef.current = null; // Clear destination ref
     setCurrentInstruction('');
     // trackingPosition is now computed, no need to set it manually
     setUIMode('start'); // Changed from 'normal' to 'start' for consistency with initial UI state
