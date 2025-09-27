@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { liveGpsLogger, LiveGpsLogEntry } from '@/utils/liveGpsLogger';
-import { Download, Trash2, Play, Pause, Eye, EyeOff } from 'lucide-react';
+import { Download, Trash2, Play, Pause, Eye, EyeOff, Copy, MessageSquare } from 'lucide-react';
 
 interface LiveGpsDebugPanelProps {
   isVisible: boolean;
@@ -86,6 +86,38 @@ export const LiveGpsDebugPanel: React.FC<LiveGpsDebugPanelProps> = ({
     setLastUpdateTime('Logs cleared');
   };
 
+  const copyLogsForChat = async () => {
+    const report = liveGpsLogger.generateReport();
+    const chatFormat = `🛰️ **Live GPS Debug Report** 
+📍 Generated: ${new Date().toLocaleTimeString()}
+📊 Total Entries: ${liveGpsLogger.getLogs().length}
+
+\`\`\`
+${report}
+\`\`\`
+
+*Kopiert aus dem Live GPS Debug Panel für Chat-Analyse*`;
+
+    try {
+      await navigator.clipboard.writeText(chatFormat);
+      console.log('✅ GPS DEBUG LOGS: Copied to clipboard for chat analysis');
+      console.log('📋 CHAT PASTE READY:', chatFormat);
+    } catch (err) {
+      console.error('❌ Failed to copy to clipboard:', err);
+      console.log('📋 MANUAL COPY - GPS DEBUG LOGS FOR CHAT:');
+      console.log(chatFormat);
+      console.log('📋 END OF LOGS - Copy the above text to chat');
+    }
+  };
+
+  const outputLogsToConsole = () => {
+    const report = liveGpsLogger.generateReport();
+    console.log('🛰️ ===== LIVE GPS DEBUG LOGS FOR CHAT =====');
+    console.log(report);
+    console.log('🛰️ ===== END OF LOGS - COPY ABOVE =====');
+    console.log('💡 TIP: Select and copy the text between the markers above to paste in chat');
+  };
+
   const getLogTypeColor = (type: LiveGpsLogEntry['type']) => {
     switch (type) {
       case 'GPS_UPDATE': return 'bg-blue-100 text-blue-800';
@@ -151,14 +183,18 @@ export const LiveGpsDebugPanel: React.FC<LiveGpsDebugPanelProps> = ({
       </CardHeader>
       
       <CardContent className="p-2">
-        <div className="flex gap-1 mb-2">
+        <div className="flex gap-1 mb-2 flex-wrap">
+          <Button onClick={copyLogsForChat} variant="outline" size="sm" className="h-6 text-xs bg-blue-50 hover:bg-blue-100">
+            <Copy className="w-3 h-3 mr-1" />
+            Copy
+          </Button>
+          <Button onClick={outputLogsToConsole} variant="outline" size="sm" className="h-6 text-xs bg-green-50 hover:bg-green-100">
+            <MessageSquare className="w-3 h-3 mr-1" />
+            Console
+          </Button>
           <Button onClick={downloadLogs} variant="outline" size="sm" className="h-6 text-xs">
             <Download className="w-3 h-3 mr-1" />
             Report
-          </Button>
-          <Button onClick={exportFullLogs} variant="outline" size="sm" className="h-6 text-xs">
-            <Download className="w-3 h-3 mr-1" />
-            Full
           </Button>
           <Button onClick={clearLogs} variant="outline" size="sm" className="h-6 text-xs">
             <Trash2 className="w-3 h-3 mr-1" />
