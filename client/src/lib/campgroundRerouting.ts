@@ -18,11 +18,11 @@ export interface CampgroundReroutingConfig {
 }
 
 export const CAMPGROUND_REROUTING_CONFIG: CampgroundReroutingConfig = {
-  offRouteThreshold: 35, // Erhöht für dichte Campingplatz-Bebauung
-  minimumMovementThreshold: 12, // Mehr Toleranz zwischen Mobilheimen/Chalets
-  rerouteConsiderationTime: 20000, // 20s - Zeit zum manuellen Navigieren um Hindernisse
-  autoRerouteThreshold: 60, // Nur bei wirklich großer Abweichung neu routen
-  maxRerouteAttempts: 2 // Verhindert Ping-Pong zwischen dicht stehenden Objekten
+  offRouteThreshold: 8, // Gleich wie RouteTracker für Konsistenz  
+  minimumMovementThreshold: 5, // Reduziert für responsive Re-routing
+  rerouteConsiderationTime: 8000, // 8s - Schnellere Reaktion
+  autoRerouteThreshold: 15, // Bereits bei 15m neu routen für mobile Navigation
+  maxRerouteAttempts: 3 // Mehr Versuche für komplexe Campingplatz-Layouts
 };
 
 export class CampgroundRerouteDetector {
@@ -32,10 +32,13 @@ export class CampgroundRerouteDetector {
   private rerouteAttempts: number = 0;
   private lastRerouteTime: number = 0;
 
-  // These constants are from the changes snippet and are assumed to be part of the RerouteDecision interface
-  // and used within the shouldReroute method as per the provided snippet.
-  private readonly OFF_ROUTE_THRESHOLD = 0.015; // Corresponds to 15m, using the original autoRerouteThreshold as a baseline for "off-route"
-  private readonly IMMEDIATE_REROUTE_DISTANCE = 0.050; // Corresponds to 50m, a more significant deviation
+  // Use config values in meters for consistent thresholds
+  private get OFF_ROUTE_THRESHOLD(): number {
+    return this.config.offRouteThreshold; // meters - matches RouteTracker
+  }
+  private get IMMEDIATE_REROUTE_DISTANCE(): number {
+    return this.config.autoRerouteThreshold; // meters - for immediate rerouting
+  }
   private offRouteCount: number = 0; // Counter for consecutive off-route detections
 
   constructor(config: CampgroundReroutingConfig = CAMPGROUND_REROUTING_CONFIG) {
@@ -121,35 +124,34 @@ export class CampgroundRerouteDetector {
       };
     }
 
-    // ENHANCED: More aggressive rerouting conditions for campground navigation
+    // ENHANCED: Responsive rerouting for mobile navigation
     const shouldReroute = 
-      distanceFromRoute > this.IMMEDIATE_REROUTE_DISTANCE || // Very far off route (50m)
-      (distanceFromRoute > this.OFF_ROUTE_THRESHOLD && this.offRouteCount >= 2) || // 2 consecutive detections instead of 3
-      (distanceFromRoute > 0.025 && this.offRouteCount >= 3); // Even 25m if consistently detected
+      distanceFromRoute > this.IMMEDIATE_REROUTE_DISTANCE || // Immediate reroute at threshold
+      (distanceFromRoute > this.OFF_ROUTE_THRESHOLD && this.offRouteCount >= 1); // Single detection sufficient
 
     if (shouldReroute) {
       this.lastRerouteTime = now;
       console.log('🏕️ CAMPGROUND REROUTING TRIGGERED:', {
-        distance: Math.round(distanceFromRoute * 1000) + 'm',
+        distance: Math.round(distanceFromRoute) + 'm',
         offRouteCount: this.offRouteCount,
         thresholds: {
-          immediate: Math.round(this.IMMEDIATE_REROUTE_DISTANCE * 1000) + 'm',
-          normal: Math.round(this.OFF_ROUTE_THRESHOLD * 1000) + 'm'
+          immediate: Math.round(this.IMMEDIATE_REROUTE_DISTANCE) + 'm',
+          normal: Math.round(this.OFF_ROUTE_THRESHOLD) + 'm'
         }
       });
 
       return {
         shouldReroute: true,
         reason: distanceFromRoute > this.IMMEDIATE_REROUTE_DISTANCE 
-          ? `Far off route (${Math.round(distanceFromRoute * 1000)}m)`
-          : `Consistently off route (${this.offRouteCount} times, ${Math.round(distanceFromRoute * 1000)}m)`,
+          ? `Far off route (${Math.round(distanceFromRoute)}m)`
+          : `Consistently off route (${this.offRouteCount} times, ${Math.round(distanceFromRoute)}m)`,
         distance: distanceFromRoute
       };
     }
 
     return {
       shouldReroute: false,
-      reason: `Off route but within tolerance (${Math.round(distanceFromRoute * 1000)}m, count: ${this.offRouteCount})`,
+      reason: `Off route but within tolerance (${Math.round(distanceFromRoute)}m, count: ${this.offRouteCount})`,
       distance: distanceFromRoute
     };
   }

@@ -32,9 +32,9 @@ export class RouteTracker {
   private timeBasedUpdateTimer: NodeJS.Timeout | null = null;
   private navigationStartTime: number = 0;
 
-  // Thresholds for navigation decisions in METERS - Optimized for campground/village navigation
+  // Thresholds for navigation decisions in METERS - Aligned with CampgroundRerouting
   private readonly STEP_ADVANCE_THRESHOLD = 15; // meters
-  private readonly OFF_ROUTE_THRESHOLD = 5; // meters
+  private readonly OFF_ROUTE_THRESHOLD = 8; // meters - matches CampgroundRerouting
   private readonly ROUTE_COMPLETE_THRESHOLD = 8; // meters
 
   constructor(
