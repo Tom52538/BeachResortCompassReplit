@@ -143,8 +143,10 @@ export default function Navigation() {
   // Navigation tracking state - ElevenLabs TTS
   const secureTTSRef = useRef<SecureTTSClient | null>(null);
   const routeTrackerRef = useRef<RouteTracker | null>(null);
-  const reroutingRef = useRef(false); // To be replaced by debounce timer
+  // State machine for re-routing: IDLE → RUNNING → COOLDOWN
+  const rerouteStateRef = useRef<'IDLE' | 'RUNNING' | 'COOLDOWN'>('IDLE');
   const rerouteDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const rerouteCooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const destinationRef = useRef<Coordinates | null>(null);
   const campgroundRerouteRef = useRef<CampgroundRerouteDetector | null>(null);
   const [currentInstruction, setCurrentInstruction] = useState<string>('');
@@ -1298,6 +1300,17 @@ export default function Navigation() {
           handleEndNavigation();
         },
         (offRouteDistance) => {
+          // CRITICAL STATE MACHINE GUARD: Block all re-routing when not IDLE
+          if (rerouteStateRef.current !== 'IDLE') {
+            exportableLogger.log('ENGINE_STATE', {
+              action: 'REROUTE_THROTTLED',
+              reason: `Re-routing blocked - current state: ${rerouteStateRef.current}`,
+              offRouteDistance: offRouteDistance.toFixed(1) + 'm',
+              state: rerouteStateRef.current
+            });
+            return; // Block all re-routing when not IDLE
+          }
+
           // Off route detection with a more robust debouncing mechanism
           console.log(`Off-route detected by ${offRouteDistance.toFixed(1)}m. Debouncing reroute...`);
 
@@ -1310,7 +1323,7 @@ export default function Navigation() {
             settings: {
               useRealGPS,
               hasDestination: !!destinationRef.current,
-              reroutingInProgress: reroutingRef.current,
+              rerouteState: rerouteStateRef.current,
               debounceActive: !!rerouteDebounceTimerRef.current
             }
           });
@@ -1327,7 +1340,7 @@ export default function Navigation() {
                                 !destinationRef.current ? 'destinationRef.current=null' : undefined,
               destination: destinationRef.current,
               useRealGPS: useRealGPS,
-              reroutingFlag: reroutingRef.current,
+              reroutingFlag: rerouteStateRef.current !== 'IDLE',
               debounceTimer: !!rerouteDebounceTimerRef.current
             },
             engineDecision: {
@@ -1338,7 +1351,7 @@ export default function Navigation() {
               conditions: {
                 useRealGPS,
                 hasDestination: !!destinationRef.current,
-                reroutingInProgress: reroutingRef.current,
+                rerouteState: rerouteStateRef.current,
                 hasDebounceTimer: !!rerouteDebounceTimerRef.current
               }
             }
@@ -1353,15 +1366,13 @@ export default function Navigation() {
             clearTimeout(rerouteDebounceTimerRef.current);
           }
 
-          // Announce rerouting only if we aren't already in the process
-          if (!reroutingRef.current) {
-            reroutingRef.current = true; // Set flag immediately to prevent multiple announcements
-            if (secureTTSRef.current && voiceEnabled) {
-              console.log('🔄 Announcing re-route');
-              secureTTSRef.current.speak('Route wird neu berechnet', 'warning').catch(err =>
-                console.error('TTS Error:', err)
-              );
-            }
+          // Set state to RUNNING immediately to prevent multiple announcements
+          rerouteStateRef.current = 'RUNNING';
+          if (secureTTSRef.current && voiceEnabled) {
+            console.log('🔄 Announcing re-route');
+            secureTTSRef.current.speak('Route wird neu berechnet', 'warning').catch(err =>
+              console.error('TTS Error:', err)
+            );
           }
 
           // Schedule the actual reroute calculation after a delay
@@ -1389,7 +1400,7 @@ export default function Navigation() {
                   shouldReroute: true,
                   destination: destinationRef.current,
                   useRealGPS: useRealGPS,
-                  reroutingFlag: reroutingRef.current,
+                  reroutingFlag: rerouteStateRef.current !== 'IDLE',
                   debounceTimer: false
                 },
                 engineDecision: {
@@ -1431,7 +1442,7 @@ export default function Navigation() {
                   shouldReroute: true,
                   destination: destinationRef.current,
                   useRealGPS: useRealGPS,
-                  reroutingFlag: reroutingRef.current,
+                  reroutingFlag: rerouteStateRef.current !== 'IDLE',
                   debounceTimer: false
                 },
                 engineDecision: {
@@ -1445,9 +1456,18 @@ export default function Navigation() {
               });
 
               setCurrentRoute(newRoute);
-              // Reset rerouting flag AFTER successful route update
-              setTimeout(() => {
-                reroutingRef.current = false;
+              // Set cooldown state and schedule reset to IDLE
+              rerouteStateRef.current = 'COOLDOWN';
+              if (rerouteCooldownTimerRef.current) {
+                clearTimeout(rerouteCooldownTimerRef.current);
+              }
+              rerouteCooldownTimerRef.current = setTimeout(() => {
+                rerouteStateRef.current = 'IDLE';
+                exportableLogger.log('ENGINE_STATE', {
+                  action: 'COOLDOWN_COMPLETE',
+                  status: 'Ready for next re-routing attempt',
+                  cooldownDuration: '10s'
+                });
                 console.log('✅ Re-routing cooldown completed - ready for next reroute');
               }, 10000); // 10 second cooldown after successful re-routing
 
@@ -1471,7 +1491,7 @@ export default function Navigation() {
                   shouldReroute: false,
                   destination: destinationRef.current,
                   useRealGPS: useRealGPS,
-                  reroutingFlag: reroutingRef.current,
+                  reroutingFlag: rerouteStateRef.current !== 'IDLE',
                   debounceTimer: false
                 },
                 engineDecision: {
@@ -1488,9 +1508,13 @@ export default function Navigation() {
                 }
               });
 
-              // Reset rerouting flag after failure with shorter cooldown
-              setTimeout(() => {
-                reroutingRef.current = false;
+              // Set cooldown state and schedule reset to IDLE after failure
+              rerouteStateRef.current = 'COOLDOWN';
+              if (rerouteCooldownTimerRef.current) {
+                clearTimeout(rerouteCooldownTimerRef.current);
+              }
+              rerouteCooldownTimerRef.current = setTimeout(() => {
+                rerouteStateRef.current = 'IDLE';
                 exportableLogger.log('ENGINE_STATE', {
                   action: 'COOLDOWN_COMPLETE_AFTER_FAILURE',
                   status: 'Ready for next re-routing attempt after failure',
@@ -1795,7 +1819,7 @@ export default function Navigation() {
           )}
 
           {isDebugMode && isNavigating && (
-            <DebugInfoPanel debugInfo={debugInfo} reroutingCooldown={reroutingRef.current} />
+            <DebugInfoPanel debugInfo={debugInfo} reroutingCooldown={rerouteStateRef.current !== 'IDLE'} />
           )}
 
           {/* GPS Log Export Button - Always visible during navigation */}
