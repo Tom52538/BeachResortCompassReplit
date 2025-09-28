@@ -194,11 +194,11 @@ export const EnhancedMapControls: React.FC<EnhancedMapControlsProps> = ({
           showNetworkOverlay
         )}
 
-        {/* Debug Mode Toggle - Only in Dev */}
-        {isDev && renderControlButton(
+        {/* Debug Mode Toggle - Always visible for Live GPS debugging */}
+        {renderControlButton(
           onToggleDebugMode,
-          <Bug className="w-5 h-5 text-white" />,
-          isDebugMode ? 'Debug-Modus deaktivieren' : 'Debug-Modus aktivieren',
+          <Bug className="w-5 h-5 text-red-400" />,
+          isDebugMode ? 'Live GPS Debug deaktivieren' : 'Live GPS Debug aktivieren',
           isDebugMode
         )}
       </div>
