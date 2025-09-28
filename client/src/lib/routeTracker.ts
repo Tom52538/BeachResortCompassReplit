@@ -35,7 +35,7 @@ export class RouteTracker {
   // Thresholds for navigation decisions in METERS - Aligned with CampgroundRerouting
   private readonly STEP_ADVANCE_THRESHOLD = 15; // meters
   private readonly OFF_ROUTE_THRESHOLD = 8; // meters - matches CampgroundRerouting
-  private readonly ROUTE_COMPLETE_THRESHOLD = 8; // meters
+  private readonly ROUTE_COMPLETE_THRESHOLD = 3; // meters - More precise destination arrival
 
   constructor(
     route: RouteResponse,
@@ -249,12 +249,23 @@ export class RouteTracker {
 
     // Check for route completion
     if (isComplete) {
-      console.log('🗺️ ROUTE TRACKER: ROUTE COMPLETED!', {
-        distanceToDestination: distanceToDestination,
-        threshold: this.ROUTE_COMPLETE_THRESHOLD,
-        isAtFinalStep: isAtFinalStep
+      console.log('🎯 DESTINATION ARRIVAL: Route completed!', {
+        distanceToDestination: distanceToDestination.toFixed(1) + 'm',
+        threshold: this.ROUTE_COMPLETE_THRESHOLD + 'm',
+        isAtFinalStep: isAtFinalStep,
+        finalStep: this.currentStepIndex + '/' + this.route.instructions.length
       });
       this.onRouteComplete();
+    } else {
+      // Debug: Log why completion is not triggered
+      console.log('🎯 DESTINATION CHECK:', {
+        distanceToDestination: distanceToDestination.toFixed(1) + 'm',
+        threshold: this.ROUTE_COMPLETE_THRESHOLD + 'm',
+        withinThreshold: distanceToDestination < this.ROUTE_COMPLETE_THRESHOLD,
+        isAtFinalStep: isAtFinalStep,
+        stepProgress: this.currentStepIndex + '/' + this.route.instructions.length,
+        completionReady: isAtFinalStep && distanceToDestination < this.ROUTE_COMPLETE_THRESHOLD
+      });
     }
 
     // Trigger off-route callback
