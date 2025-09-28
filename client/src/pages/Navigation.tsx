@@ -20,7 +20,9 @@ import { useNavigationTracking } from '@/hooks/useNavigationTracking';
 import { useSiteManager } from '@/lib/siteManager';
 import { mobileLogger } from '@/utils/mobileLogger';
 import { liveGpsLogger } from '@/utils/liveGpsLogger';
+import { exportableLogger } from '@/utils/exportableLogger';
 import { LiveGpsDebugPanel } from '@/components/Debug/LiveGpsDebugPanel';
+import { ExportLogButton } from '@/components/Navigation/ExportLogButton';
 import { POI, RouteResponse, TEST_SITES, Coordinates, Site } from '@/types/navigation';
 import { calculateDistance, formatDistance, calculateBearing } from '@/lib/mapUtils';
 import { useToast } from '@/hooks/use-toast';
@@ -1299,6 +1301,20 @@ export default function Navigation() {
           // Off route detection with a more robust debouncing mechanism
           console.log(`Off-route detected by ${offRouteDistance.toFixed(1)}m. Debouncing reroute...`);
 
+          // EXPORTABLE LOGGING: Log re-route trigger for export
+          exportableLogger.log('REROUTE_TRIGGER', {
+            offRouteDistance: offRouteDistance.toFixed(1) + 'm',
+            position: trackingPosition || currentPosition,
+            shouldReroute: !!(useRealGPS && destinationRef.current),
+            blockingCondition: !useRealGPS ? 'GPS_DISABLED' : !destinationRef.current ? 'NO_DESTINATION' : 'NONE',
+            settings: {
+              useRealGPS,
+              hasDestination: !!destinationRef.current,
+              reroutingInProgress: reroutingRef.current,
+              debounceActive: !!rerouteDebounceTimerRef.current
+            }
+          });
+
           // LIVE GPS LOGGING: Log re-route trigger analysis
           liveGpsLogger.log({
             type: 'REROUTE_TRIGGER',
@@ -1353,8 +1369,17 @@ export default function Navigation() {
             try {
               console.log('▶️ Executing debounced reroute calculation...');
               
-              // LIVE GPS LOGGING: Log re-route execution start
+              // EXPORTABLE LOGGING: Log re-route execution
               const fromPosition = trackingPosition || currentPosition;
+              exportableLogger.log('REROUTE_DECISION', {
+                action: 'REROUTE_STARTED',
+                from: fromPosition,
+                to: destinationRef.current,
+                mode: travelMode === 'car' ? 'driving' : travelMode === 'bike' ? 'cycling' : 'walking',
+                status: 'Calculating new route...'
+              });
+
+              // LIVE GPS LOGGING: Log re-route execution start
               liveGpsLogger.log({
                 type: 'REROUTE_EXECUTION',
                 gpsPosition: fromPosition,
@@ -1383,6 +1408,17 @@ export default function Navigation() {
                 from: fromPosition,
                 to: destinationRef.current!,
                 mode: profile
+              });
+
+              // EXPORTABLE LOGGING: Log successful re-route
+              exportableLogger.log('REROUTE_DECISION', {
+                action: 'REROUTE_SUCCESS',
+                newRoute: {
+                  distance: newRoute.totalDistance + 'm',
+                  time: newRoute.estimatedTime + 'min',
+                  steps: newRoute.instructions?.length || 0
+                },
+                status: 'New route calculated successfully'
               });
 
               // LIVE GPS LOGGING: Log successful re-route
@@ -1740,6 +1776,11 @@ export default function Navigation() {
 
           {isDebugMode && isNavigating && (
             <DebugInfoPanel debugInfo={debugInfo} reroutingCooldown={reroutingRef.current} />
+          )}
+
+          {/* GPS Log Export Button - Always visible during navigation */}
+          {isNavigating && (
+            <ExportLogButton />
           )}
         </div>
       </ErrorBoundary>

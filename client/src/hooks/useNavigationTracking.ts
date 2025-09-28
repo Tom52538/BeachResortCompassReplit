@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Coordinates } from '../types/navigation';
 import { SpeedTracker } from '../lib/speedTracker';
 import { liveGpsLogger } from '@/utils/liveGpsLogger';
+import { exportableLogger } from '@/utils/exportableLogger';
 
 interface NavigationTrackingOptions {
   enableHighAccuracy?: boolean;
