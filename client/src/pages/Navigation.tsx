@@ -1414,8 +1414,8 @@ export default function Navigation() {
               exportableLogger.log('REROUTE_DECISION', {
                 action: 'REROUTE_SUCCESS',
                 newRoute: {
-                  distance: newRoute.totalDistance + 'm',
-                  time: newRoute.estimatedTime + 'min',
+                  distance: Math.round(newRoute.totalDistance) + 'm',
+                  time: Math.round(newRoute.estimatedTime) + 'min',
                   steps: newRoute.instructions?.length || 0
                 },
                 status: 'New route calculated successfully'
@@ -1445,11 +1445,22 @@ export default function Navigation() {
               });
 
               setCurrentRoute(newRoute);
-              // The main useEffect will handle re-initializing the tracker with the new route
+              // Reset rerouting flag AFTER successful route update
+              setTimeout(() => {
+                reroutingRef.current = false;
+                console.log('✅ Re-routing cooldown completed - ready for next reroute');
+              }, 10000); // 10 second cooldown after successful re-routing
 
             } catch (err) {
               console.error('Debounced re-route failed:', err);
               
+              // EXPORTABLE LOGGING: Log re-route failure
+              exportableLogger.log('REROUTE_DECISION', {
+                action: 'REROUTE_FAILED',
+                error: err instanceof Error ? err.message : String(err),
+                status: 'Route calculation failed'
+              });
+
               // LIVE GPS LOGGING: Log re-route failure
               liveGpsLogger.log({
                 type: 'REROUTE_EXECUTION',
@@ -1476,9 +1487,18 @@ export default function Navigation() {
                   stack: err instanceof Error ? err.stack : undefined
                 }
               });
+
+              // Reset rerouting flag after failure with shorter cooldown
+              setTimeout(() => {
+                reroutingRef.current = false;
+                exportableLogger.log('ENGINE_STATE', {
+                  action: 'COOLDOWN_COMPLETE_AFTER_FAILURE',
+                  status: 'Ready for next re-routing attempt after failure',
+                  cooldownDuration: '5s'
+                });
+              }, 5000); // 5 second cooldown for failed attempts
             } finally {
-              // Reset the flag after the operation is complete
-              reroutingRef.current = false;
+              // Clear debounce timer - rerouting flag reset is handled in success/error blocks
               rerouteDebounceTimerRef.current = null;
             }
           }, 2500); // 2.5 second debounce delay
