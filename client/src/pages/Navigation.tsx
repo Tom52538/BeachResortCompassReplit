@@ -1425,8 +1425,8 @@ export default function Navigation() {
               exportableLogger.log('REROUTE_DECISION', {
                 action: 'REROUTE_SUCCESS',
                 newRoute: {
-                  distance: Math.round(newRoute.totalDistance) + 'm',
-                  time: Math.round(newRoute.estimatedTime) + 'min',
+                  distance: Math.round(newRoute.distanceMeters || 0) + 'm',
+                  time: Math.round((newRoute.durationSeconds || 0) / 60) + 'min',
                   steps: newRoute.instructions?.length || 0
                 },
                 status: 'New route calculated successfully'

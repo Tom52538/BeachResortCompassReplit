@@ -73,6 +73,8 @@ router.post('/enhanced', async (req, res) => {
       estimatedTime: result.estimatedTime >= 3600
         ? `${Math.floor(result.estimatedTime / 3600)}h ${Math.floor((result.estimatedTime % 3600) / 60)}min`
         : `${Math.ceil(result.estimatedTime / 60)} min`,
+      // Add raw numeric values for client calculations
+      distanceMeters: result.distance,
       durationSeconds: result.estimatedTime,
       instructions: result.instructions.map((instruction, index) => ({
         instruction,
