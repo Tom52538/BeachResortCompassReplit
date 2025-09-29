@@ -31,6 +31,9 @@ export class RouteTracker {
   private speedTracker: SpeedTracker;
   private timeBasedUpdateTimer: NodeJS.Timeout | null = null;
   private navigationStartTime: number = 0;
+  
+  // INSTRUCTION ANCHOR MAPPING: Maps instruction index to geometry index
+  private instructionAnchorIndices: number[] = [];
 
   // GPS-TOLERANT Thresholds for navigation decisions in METERS
   private readonly STEP_ADVANCE_THRESHOLD = 15; // meters - bleibt bei 15m für Step-Advance
@@ -50,6 +53,83 @@ export class RouteTracker {
     this.totalDistance = this.calculateTotalDistance();
     this.speedTracker = new SpeedTracker();
     this.navigationStartTime = Date.now();
+    
+    // INITIALIZE INSTRUCTION ANCHORS: Map each instruction to geometry index
+    this.initializeInstructionAnchors();
+  }
+
+  /**
+   * INSTRUCTION ANCHOR MAPPING: Initialize mapping from instructions to geometry indices
+   * This fixes the bug where steps were advanced based on geometry vertices instead of actual maneuvers
+   */
+  private initializeInstructionAnchors(): void {
+    if (!this.route.instructions || !this.route.geometry) {
+      console.log('🗺️ ANCHOR MAPPING: No instructions or geometry available');
+      return;
+    }
+
+    this.instructionAnchorIndices = [];
+    
+    for (let i = 0; i < this.route.instructions.length; i++) {
+      // STRATEGY: Distribute instructions evenly across geometry
+      // Since RouteInstruction doesn't have coordinates, we map them proportionally
+      const distributedIndex = Math.floor((i / (this.route.instructions.length - 1)) * (this.route.geometry.length - 1));
+      this.instructionAnchorIndices.push(Math.max(0, Math.min(distributedIndex, this.route.geometry.length - 1)));
+    }
+    
+    console.log('🗺️ INSTRUCTION ANCHORS: Mapped instructions to geometry:', {
+      instructionCount: this.route.instructions.length,
+      geometryCount: this.route.geometry.length,
+      anchors: this.instructionAnchorIndices
+    });
+  }
+  
+
+  /**
+   * Calculate distance along route to next maneuver (not just next vertex)
+   */
+  private calculateDistanceToNextManeuver(currentPosition: Coordinates): number {
+    if (this.currentStepIndex >= this.instructionAnchorIndices.length - 1) {
+      // At final step, return distance to destination
+      const destination = {
+        lat: this.route.geometry[this.route.geometry.length - 1][1],
+        lng: this.route.geometry[this.route.geometry.length - 1][0]
+      };
+      return calculateDistance(currentPosition, destination);
+    }
+    
+    // Find current position on route
+    const routeInfo = this.findClosestPointOnRoute(currentPosition);
+    const nextAnchorIndex = this.instructionAnchorIndices[this.currentStepIndex + 1];
+    
+    // Calculate along-route distance from current position to next maneuver anchor
+    let distanceToManeuver = 0;
+    
+    // Add distance from current position to end of current segment
+    if (routeInfo.segmentIndex < this.route.geometry.length - 1) {
+      const segmentEnd = {
+        lat: this.route.geometry[routeInfo.segmentIndex + 1][1],
+        lng: this.route.geometry[routeInfo.segmentIndex + 1][0]
+      };
+      distanceToManeuver += calculateDistance(routeInfo.point, segmentEnd);
+    }
+    
+    // Add distance for segments between current and anchor
+    for (let i = routeInfo.segmentIndex + 1; i < nextAnchorIndex; i++) {
+      if (i < this.route.geometry.length - 1) {
+        const segmentStart = {
+          lat: this.route.geometry[i][1],
+          lng: this.route.geometry[i][0]
+        };
+        const segmentEnd = {
+          lat: this.route.geometry[i + 1][1],
+          lng: this.route.geometry[i + 1][0]
+        };
+        distanceToManeuver += calculateDistance(segmentStart, segmentEnd);
+      }
+    }
+    
+    return distanceToManeuver;
   }
 
   /**
@@ -62,6 +142,10 @@ export class RouteTracker {
     this.totalDistance = this.calculateTotalDistance();
     this.speedTracker = new SpeedTracker();
     this.navigationStartTime = Date.now();
+    
+    // REINITIALIZE INSTRUCTION ANCHORS for new route
+    this.initializeInstructionAnchors();
+    
     console.log('🗺️ RouteTracker updated with new route');
   }
 
@@ -206,19 +290,17 @@ export class RouteTracker {
       }
     });
 
-    // Check if we should advance to next step
-    const nextWaypointIndex = Math.min(
-      this.currentStepIndex + 1, 
-      this.route.geometry.length - 1
-    );
-
-    const nextWaypoint = {
-      lat: this.route.geometry[nextWaypointIndex][1],
-      lng: this.route.geometry[nextWaypointIndex][0]
-    };
-
-    const distanceToNext = calculateDistance(position, nextWaypoint);
-    const shouldAdvance = distanceToNext < this.STEP_ADVANCE_THRESHOLD;
+    // FIXED: Use distance to next MANEUVER instead of next geometry vertex
+    const distanceToNextManeuver = this.calculateDistanceToNextManeuver(position);
+    const shouldAdvance = distanceToNextManeuver < this.STEP_ADVANCE_THRESHOLD;
+    
+    console.log('🗺️ STEP ADVANCE CHECK:', {
+      currentStep: this.currentStepIndex,
+      distanceToNextManeuver: distanceToNextManeuver.toFixed(1) + 'm',
+      threshold: this.STEP_ADVANCE_THRESHOLD + 'm',
+      shouldAdvance: shouldAdvance,
+      nextInstructionAnchor: this.instructionAnchorIndices[this.currentStepIndex + 1] || 'final'
+    });
 
     // Check if route is complete - More accurate destination detection
     const destination = {
@@ -227,9 +309,10 @@ export class RouteTracker {
     };
     const distanceToDestination = calculateDistance(position, destination);
 
-    // Only complete if we're at the final step AND very close to destination
+    // FIXED: Complete only based on distance to destination, NOT step index
+    // This prevents "Sie haben Ihr Ziel erreicht" at 96m when reaching final step
+    const isComplete = distanceToDestination < this.ROUTE_COMPLETE_THRESHOLD;
     const isAtFinalStep = this.currentStepIndex >= this.route.instructions.length - 1;
-    const isComplete = isAtFinalStep && distanceToDestination < this.ROUTE_COMPLETE_THRESHOLD;
 
     // Advance step if needed
     if (shouldAdvance && this.currentStepIndex < this.route.instructions.length - 1) {
@@ -238,9 +321,9 @@ export class RouteTracker {
       console.log('🗺️ ROUTE TRACKER: STEP ADVANCED!', {
         previousStep: previousStep,
         newStep: this.currentStepIndex,
-        distanceToNext: distanceToNext,
-        threshold: this.STEP_ADVANCE_THRESHOLD,
-        newInstruction: this.route.instructions[this.currentStepIndex]
+        distanceToNextManeuver: distanceToNextManeuver.toFixed(1) + 'm',
+        threshold: this.STEP_ADVANCE_THRESHOLD + 'm',
+        newInstruction: this.route.instructions[this.currentStepIndex]?.instruction || 'Unknown'
       });
       this.onStepChange(this.currentStepIndex);
     } else if (shouldAdvance) {
@@ -318,7 +401,7 @@ export class RouteTracker {
 
     const progress: RouteProgress = {
       currentStep: this.currentStepIndex,
-      distanceToNext,
+      distanceToNext: distanceToNextManeuver, // FIXED: Use distance to maneuver
       distanceRemaining,
       shouldAdvance,
       isOffRoute,
@@ -335,7 +418,7 @@ export class RouteTracker {
 
     console.log('🗺️ ROUTE TRACKER: Progress calculated:', {
       currentStep: progress.currentStep,
-      distanceToNext: Math.round(progress.distanceToNext * 1000) + 'm',
+      distanceToNextManeuver: Math.round(progress.distanceToNext) + 'm', // FIXED: Shows distance to maneuver
       distanceRemaining: Math.round(progress.distanceRemaining * 1000) + 'm',
       percentComplete: Math.round(progress.percentComplete) + '%',
       estimatedTimeRemaining: Math.round(progress.estimatedTimeRemaining / 60) + 'min',
