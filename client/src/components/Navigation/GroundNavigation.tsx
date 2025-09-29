@@ -161,13 +161,19 @@ export const GroundNavigation = ({
       // Force route tracker to update with new route
       routeTracker.updateRoute(newRoute);
 
-      // Announce rerouting success
-      if (ttsClientRef.current) {
+      // Announce rerouting success - but suppress initial re-route at navigation start
+      // GPS always deviates from first waypoint, so first re-route is expected and should be silent
+      const isInitialNavigation = !hasAnnouncedStart; // If we haven't announced start yet, this is initial deviation
+      
+      if (ttsClientRef.current && !isInitialNavigation) {
         try {
           await ttsClientRef.current.speak('Route neu berechnet. Neue Anweisungen folgen.', 'start');
+          console.log('🔄 Re-route announcement made (not initial navigation)');
         } catch (error) {
           console.warn('Reroute announcement failed:', error);
         }
+      } else if (isInitialNavigation) {
+        console.log('🔇 Initial re-route announcement suppressed (GPS deviation from first waypoint expected)');
       }
 
       console.log('✅ REROUTING COMPLETE - All state reset for new navigation');
@@ -418,61 +424,10 @@ export const GroundNavigation = ({
         return;
       }
 
-      // ElevenLabs TTS Voice guidance with loop prevention
-      const currentInstruction = routeTracker.getCurrentInstruction();
-      if (currentInstruction && ttsClientRef.current && progress.distanceToNext > 0.01) { // Minimum 10m for announcements
-        const lastAnnouncement = lastAnnouncementRef.current;
-        const currentTime = Date.now();
-        const timeSinceLastAnnouncement = currentTime - lastAnnouncement.time;
-        const distanceChange = Math.abs(progress.distanceToNext - lastAnnouncement.distance);
-
-        // FIXED: Prevent voice loops with better conditions
-        // Only announce if:
-        // 1. Step changed (most important) OR
-        // 2. More than 30 seconds passed AND significant distance change OR
-        // 3. Very significant distance change (>100m) - user made real progress
-        const shouldAnnounce =
-          progress.currentStep !== lastAnnouncement.step ||
-          (timeSinceLastAnnouncement > 30000 && distanceChange > 0.02) ||
-          distanceChange > 0.1; // 100m significant change to prevent loops
-
-        if (shouldAnnounce) {
-          const distanceInMeters = progress.distanceToNext * 1000;
-
-          // Format German navigation announcement
-          let announcement = '';
-          if (distanceInMeters > 200) {
-            announcement = `In ${Math.round(distanceInMeters)} Metern: ${currentInstruction.instruction}`;
-          } else if (distanceInMeters > 50) {
-            announcement = `In ${Math.round(distanceInMeters)} Metern: ${currentInstruction.instruction}`;
-          } else if (distanceInMeters > 20) {
-            announcement = `Gleich: ${currentInstruction.instruction}`;
-          } else {
-            announcement = currentInstruction.instruction;
-          }
-
-          // Use ElevenLabs TTS for high-quality navigation
-          try {
-            await ttsClientRef.current.speak(announcement, 'direction');
-            lastAnnouncementRef.current = {
-              step: progress.currentStep,
-              distance: progress.distanceToNext,
-              time: currentTime
-            };
-
-            console.log('🎤 ElevenLabs Navigation:', {
-              instruction: currentInstruction.instruction,
-              distance: Math.round(distanceInMeters) + 'm',
-              announcement,
-              reason: progress.currentStep !== lastAnnouncement.step ? 'step_change' :
-                      timeSinceLastAnnouncement > 30000 ? 'time_interval' : 'distance_change'
-            });
-          } catch (error) {
-            console.error('❌ Navigation TTS Error:', error);
-            setNavigationError('Voice guidance failed');
-          }
-        }
-      }
+      // NOTE: Voice announcements are now handled EXCLUSIVELY by RouteTracker in Navigation.tsx
+      // This prevents duplicate announcements and ensures precise 3m destination threshold
+      // Previous logic here used 10m threshold (0.01km) causing premature "Sie haben Ihr Ziel erreicht"
+      console.log('🔇 GroundNavigation: Voice announcements disabled - handled by RouteTracker');
 
       // Debug log for route progress updates
       if (gpsUpdateCount % 10 === 0) { // Log every 10th update to prevent spam

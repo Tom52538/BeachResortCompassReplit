@@ -1,0 +1,1767 @@
+=== GPS & RE-ROUTING ANALYSIS LOG ===
+Generated: 2025-09-29T04:53:44.511Z
+Total Entries: 209
+=====================================
+
+[1] 2025-09-29T04:47:37.274Z - REROUTE_TRIGGER
+{
+  "offRouteDistance": "17.5m",
+  "position": {
+    "lat": 50.9970714,
+    "lng": 6.0514678
+  },
+  "shouldReroute": true,
+  "blockingCondition": "NONE",
+  "settings": {
+    "useRealGPS": true,
+    "hasDestination": true,
+    "rerouteState": "IDLE",
+    "debounceActive": false
+  }
+}
+---
+[2] 2025-09-29T04:47:37.374Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "17.5m",
+  "state": "RUNNING"
+}
+---
+[3] 2025-09-29T04:47:37.475Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "17.5m",
+  "state": "RUNNING"
+}
+---
+[4] 2025-09-29T04:47:38.090Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "16.4m",
+  "state": "RUNNING"
+}
+---
+[5] 2025-09-29T04:47:39.119Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "16.1m",
+  "state": "RUNNING"
+}
+---
+[6] 2025-09-29T04:47:39.186Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "16.0m",
+  "state": "RUNNING"
+}
+---
+[7] 2025-09-29T04:47:39.787Z - REROUTE_DECISION
+{
+  "action": "REROUTE_STARTED",
+  "from": {
+    "lat": 50.9970714,
+    "lng": 6.0514678
+  },
+  "to": {
+    "lat": 51.0003691,
+    "lng": 6.0525541
+  },
+  "mode": "walking",
+  "status": "Calculating new route..."
+}
+---
+[8] 2025-09-29T04:47:39.965Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "15.8m",
+  "state": "RUNNING"
+}
+---
+[9] 2025-09-29T04:47:40.029Z - REROUTE_DECISION
+{
+  "action": "REROUTE_SUCCESS",
+  "newRoute": {
+    "distance": "0m",
+    "time": "10min",
+    "steps": 6
+  },
+  "status": "New route calculated successfully"
+}
+---
+[10] 2025-09-29T04:47:40.161Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.8m",
+  "state": "COOLDOWN"
+}
+---
+[11] 2025-09-29T04:47:40.248Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.9m",
+  "state": "COOLDOWN"
+}
+---
+[12] 2025-09-29T04:47:40.528Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.4m",
+  "state": "COOLDOWN"
+}
+---
+[13] 2025-09-29T04:47:41.124Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.2m",
+  "state": "COOLDOWN"
+}
+---
+[14] 2025-09-29T04:47:41.190Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.2m",
+  "state": "COOLDOWN"
+}
+---
+[15] 2025-09-29T04:47:41.564Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.2m",
+  "state": "COOLDOWN"
+}
+---
+[16] 2025-09-29T04:47:42.120Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.2m",
+  "state": "COOLDOWN"
+}
+---
+[17] 2025-09-29T04:47:42.669Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.4m",
+  "state": "COOLDOWN"
+}
+---
+[18] 2025-09-29T04:47:42.745Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.4m",
+  "state": "COOLDOWN"
+}
+---
+[19] 2025-09-29T04:47:42.819Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.5m",
+  "state": "COOLDOWN"
+}
+---
+[20] 2025-09-29T04:47:43.111Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.6m",
+  "state": "COOLDOWN"
+}
+---
+[21] 2025-09-29T04:47:44.110Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.4m",
+  "state": "COOLDOWN"
+}
+---
+[22] 2025-09-29T04:47:44.234Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.2m",
+  "state": "COOLDOWN"
+}
+---
+[23] 2025-09-29T04:47:44.820Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.9m",
+  "state": "COOLDOWN"
+}
+---
+[24] 2025-09-29T04:47:45.118Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.8m",
+  "state": "COOLDOWN"
+}
+---
+[25] 2025-09-29T04:47:45.409Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.5m",
+  "state": "COOLDOWN"
+}
+---
+[26] 2025-09-29T04:47:46.042Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.2m",
+  "state": "COOLDOWN"
+}
+---
+[27] 2025-09-29T04:47:46.120Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.2m",
+  "state": "COOLDOWN"
+}
+---
+[28] 2025-09-29T04:47:46.627Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "13.4m",
+  "state": "COOLDOWN"
+}
+---
+[29] 2025-09-29T04:47:47.121Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "12.9m",
+  "state": "COOLDOWN"
+}
+---
+[30] 2025-09-29T04:47:47.260Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "11.8m",
+  "state": "COOLDOWN"
+}
+---
+[31] 2025-09-29T04:47:47.858Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "10.7m",
+  "state": "COOLDOWN"
+}
+---
+[32] 2025-09-29T04:47:47.926Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "10.7m",
+  "state": "COOLDOWN"
+}
+---
+[33] 2025-09-29T04:47:48.111Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "10.4m",
+  "state": "COOLDOWN"
+}
+---
+[34] 2025-09-29T04:47:48.442Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "9.5m",
+  "state": "COOLDOWN"
+}
+---
+[35] 2025-09-29T04:47:48.933Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "8.7m",
+  "state": "COOLDOWN"
+}
+---
+[36] 2025-09-29T04:47:49.112Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "8.6m",
+  "state": "COOLDOWN"
+}
+---
+[37] 2025-09-29T04:47:49.282Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "8.1m",
+  "state": "COOLDOWN"
+}
+---
+[38] 2025-09-29T04:47:49.353Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "8.1m",
+  "state": "COOLDOWN"
+}
+---
+[39] 2025-09-29T04:47:50.064Z - ENGINE_STATE
+{
+  "action": "COOLDOWN_COMPLETE",
+  "status": "Ready for next re-routing attempt",
+  "cooldownDuration": "10s"
+}
+---
+[40] 2025-09-29T04:52:41.444Z - REROUTE_TRIGGER
+{
+  "offRouteDistance": "8.3m",
+  "position": {
+    "lat": 50.9970749,
+    "lng": 6.0514443
+  },
+  "shouldReroute": true,
+  "blockingCondition": "NONE",
+  "settings": {
+    "useRealGPS": true,
+    "hasDestination": true,
+    "rerouteState": "IDLE",
+    "debounceActive": false
+  }
+}
+---
+[41] 2025-09-29T04:52:41.912Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "9.2m",
+  "state": "RUNNING"
+}
+---
+[42] 2025-09-29T04:52:42.175Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "9.5m",
+  "state": "RUNNING"
+}
+---
+[43] 2025-09-29T04:52:42.343Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "9.5m",
+  "state": "RUNNING"
+}
+---
+[44] 2025-09-29T04:52:42.665Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "10.3m",
+  "state": "RUNNING"
+}
+---
+[45] 2025-09-29T04:52:43.105Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "11.0m",
+  "state": "RUNNING"
+}
+---
+[46] 2025-09-29T04:52:43.218Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "11.3m",
+  "state": "RUNNING"
+}
+---
+[47] 2025-09-29T04:52:43.598Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "11.8m",
+  "state": "RUNNING"
+}
+---
+[48] 2025-09-29T04:52:43.984Z - REROUTE_DECISION
+{
+  "action": "REROUTE_STARTED",
+  "from": {
+    "lat": 50.9970749,
+    "lng": 6.0514443
+  },
+  "to": {
+    "lat": 51.0003691,
+    "lng": 6.0525541
+  },
+  "mode": "walking",
+  "status": "Calculating new route..."
+}
+---
+[49] 2025-09-29T04:52:44.212Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "12.4m",
+  "state": "RUNNING"
+}
+---
+[50] 2025-09-29T04:52:44.340Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "12.4m",
+  "state": "RUNNING"
+}
+---
+[51] 2025-09-29T04:52:44.416Z - REROUTE_DECISION
+{
+  "action": "REROUTE_SUCCESS",
+  "newRoute": {
+    "distance": "0m",
+    "time": "10min",
+    "steps": 6
+  },
+  "status": "New route calculated successfully"
+}
+---
+[52] 2025-09-29T04:52:44.474Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "12.8m",
+  "state": "COOLDOWN"
+}
+---
+[53] 2025-09-29T04:52:44.650Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "12.8m",
+  "state": "COOLDOWN"
+}
+---
+[54] 2025-09-29T04:52:45.117Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "13.6m",
+  "state": "COOLDOWN"
+}
+---
+[55] 2025-09-29T04:52:45.645Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.3m",
+  "state": "COOLDOWN"
+}
+---
+[56] 2025-09-29T04:52:45.749Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.3m",
+  "state": "COOLDOWN"
+}
+---
+[57] 2025-09-29T04:52:46.084Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.8m",
+  "state": "COOLDOWN"
+}
+---
+[58] 2025-09-29T04:52:46.202Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.0m",
+  "state": "COOLDOWN"
+}
+---
+[59] 2025-09-29T04:52:46.655Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.5m",
+  "state": "COOLDOWN"
+}
+---
+[60] 2025-09-29T04:52:47.098Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "16.0m",
+  "state": "COOLDOWN"
+}
+---
+[61] 2025-09-29T04:52:47.237Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "16.0m",
+  "state": "COOLDOWN"
+}
+---
+[62] 2025-09-29T04:52:47.427Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "16.3m",
+  "state": "COOLDOWN"
+}
+---
+[63] 2025-09-29T04:52:47.916Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "17.0m",
+  "state": "COOLDOWN"
+}
+---
+[64] 2025-09-29T04:52:48.121Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "17.1m",
+  "state": "COOLDOWN"
+}
+---
+[65] 2025-09-29T04:52:48.574Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "17.7m",
+  "state": "COOLDOWN"
+}
+---
+[66] 2025-09-29T04:52:49.109Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "18.2m",
+  "state": "COOLDOWN"
+}
+---
+[67] 2025-09-29T04:52:49.235Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "18.3m",
+  "state": "COOLDOWN"
+}
+---
+[68] 2025-09-29T04:52:49.759Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "18.9m",
+  "state": "COOLDOWN"
+}
+---
+[69] 2025-09-29T04:52:50.106Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "19.2m",
+  "state": "COOLDOWN"
+}
+---
+[70] 2025-09-29T04:52:50.396Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "19.6m",
+  "state": "COOLDOWN"
+}
+---
+[71] 2025-09-29T04:52:50.935Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "20.1m",
+  "state": "COOLDOWN"
+}
+---
+[72] 2025-09-29T04:52:51.049Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "20.1m",
+  "state": "COOLDOWN"
+}
+---
+[73] 2025-09-29T04:52:51.179Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "20.2m",
+  "state": "COOLDOWN"
+}
+---
+[74] 2025-09-29T04:52:51.599Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "20.7m",
+  "state": "COOLDOWN"
+}
+---
+[75] 2025-09-29T04:52:52.096Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "21.1m",
+  "state": "COOLDOWN"
+}
+---
+[76] 2025-09-29T04:52:52.220Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "21.3m",
+  "state": "COOLDOWN"
+}
+---
+[77] 2025-09-29T04:52:52.820Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "22.0m",
+  "state": "COOLDOWN"
+}
+---
+[78] 2025-09-29T04:52:52.926Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "22.0m",
+  "state": "COOLDOWN"
+}
+---
+[79] 2025-09-29T04:52:53.163Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "22.3m",
+  "state": "COOLDOWN"
+}
+---
+[80] 2025-09-29T04:52:53.390Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "22.5m",
+  "state": "COOLDOWN"
+}
+---
+[81] 2025-09-29T04:52:53.505Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "22.7m",
+  "state": "COOLDOWN"
+}
+---
+[82] 2025-09-29T04:52:54.013Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "23.6m",
+  "state": "COOLDOWN"
+}
+---
+[83] 2025-09-29T04:52:54.187Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "23.6m",
+  "state": "COOLDOWN"
+}
+---
+[84] 2025-09-29T04:52:54.364Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "23.6m",
+  "state": "COOLDOWN"
+}
+---
+[85] 2025-09-29T04:52:54.538Z - ENGINE_STATE
+{
+  "action": "COOLDOWN_COMPLETE",
+  "status": "Ready for next re-routing attempt",
+  "cooldownDuration": "10s"
+}
+---
+[86] 2025-09-29T04:52:54.674Z - REROUTE_TRIGGER
+{
+  "offRouteDistance": "24.3m",
+  "position": {
+    "lat": 50.9996734,
+    "lng": 6.050575
+  },
+  "shouldReroute": true,
+  "blockingCondition": "NONE",
+  "settings": {
+    "useRealGPS": true,
+    "hasDestination": true,
+    "rerouteState": "IDLE",
+    "debounceActive": false
+  }
+}
+---
+[87] 2025-09-29T04:52:55.090Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "25.1m",
+  "state": "RUNNING"
+}
+---
+[88] 2025-09-29T04:52:55.710Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "26.1m",
+  "state": "RUNNING"
+}
+---
+[89] 2025-09-29T04:52:55.864Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "26.1m",
+  "state": "RUNNING"
+}
+---
+[90] 2025-09-29T04:52:56.243Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "26.5m",
+  "state": "RUNNING"
+}
+---
+[91] 2025-09-29T04:52:56.387Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "27.0m",
+  "state": "RUNNING"
+}
+---
+[92] 2025-09-29T04:52:56.949Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "27.8m",
+  "state": "RUNNING"
+}
+---
+[93] 2025-09-29T04:52:57.166Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "28.0m",
+  "state": "RUNNING"
+}
+---
+[94] 2025-09-29T04:52:57.250Z - REROUTE_DECISION
+{
+  "action": "REROUTE_STARTED",
+  "from": {
+    "lat": 50.9996734,
+    "lng": 6.050575
+  },
+  "to": {
+    "lat": 51.0003691,
+    "lng": 6.0525541
+  },
+  "mode": "walking",
+  "status": "Calculating new route..."
+}
+---
+[95] 2025-09-29T04:52:57.497Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "28.6m",
+  "state": "RUNNING"
+}
+---
+[96] 2025-09-29T04:52:57.613Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "28.6m",
+  "state": "RUNNING"
+}
+---
+[97] 2025-09-29T04:52:57.689Z - REROUTE_DECISION
+{
+  "action": "REROUTE_SUCCESS",
+  "newRoute": {
+    "distance": "0m",
+    "time": "4min",
+    "steps": 4
+  },
+  "status": "New route calculated successfully"
+}
+---
+[98] 2025-09-29T04:52:57.918Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "29.1m",
+  "state": "COOLDOWN"
+}
+---
+[99] 2025-09-29T04:52:58.159Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "29.9m",
+  "state": "COOLDOWN"
+}
+---
+[100] 2025-09-29T04:52:58.751Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "30.8m",
+  "state": "COOLDOWN"
+}
+---
+[101] 2025-09-29T04:52:59.130Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "31.2m",
+  "state": "COOLDOWN"
+}
+---
+[102] 2025-09-29T04:52:59.254Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "31.2m",
+  "state": "COOLDOWN"
+}
+---
+[103] 2025-09-29T04:52:59.379Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "31.7m",
+  "state": "COOLDOWN"
+}
+---
+[104] 2025-09-29T04:52:59.694Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "32.1m",
+  "state": "COOLDOWN"
+}
+---
+[105] 2025-09-29T04:52:59.972Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "32.5m",
+  "state": "COOLDOWN"
+}
+---
+[106] 2025-09-29T04:53:00.183Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "32.6m",
+  "state": "COOLDOWN"
+}
+---
+[107] 2025-09-29T04:53:00.526Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "33.3m",
+  "state": "COOLDOWN"
+}
+---
+[108] 2025-09-29T04:53:00.639Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "33.3m",
+  "state": "COOLDOWN"
+}
+---
+[109] 2025-09-29T04:53:01.048Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "33.9m",
+  "state": "COOLDOWN"
+}
+---
+[110] 2025-09-29T04:53:01.172Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "34.0m",
+  "state": "COOLDOWN"
+}
+---
+[111] 2025-09-29T04:53:01.731Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "35.0m",
+  "state": "COOLDOWN"
+}
+---
+[112] 2025-09-29T04:53:02.111Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "35.4m",
+  "state": "COOLDOWN"
+}
+---
+[113] 2025-09-29T04:53:02.238Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "35.4m",
+  "state": "COOLDOWN"
+}
+---
+[114] 2025-09-29T04:53:02.438Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "36.0m",
+  "state": "COOLDOWN"
+}
+---
+[115] 2025-09-29T04:53:02.926Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "36.8m",
+  "state": "COOLDOWN"
+}
+---
+[116] 2025-09-29T04:53:03.152Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "37.0m",
+  "state": "COOLDOWN"
+}
+---
+[117] 2025-09-29T04:53:03.533Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "37.7m",
+  "state": "COOLDOWN"
+}
+---
+[118] 2025-09-29T04:53:04.129Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "38.5m",
+  "state": "COOLDOWN"
+}
+---
+[119] 2025-09-29T04:53:04.245Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "38.5m",
+  "state": "COOLDOWN"
+}
+---
+[120] 2025-09-29T04:53:04.745Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "39.4m",
+  "state": "COOLDOWN"
+}
+---
+[121] 2025-09-29T04:53:05.130Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "39.8m",
+  "state": "COOLDOWN"
+}
+---
+[122] 2025-09-29T04:53:05.280Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "40.1m",
+  "state": "COOLDOWN"
+}
+---
+[123] 2025-09-29T04:53:05.791Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "40.9m",
+  "state": "COOLDOWN"
+}
+---
+[124] 2025-09-29T04:53:05.885Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "40.9m",
+  "state": "COOLDOWN"
+}
+---
+[125] 2025-09-29T04:53:06.134Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "41.2m",
+  "state": "COOLDOWN"
+}
+---
+[126] 2025-09-29T04:53:06.261Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "41.5m",
+  "state": "COOLDOWN"
+}
+---
+[127] 2025-09-29T04:53:06.464Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "42.1m",
+  "state": "COOLDOWN"
+}
+---
+[128] 2025-09-29T04:53:07.091Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "43.0m",
+  "state": "COOLDOWN"
+}
+---
+[129] 2025-09-29T04:53:07.711Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "43.9m",
+  "state": "COOLDOWN"
+}
+---
+[130] 2025-09-29T04:53:07.789Z - ENGINE_STATE
+{
+  "action": "COOLDOWN_COMPLETE",
+  "status": "Ready for next re-routing attempt",
+  "cooldownDuration": "10s"
+}
+---
+[131] 2025-09-29T04:53:07.833Z - REROUTE_TRIGGER
+{
+  "offRouteDistance": "43.9m",
+  "position": {
+    "lat": 50.999807,
+    "lng": 6.050652
+  },
+  "shouldReroute": true,
+  "blockingCondition": "NONE",
+  "settings": {
+    "useRealGPS": true,
+    "hasDestination": true,
+    "rerouteState": "IDLE",
+    "debounceActive": false
+  }
+}
+---
+[132] 2025-09-29T04:53:08.103Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.2m",
+  "state": "RUNNING"
+}
+---
+[133] 2025-09-29T04:53:08.319Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.3m",
+  "state": "RUNNING"
+}
+---
+[134] 2025-09-29T04:53:08.780Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.5m",
+  "state": "RUNNING"
+}
+---
+[135] 2025-09-29T04:53:09.102Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.6m",
+  "state": "RUNNING"
+}
+---
+[136] 2025-09-29T04:53:09.238Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.6m",
+  "state": "RUNNING"
+}
+---
+[137] 2025-09-29T04:53:09.519Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.8m",
+  "state": "RUNNING"
+}
+---
+[138] 2025-09-29T04:53:10.020Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.8m",
+  "state": "RUNNING"
+}
+---
+[139] 2025-09-29T04:53:10.367Z - REROUTE_DECISION
+{
+  "action": "REROUTE_STARTED",
+  "from": {
+    "lat": 50.999807,
+    "lng": 6.050652
+  },
+  "to": {
+    "lat": 51.0003691,
+    "lng": 6.0525541
+  },
+  "mode": "walking",
+  "status": "Calculating new route..."
+}
+---
+[140] 2025-09-29T04:53:10.584Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "44.7m",
+  "state": "RUNNING"
+}
+---
+[141] 2025-09-29T04:53:10.665Z - REROUTE_DECISION
+{
+  "action": "REROUTE_SUCCESS",
+  "newRoute": {
+    "distance": "0m",
+    "time": "4min",
+    "steps": 4
+  },
+  "status": "New route calculated successfully"
+}
+---
+[142] 2025-09-29T04:53:10.857Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.7m",
+  "state": "COOLDOWN"
+}
+---
+[143] 2025-09-29T04:53:11.143Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.6m",
+  "state": "COOLDOWN"
+}
+---
+[144] 2025-09-29T04:53:11.281Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.6m",
+  "state": "COOLDOWN"
+}
+---
+[145] 2025-09-29T04:53:11.814Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.6m",
+  "state": "COOLDOWN"
+}
+---
+[146] 2025-09-29T04:53:12.111Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.5m",
+  "state": "COOLDOWN"
+}
+---
+[147] 2025-09-29T04:53:12.361Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.6m",
+  "state": "COOLDOWN"
+}
+---
+[148] 2025-09-29T04:53:12.580Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.6m",
+  "state": "COOLDOWN"
+}
+---
+[149] 2025-09-29T04:53:12.698Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.6m",
+  "state": "COOLDOWN"
+}
+---
+[150] 2025-09-29T04:53:12.975Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.7m",
+  "state": "COOLDOWN"
+}
+---
+[151] 2025-09-29T04:53:13.222Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.7m",
+  "state": "COOLDOWN"
+}
+---
+[152] 2025-09-29T04:53:13.511Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.7m",
+  "state": "COOLDOWN"
+}
+---
+[153] 2025-09-29T04:53:14.110Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.7m",
+  "state": "COOLDOWN"
+}
+---
+[154] 2025-09-29T04:53:14.268Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.7m",
+  "state": "COOLDOWN"
+}
+---
+[155] 2025-09-29T04:53:14.381Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.7m",
+  "state": "COOLDOWN"
+}
+---
+[156] 2025-09-29T04:53:14.766Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.8m",
+  "state": "COOLDOWN"
+}
+---
+[157] 2025-09-29T04:53:15.105Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.8m",
+  "state": "COOLDOWN"
+}
+---
+[158] 2025-09-29T04:53:15.313Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.8m",
+  "state": "COOLDOWN"
+}
+---
+[159] 2025-09-29T04:53:15.894Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.9m",
+  "state": "COOLDOWN"
+}
+---
+[160] 2025-09-29T04:53:15.998Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.9m",
+  "state": "COOLDOWN"
+}
+---
+[161] 2025-09-29T04:53:16.197Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "44.9m",
+  "state": "COOLDOWN"
+}
+---
+[162] 2025-09-29T04:53:16.506Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.1m",
+  "state": "COOLDOWN"
+}
+---
+[163] 2025-09-29T04:53:17.076Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.3m",
+  "state": "COOLDOWN"
+}
+---
+[164] 2025-09-29T04:53:17.671Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.5m",
+  "state": "COOLDOWN"
+}
+---
+[165] 2025-09-29T04:53:17.770Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.5m",
+  "state": "COOLDOWN"
+}
+---
+[166] 2025-09-29T04:53:18.111Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.5m",
+  "state": "COOLDOWN"
+}
+---
+[167] 2025-09-29T04:53:18.361Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.6m",
+  "state": "COOLDOWN"
+}
+---
+[168] 2025-09-29T04:53:18.978Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.7m",
+  "state": "COOLDOWN"
+}
+---
+[169] 2025-09-29T04:53:19.202Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.7m",
+  "state": "COOLDOWN"
+}
+---
+[170] 2025-09-29T04:53:19.320Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.7m",
+  "state": "COOLDOWN"
+}
+---
+[171] 2025-09-29T04:53:19.595Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.7m",
+  "state": "COOLDOWN"
+}
+---
+[172] 2025-09-29T04:53:20.073Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.8m",
+  "state": "COOLDOWN"
+}
+---
+[173] 2025-09-29T04:53:20.635Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.8m",
+  "state": "COOLDOWN"
+}
+---
+[174] 2025-09-29T04:53:20.752Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "45.8m",
+  "state": "COOLDOWN"
+}
+---
+[175] 2025-09-29T04:53:20.752Z - ENGINE_STATE
+{
+  "action": "COOLDOWN_COMPLETE",
+  "status": "Ready for next re-routing attempt",
+  "cooldownDuration": "10s"
+}
+---
+[176] 2025-09-29T04:53:21.194Z - REROUTE_TRIGGER
+{
+  "offRouteDistance": "45.9m",
+  "position": {
+    "lat": 50.9999749,
+    "lng": 6.0506998
+  },
+  "shouldReroute": true,
+  "blockingCondition": "NONE",
+  "settings": {
+    "useRealGPS": true,
+    "hasDestination": true,
+    "rerouteState": "IDLE",
+    "debounceActive": false
+  }
+}
+---
+[177] 2025-09-29T04:53:21.350Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "45.8m",
+  "state": "RUNNING"
+}
+---
+[178] 2025-09-29T04:53:21.829Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "45.9m",
+  "state": "RUNNING"
+}
+---
+[179] 2025-09-29T04:53:22.110Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "45.9m",
+  "state": "RUNNING"
+}
+---
+[180] 2025-09-29T04:53:22.467Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "45.9m",
+  "state": "RUNNING"
+}
+---
+[181] 2025-09-29T04:53:22.568Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "45.9m",
+  "state": "RUNNING"
+}
+---
+[182] 2025-09-29T04:53:22.991Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "45.9m",
+  "state": "RUNNING"
+}
+---
+[183] 2025-09-29T04:53:23.735Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "46.0m",
+  "state": "RUNNING"
+}
+---
+[184] 2025-09-29T04:53:23.813Z - REROUTE_DECISION
+{
+  "action": "REROUTE_STARTED",
+  "from": {
+    "lat": 50.9999749,
+    "lng": 6.0506998
+  },
+  "to": {
+    "lat": 51.0003691,
+    "lng": 6.0525541
+  },
+  "mode": "walking",
+  "status": "Calculating new route..."
+}
+---
+[185] 2025-09-29T04:53:24.129Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "46.0m",
+  "state": "RUNNING"
+}
+---
+[186] 2025-09-29T04:53:24.228Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: RUNNING",
+  "offRouteDistance": "46.0m",
+  "state": "RUNNING"
+}
+---
+[187] 2025-09-29T04:53:24.234Z - REROUTE_DECISION
+{
+  "action": "REROUTE_SUCCESS",
+  "newRoute": {
+    "distance": "0m",
+    "time": "3min",
+    "steps": 2
+  },
+  "status": "New route calculated successfully"
+}
+---
+[188] 2025-09-29T04:53:24.386Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "17.1m",
+  "state": "COOLDOWN"
+}
+---
+[189] 2025-09-29T04:53:24.904Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "16.2m",
+  "state": "COOLDOWN"
+}
+---
+[190] 2025-09-29T04:53:25.113Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "16.0m",
+  "state": "COOLDOWN"
+}
+---
+[191] 2025-09-29T04:53:25.497Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.3m",
+  "state": "COOLDOWN"
+}
+---
+[192] 2025-09-29T04:53:25.736Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.1m",
+  "state": "COOLDOWN"
+}
+---
+[193] 2025-09-29T04:53:25.848Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "15.1m",
+  "state": "COOLDOWN"
+}
+---
+[194] 2025-09-29T04:53:26.060Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "14.6m",
+  "state": "COOLDOWN"
+}
+---
+[195] 2025-09-29T04:53:26.666Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "13.7m",
+  "state": "COOLDOWN"
+}
+---
+[196] 2025-09-29T04:53:27.135Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "13.3m",
+  "state": "COOLDOWN"
+}
+---
+[197] 2025-09-29T04:53:27.265Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "12.9m",
+  "state": "COOLDOWN"
+}
+---
+[198] 2025-09-29T04:53:27.369Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "12.9m",
+  "state": "COOLDOWN"
+}
+---
+[199] 2025-09-29T04:53:27.892Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "12.1m",
+  "state": "COOLDOWN"
+}
+---
+[200] 2025-09-29T04:53:28.118Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "11.9m",
+  "state": "COOLDOWN"
+}
+---
+[201] 2025-09-29T04:53:28.497Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "11.2m",
+  "state": "COOLDOWN"
+}
+---
+[202] 2025-09-29T04:53:29.103Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "10.4m",
+  "state": "COOLDOWN"
+}
+---
+[203] 2025-09-29T04:53:29.211Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "10.4m",
+  "state": "COOLDOWN"
+}
+---
+[204] 2025-09-29T04:53:29.739Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "9.6m",
+  "state": "COOLDOWN"
+}
+---
+[205] 2025-09-29T04:53:30.099Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "9.2m",
+  "state": "COOLDOWN"
+}
+---
+[206] 2025-09-29T04:53:30.300Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "8.8m",
+  "state": "COOLDOWN"
+}
+---
+[207] 2025-09-29T04:53:30.934Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "8.0m",
+  "state": "COOLDOWN"
+}
+---
+[208] 2025-09-29T04:53:31.031Z - ENGINE_STATE
+{
+  "action": "REROUTE_THROTTLED",
+  "reason": "Re-routing blocked - current state: COOLDOWN",
+  "offRouteDistance": "8.0m",
+  "state": "COOLDOWN"
+}
+---
+[209] 2025-09-29T04:53:34.252Z - ENGINE_STATE
+{
+  "action": "COOLDOWN_COMPLETE",
+  "status": "Ready for next re-routing attempt",
+  "cooldownDuration": "10s"
+}
+---
