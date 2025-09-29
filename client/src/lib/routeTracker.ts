@@ -32,10 +32,10 @@ export class RouteTracker {
   private timeBasedUpdateTimer: NodeJS.Timeout | null = null;
   private navigationStartTime: number = 0;
 
-  // Thresholds for navigation decisions in METERS - Aligned with CampgroundRerouting
-  private readonly STEP_ADVANCE_THRESHOLD = 15; // meters
-  private readonly OFF_ROUTE_THRESHOLD = 8; // meters - matches CampgroundRerouting
-  private readonly ROUTE_COMPLETE_THRESHOLD = 3; // meters - More precise destination arrival
+  // GPS-TOLERANT Thresholds for navigation decisions in METERS
+  private readonly STEP_ADVANCE_THRESHOLD = 15; // meters - bleibt bei 15m für Step-Advance
+  private readonly OFF_ROUTE_THRESHOLD = 25; // GPS-TOLERANT: Erhöht von 8m auf 25m für GPS-Ungenauigkeit
+  private readonly ROUTE_COMPLETE_THRESHOLD = 3; // meters - Bleibt bei 3m für präzise Ziel-Erkennung
 
   constructor(
     route: RouteResponse,

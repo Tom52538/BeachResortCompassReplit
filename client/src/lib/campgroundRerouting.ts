@@ -18,11 +18,11 @@ export interface CampgroundReroutingConfig {
 }
 
 export const CAMPGROUND_REROUTING_CONFIG: CampgroundReroutingConfig = {
-  offRouteThreshold: 8, // Gleich wie RouteTracker für Konsistenz  
-  minimumMovementThreshold: 5, // Reduziert für responsive Re-routing
-  rerouteConsiderationTime: 8000, // 8s - Schnellere Reaktion
-  autoRerouteThreshold: 15, // Bereits bei 15m neu routen für mobile Navigation
-  maxRerouteAttempts: 3 // Mehr Versuche für komplexe Campingplatz-Layouts
+  offRouteThreshold: 25, // GPS-TOLERANT: Erhöht von 8m auf 25m für GPS-Ungenauigkeit
+  minimumMovementThreshold: 12, // GPS-MOVEMENT: Erhöht von 5m auf 12m - User muss sich wirklich bewegen
+  rerouteConsiderationTime: 15000, // 15s - Erhöht von 8s für weniger nervöse Re-routes
+  autoRerouteThreshold: 30, // GPS-CONFIDENCE: Erhöht von 15m auf 30m für sicheres Re-routing
+  maxRerouteAttempts: 3 // Bleibt bei 3 Versuchen
 };
 
 export class CampgroundRerouteDetector {
