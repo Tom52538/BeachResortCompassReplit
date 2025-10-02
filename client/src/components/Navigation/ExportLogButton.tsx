@@ -25,7 +25,7 @@ export const ExportLogButton: React.FC = () => {
 
   return (
     <div 
-      className="fixed bottom-4 left-4 bg-black/80 backdrop-blur-md rounded-lg p-3 z-50"
+      className="fixed bottom-24 left-4 bg-black/80 backdrop-blur-md rounded-lg p-3 z-50"
       style={{
         border: '1px solid rgba(255, 255, 255, 0.2)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
