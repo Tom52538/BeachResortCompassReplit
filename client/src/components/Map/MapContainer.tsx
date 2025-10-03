@@ -43,6 +43,7 @@ interface MapContainerProps {
   showNetworkOverlay?: boolean;
   rotation?: number;
   children?: React.ReactNode;
+  site: string;
 }
 
 const CurrentLocationMarker = ({ position }: { position: Coordinates }) => {
@@ -194,7 +195,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   destinationMarker,
   showNetworkOverlay = false,
   rotation = 0,
-  children
+  children,
+  site
 }) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const [gestureIndicator, setGestureIndicator] = useState<{
@@ -434,7 +436,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         ))}
 
         {/* Network overlay - show routing network */}
-        <NetworkOverlay visible={showNetworkOverlay} />
+        <NetworkOverlay visible={showNetworkOverlay} site={site} />
 
         {/* Glassmorphism route line */}
         {route && <RoutePolyline route={route} />}

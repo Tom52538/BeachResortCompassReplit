@@ -358,7 +358,7 @@ apiRouter.get("/pois", async (req: Request, res: Response) => {
         data_source: 'osm',
         osm_id: props.osm_id || null
       };
-    }).filter(poi => poi !== null); // Remove invalid POIs
+    }).filter((poi): poi is any => poi !== null); // Remove invalid POIs
 
     console.log(`Loaded ${pois.length} POIs for site ${site}`);
     res.json(pois);
@@ -470,13 +470,13 @@ apiRouter.get("/pois/search", async (req: Request, res: Response) => {
         data_source: 'osm',
         osm_id: props.osm_id || null
       };
-    }).filter(poi => poi !== null);
+    }).filter((poi): poi is any => poi !== null);
 
     let filteredPOIs = allPOIs;
 
     // Filter by category if provided
     if (category) {
-      filteredPOIs = filteredPOIs.filter(poi => {
+      filteredPOIs = filteredPOIs.filter((poi: any) => {
         const poiCategory = String(poi.category || '').toLowerCase();
         const searchCategory = String(category || '').toLowerCase();
         return poiCategory === searchCategory ||
@@ -488,7 +488,7 @@ apiRouter.get("/pois/search", async (req: Request, res: Response) => {
     // Filter by query if provided
     if (query) {
       const searchTerm = (query as string).toLowerCase();
-      filteredPOIs = filteredPOIs.filter(poi => {
+      filteredPOIs = filteredPOIs.filter((poi: any) => {
         return String(poi.name || '').toLowerCase().includes(searchTerm) ||
                String(poi.category || '').toLowerCase().includes(searchTerm) ||
                (poi.description && String(poi.description).toLowerCase().includes(searchTerm)) ||
@@ -638,7 +638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NOTE: Enhanced routing now handled by dedicated router in server/routes/enhancedRouting.ts
 
   // Helper function to decode Google polyline
-  function decodePolyline(encoded) {
+  function decodePolyline(encoded: any) {
     const coordinates = [];
     let index = 0, lat = 0, lng = 0;
 
@@ -680,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Helper functions for network overlay
-  function getOrCreateNode(nodeMap, coord, tolerance) {
+  function getOrCreateNode(nodeMap: Map<string, any>, coord: [number, number], tolerance: number) {
     const key = `${Math.round(coord[1] * 10000)}_${Math.round(coord[0] * 10000)}`;
 
     if (!nodeMap.has(key)) {
@@ -708,9 +708,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Network overlay endpoint
   app.get('/api/network-overlay', async (req, res) => {
     try {
-      console.log('🗺️ Network overlay data requested');
+      const site = req.query.site as string || 'kamperland';
+      console.log(`🗺️ Network overlay data requested for site: ${site}`);
 
-      const geojsonPath = join(process.cwd(), 'server/data/roompot_routing_network.geojson');
+      let filename: string;
+      switch (site) {
+        case 'zuhause':
+          filename = 'zuhause_routing_network.geojson';
+          break;
+        case 'sittard':
+          filename = 'sittard_routing_network.geojson';
+          break;
+        default:
+          filename = 'roompot_routing_network.geojson';
+      }
+
+      const geojsonPath = join(process.cwd(), 'server/data', filename);
+
+      if (!fs.existsSync(geojsonPath)) {
+        console.error(`Network overlay file not found: ${geojsonPath}`);
+        return res.status(404).json({ error: `Network overlay not available for site '${site}'` });
+      }
+
       const geojsonData = JSON.parse(fs.readFileSync(geojsonPath, 'utf-8'));
 
       const nodeMap = new Map();
@@ -787,122 +806,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper functions for network overlay
-  function getOrCreateNode(nodeMap: Map<string, any>, coordinates: [number, number], tolerance: number) {
-    // Check if a node already exists within tolerance
-    for (const [nodeId, node] of nodeMap) {
-      const distance = calculateDistanceMeters(
-        coordinates[1], coordinates[0],
-        node.coordinates[1], node.coordinates[0]
-      );
-
-      if (distance < tolerance) {
-        return nodeId;
-      }
-    }
-
-    // Create new node
-    const nodeId = `node_${nodeMap.size}`;
-    const node = {
-      id: nodeId,
-      coordinates,
-      connectionCount: 0
-    };
-
-    nodeMap.set(nodeId, node);
-    return nodeId;
-  }
-
-  // Load POI data from GeoJSON file
-  app.get('/api/pois', (req, res) => {
-    try {
-      const site = req.query.site as string || 'kamperland';
-      console.log(`Loading POI data for site: ${site}`);
-
-      // Site-specific POI file loading
-      let poiFilePath: string;
-      if (site === 'zuhause') {
-        poiFilePath = join(process.cwd(), 'server/data/zuhause_pois.geojson');
-        console.log(`🏠 Loading zuhause-specific POIs from: ${poiFilePath}`);
-      } else if (site === 'sittard') {
-        poiFilePath = join(process.cwd(), 'server/data/sittard_poi.geojson');
-        console.log(`🏛️ Loading sittard-specific POIs from: ${poiFilePath}`);
-      } else {
-        // Default to combined roompot POIs for kamperland and other sites
-        poiFilePath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
-        console.log(`🏕️ Loading roompot POIs from: ${poiFilePath}`);
-      }
-
-      // Check if file exists
-      if (!fs.existsSync(poiFilePath)) {
-        console.error(`❌ POI file not found: ${poiFilePath}`);
-        return res.status(500).json({ error: `POI file not found for site: ${site}` });
-      }
-
-      const poiData = JSON.parse(fs.readFileSync(poiFilePath, 'utf8'));
-      const transformedPOIs = transformGeoJSONToPOIs(poiData, site);
-
-      console.log(`✅ Loaded ${transformedPOIs.length} POIs for site ${site} from ${path.basename(poiFilePath)}`);
-
-      res.json(transformedPOIs);
-    } catch (error) {
-      console.error('❌ Error loading POI data:', error);
-      res.status(500).json({ error: 'Failed to load POI data' });
-    }
-  });
-
-  // POI Search endpoint
-  app.get('/api/pois/search', (req, res) => {
-    try {
-      const { q: query, site = 'kamperland', category } = req.query;
-      console.log('POI Search request:', { query, site, category });
-
-      if (!query || typeof query !== 'string') {
-        return res.json([]);
-      }
-
-      // Site-specific POI file loading for search
-      let poiFilePath: string;
-      if (site === 'zuhause') {
-        poiFilePath = join(process.cwd(), 'server/data/zuhause_pois.geojson');
-        console.log(`🔍 Searching zuhause POIs from: ${poiFilePath}`);
-      } else if (site === 'sittard') {
-        poiFilePath = join(process.cwd(), 'server/data/sittard_poi.geojson');
-        console.log(`🔍 Searching sittard POIs from: ${poiFilePath}`);
-      } else {
-        poiFilePath = join(process.cwd(), 'server/data/combined_pois_roompot.geojson');
-        console.log(`🔍 Searching roompot POIs from: ${poiFilePath}`);
-      }
-
-      // Check if file exists
-      if (!fs.existsSync(poiFilePath)) {
-        console.error(`❌ POI search file not found: ${poiFilePath}`);
-        return res.json([]);
-      }
-
-      const poiData = JSON.parse(fs.readFileSync(poiFilePath, 'utf8'));
-      const allPOIs = transformGeoJSONToPOIs(poiData, site as string);
-
-      // Search logic
-      const searchTerm = query.toLowerCase();
-      let results = allPOIs.filter(poi =>
-        poi.name.toLowerCase().includes(searchTerm) ||
-        (poi.category && poi.category.toLowerCase().includes(searchTerm)) ||
-        (poi.description && poi.description.toLowerCase().includes(searchTerm))
-      );
-
-      // Apply category filter if provided
-      if (category && category !== 'undefined') {
-        results = results.filter(poi => poi.category === category);
-      }
-
-      console.log(`🔍 POI Search results: Found ${results.length} POIs for query "${query}" in site "${site}" from ${path.basename(poiFilePath)}`);
-      res.json(results);
-    } catch (error) {
-      console.error('❌ Error searching POIs:', error);
-      res.status(500).json({ error: 'Failed to search POIs' });
-    }
-  });
 
   // ElevenLabs TTS endpoints (sichere server-seitige Implementation)
   let elevenLabsService: ElevenLabsServerService | null = null;
