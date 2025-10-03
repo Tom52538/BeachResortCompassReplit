@@ -28,26 +28,29 @@ interface NetworkOverlayData {
 
 interface NetworkOverlayProps {
   visible: boolean;
+  site: string;
 }
 
-export const NetworkOverlay: React.FC<NetworkOverlayProps> = ({ visible }) => {
+export const NetworkOverlay: React.FC<NetworkOverlayProps> = ({ visible, site }) => {
   const [networkData, setNetworkData] = useState<NetworkOverlayData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (visible && !networkData) {
+    if (visible && site) {
       loadNetworkData();
+    } else if (!visible) {
+      setNetworkData(null);
     }
-  }, [visible, networkData]);
+  }, [visible, site]);
 
   const loadNetworkData = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🗺️ NETWORK OVERLAY: Loading network data...');
-      const response = await fetch('/api/network-overlay');
+      console.log(`🗺️ NETWORK OVERLAY: Loading network data for site "${site}"...`);
+      const response = await fetch(`/api/network-overlay?site=${site}`);
       
       if (!response.ok) {
         throw new Error(`Network overlay request failed: ${response.status}`);

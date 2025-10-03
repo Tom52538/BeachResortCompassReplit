@@ -1679,6 +1679,7 @@ export default function Navigation() {
                 mapStyle={mapStyle}
                 destinationMarker={destinationMarker}
                 showNetworkOverlay={showNetworkOverlay}
+                site={currentSite}
               >
                 {isDebugMode && isNavigating && (
                   <DebugOverlay
