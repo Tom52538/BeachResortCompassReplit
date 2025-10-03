@@ -317,7 +317,7 @@ apiRouter.get("/pois", async (req: Request, res: Response) => {
     if (site === 'zuhause') {
       filename = 'zuhause_pois.geojson';
     } else if (site === 'sittard') {
-      filename = 'sittard_poi.geojson';
+      filename = 'sittard_poi_categorized.geojson';
     } else {
       filename = 'combined_pois_roompot.geojson'; // kamperland default
     }
@@ -343,7 +343,7 @@ apiRouter.get("/pois", async (req: Request, res: Response) => {
         id: props.id || `poi_${index}`,
         name: props.name || 'Unnamed Location',
         lodge_number: props.lodge_number || null,
-        category: props.category || 'other',
+        category: props.display_category || props.category || 'other',
         coordinates: {
           lat: coords[1],
           lng: coords[0]
@@ -381,7 +381,7 @@ apiRouter.get("/pois/search", async (req: Request, res: Response) => {
     if (searchSite === 'zuhause') {
       searchFilename = 'zuhause_pois.geojson';
     } else if (searchSite === 'sittard') {
-      searchFilename = 'sittard_poi.geojson';
+      searchFilename = 'sittard_poi_categorized.geojson';
     } else {
       searchFilename = 'combined_pois_roompot.geojson'; // kamperland default
     }
@@ -459,7 +459,7 @@ apiRouter.get("/pois/search", async (req: Request, res: Response) => {
         id: props.id || `poi_${index}`,
         name: props.name || `Unnamed POI ${index}`,
         lodge_number: props.lodge_number || null,
-        category: category,
+        category: props.display_category || category,
         subCategory: props.subCategory || null,
         coordinates: { lat: coords[1], lng: coords[0] },
         description: props.description || null,
@@ -522,7 +522,7 @@ apiRouter.get("/pois/:id", async (req: Request, res: Response) => {
     if (site === 'zuhause') {
       poiFilename = 'zuhause_pois.geojson';
     } else if (site === 'sittard') {
-      poiFilename = 'sittard_poi.geojson';
+      poiFilename = 'sittard_poi_categorized.geojson';
     } else {
       poiFilename = 'combined_pois_roompot.geojson'; // kamperland default
     }
@@ -546,7 +546,7 @@ apiRouter.get("/pois/:id", async (req: Request, res: Response) => {
       id: props.id || id,
       name: props.name || 'Unnamed Location',
       lodge_number: props.lodge_number || null,
-      category: props.category || 'other',
+      category: props.display_category || props.category || 'other',
       coordinates: {
         lat: coords[1],
         lng: coords[0]
@@ -596,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (site === 'zuhause') {
         poiFilename = 'zuhause_pois.geojson';
       } else if (site === 'sittard') {
-        poiFilename = 'sittard_poi.geojson';
+        poiFilename = 'sittard_poi_categorized.geojson';
       } else {
         poiFilename = 'combined_pois_roompot.geojson'; // kamperland default
       }

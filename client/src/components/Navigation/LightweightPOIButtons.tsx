@@ -37,16 +37,16 @@ const ZUHAUSE_POI_BUTTONS = [
   { category: 'gesundheit', icon: '🏥', label: 'Gesundheit & Bildung', color: 'bg-teal-600' } // 28 POIs - 2%
 ];
 
-// POI categories for Sittard location - Dutch city focused
+// POI categories for Sittard location - German city focused
 const SITTARD_POI_BUTTONS = [
-  { category: 'parking', icon: '🚗', label: 'Parkeren', color: 'bg-blue-500' },
-  { category: 'restaurant', icon: '🍽️', label: 'Restaurants', color: 'bg-orange-500' },
-  { category: 'accommodation', icon: '🏨', label: 'Hotels', color: 'bg-green-600' },
-  { category: 'services', icon: 'ℹ️', label: 'Diensten', color: 'bg-purple-500' },
-  { category: 'tourism', icon: '🏛️', label: 'Bezienswaardigheden', color: 'bg-amber-800' },
-  { category: 'leisure', icon: '🏃', label: 'Recreatie', color: 'bg-red-500' },
-  { category: 'shop', icon: '🛒', label: 'Winkelen', color: 'bg-yellow-500' },
-  { category: 'healthcare', icon: '🏥', label: 'Gezondheid', color: 'bg-teal-600' }
+    { category: 'Mobilität & Verkehr', icon: '🚗', label: 'Mobilität & Verkehr', color: 'bg-blue-500' },
+    { category: 'Freizeit & Erholung', icon: '🏃', label: 'Freizeit & Erholung', color: 'bg-red-500' },
+    { category: 'Gastronomie', icon: '🍽️', label: 'Gastronomie', color: 'bg-orange-500' },
+    { category: 'Einzelhandel & Dienstleistungen', icon: '🛒', label: 'Einzelhandel & Dienstleistungen', color: 'bg-yellow-500' },
+    { category: 'Bildung', icon: '🏫', label: 'Bildung', color: 'bg-purple-500' },
+    { category: 'Öffentliche Einrichtung', icon: '🏛️', label: 'Öffentliche Einrichtung', color: 'bg-amber-800' },
+    { category: 'Religion', icon: '⛪', label: 'Religion', color: 'bg-gray-500' },
+    { category: 'Gesundheit', icon: '🏥', label: 'Gesundheit', color: 'bg-teal-600' }
 ];
 
 const LightweightPOIButtonsComponent = ({ onCategorySelect, activeCategories = [], selectedPOI }: LightweightPOIButtonsProps) => {
